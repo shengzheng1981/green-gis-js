@@ -1,20 +1,20 @@
 # Green GIS JS API
 Green GIS JS API is a lite GIS JS API based on Canvas API. Currently, this API only implement basic functions, so it can only be used by learning and researching! But, you can use it in a simple APP! Have fun!
 
-## Functions && Boundary
-0. Only Support Canvas! NO SVG!
+## Functions & Boundary
+0. **Only Support Canvas! NO SVG!**
 1. Map basic functions, such as zoom in/zoom out/pan; Next: extent stacks;
-2. Projection, only support web mercator (3857), so can be integrated with all kinds of web maps, such as google map/amap(aka gaode);
-3. Geometry, only support simple point/line/polygon, no multiple and no ring, but you can implement by yourself;
-4. Symbol, only simple point/line/fill symbol, also you can extend;
+2. Projection, **only support web mercator (3857)**, so can be integrated with all kinds of web maps, such as google map/amap(aka gaode);
+3. Geometry, **only support simple point/line/polygon**, no multiple and no ring, but you can implement by yourself;
+4. Symbol, **only simple point/line/fill symbol**, also you can extend;
 5. Graphic, Geometry + Symbol = Graphic;
 6. Feature, Geometry + Properties = Feature;
 7. Layer, Graphic can managed by GraphicLayer, Feature can managed by FeatureClass, FeatureLayer is a view for FeatureClass;
-8. Data, only support geojson, FeatureClass is designed to load geojson and managed fields;
+8. Data, **only support geojson**, FeatureClass is designed to load geojson and managed fields;
 9. Renderer, now SimpleRenderer and CategoryRenderer; Next: ClassRenderer;
-10.Module, only support ESM2015, no bundle, no umd/cmd/amd, blablabla....
+10.Module, **only support ESM2015**, no bundle, no umd/cmd/amd...
 
-## Usage && Demo
+## Usage & Demo
 1. Basic Map
 ```
 //foo is a canvas
@@ -136,12 +136,15 @@ map.setView([107.411, 29.89], 7);
 
 
 ## Route Map
-1. Label && Tooltip
+1. Label and Tooltip
 2. Multiple point/line/polygon
 3. Event Management
 4. ObjectID Management
 5. And More...
 
 
-## Blog && Article
-More Sample && Information: [Re-learning GIS](https://zhuanlan.zhihu.com/c_165676639) .
+## Blog & Article
+More Sample And Information: [Re-learning GIS](https://zhuanlan.zhihu.com/c_165676639) .
+
+## License
+[MIT](LICENSE) © Sheng Zheng
