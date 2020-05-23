@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "baseUrl": "./src",
-    "outDir": "./dist/esm2015",
+    "outDir": "./dist",
     "sourceMap": false,
-    "declaration": false,
+    "declaration": true,
     "module": "es2015",
     "moduleResolution" :"node",
     "target": "es6"

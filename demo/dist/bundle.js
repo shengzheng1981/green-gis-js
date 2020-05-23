@@ -86,21 +86,21 @@
 /************************************************************************/
 /******/ ({
 
-/***/ "../dist/esm2015/data/feature-class.js":
-/*!*********************************************!*\
-  !*** ../dist/esm2015/data/feature-class.js ***!
-  \*********************************************/
+/***/ "../dist/data/feature-class.js":
+/*!*************************************!*\
+  !*** ../dist/data/feature-class.js ***!
+  \*************************************/
 /*! exports provided: FeatureClass */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FeatureClass", function() { return FeatureClass; });
-/* harmony import */ var _element_feature__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../element/feature */ "../dist/esm2015/element/feature.js");
-/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/esm2015/geometry/geometry.js");
-/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../geometry/point */ "../dist/esm2015/geometry/point.js");
-/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../geometry/polyline */ "../dist/esm2015/geometry/polyline.js");
-/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../geometry/polygon */ "../dist/esm2015/geometry/polygon.js");
+/* harmony import */ var _element_feature__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../element/feature */ "../dist/element/feature.js");
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../geometry/point */ "../dist/geometry/point.js");
+/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../geometry/polyline */ "../dist/geometry/polyline.js");
+/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../geometry/polygon */ "../dist/geometry/polygon.js");
 
 
 
@@ -168,10 +168,10 @@ class FeatureClass {
 
 /***/ }),
 
-/***/ "../dist/esm2015/data/field.js":
-/*!*************************************!*\
-  !*** ../dist/esm2015/data/field.js ***!
-  \*************************************/
+/***/ "../dist/data/field.js":
+/*!*****************************!*\
+  !*** ../dist/data/field.js ***!
+  \*****************************/
 /*! exports provided: FieldType, Field */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -190,18 +190,18 @@ class Field {
 
 /***/ }),
 
-/***/ "../dist/esm2015/element/feature.js":
-/*!******************************************!*\
-  !*** ../dist/esm2015/element/feature.js ***!
-  \******************************************/
+/***/ "../dist/element/feature.js":
+/*!**********************************!*\
+  !*** ../dist/element/feature.js ***!
+  \**********************************/
 /*! exports provided: Feature */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Feature", function() { return Feature; });
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/esm2015/symbol/symbol.js");
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/projection/web-mecator.js");
 
 
 class Feature {
@@ -267,17 +267,17 @@ class Feature {
 
 /***/ }),
 
-/***/ "../dist/esm2015/element/graphic.js":
-/*!******************************************!*\
-  !*** ../dist/esm2015/element/graphic.js ***!
-  \******************************************/
+/***/ "../dist/element/graphic.js":
+/*!**********************************!*\
+  !*** ../dist/element/graphic.js ***!
+  \**********************************/
 /*! exports provided: Graphic */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Graphic", function() { return Graphic; });
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/projection/web-mecator.js");
 
 class Graphic {
     constructor(geometry, symbol) {
@@ -297,10 +297,10 @@ class Graphic {
 
 /***/ }),
 
-/***/ "../dist/esm2015/entity.js":
-/*!*********************************!*\
-  !*** ../dist/esm2015/entity.js ***!
-  \*********************************/
+/***/ "../dist/entity.js":
+/*!*************************!*\
+  !*** ../dist/entity.js ***!
+  \*************************/
 /*! exports provided: Entity */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -335,10 +335,10 @@ class Entity {
 
 /***/ }),
 
-/***/ "../dist/esm2015/geometry/geometry.js":
-/*!********************************************!*\
-  !*** ../dist/esm2015/geometry/geometry.js ***!
-  \********************************************/
+/***/ "../dist/geometry/geometry.js":
+/*!************************************!*\
+  !*** ../dist/geometry/geometry.js ***!
+  \************************************/
 /*! exports provided: GeometryType, Geometry */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -346,8 +346,8 @@ class Entity {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GeometryType", function() { return GeometryType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Geometry", function() { return Geometry; });
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/esm2015/symbol/symbol.js");
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/projection/web-mecator.js");
 
 
 var GeometryType;
@@ -375,20 +375,20 @@ class Geometry {
 
 /***/ }),
 
-/***/ "../dist/esm2015/geometry/point.js":
-/*!*****************************************!*\
-  !*** ../dist/esm2015/geometry/point.js ***!
-  \*****************************************/
+/***/ "../dist/geometry/point.js":
+/*!*********************************!*\
+  !*** ../dist/geometry/point.js ***!
+  \*********************************/
 /*! exports provided: Point */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Point", function() { return Point; });
-/* harmony import */ var _geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry */ "../dist/esm2015/geometry/geometry.js");
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/bound */ "../dist/esm2015/util/bound.js");
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/esm2015/symbol/symbol.js");
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
+/* harmony import */ var _geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/bound */ "../dist/util/bound.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/projection/web-mecator.js");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -469,20 +469,20 @@ Point.TOLERANCE = 0; //screen pixel
 
 /***/ }),
 
-/***/ "../dist/esm2015/geometry/polygon.js":
-/*!*******************************************!*\
-  !*** ../dist/esm2015/geometry/polygon.js ***!
-  \*******************************************/
+/***/ "../dist/geometry/polygon.js":
+/*!***********************************!*\
+  !*** ../dist/geometry/polygon.js ***!
+  \***********************************/
 /*! exports provided: Polygon */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Polygon", function() { return Polygon; });
-/* harmony import */ var _geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry */ "../dist/esm2015/geometry/geometry.js");
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/bound */ "../dist/esm2015/util/bound.js");
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/esm2015/symbol/symbol.js");
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
+/* harmony import */ var _geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/bound */ "../dist/util/bound.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/projection/web-mecator.js");
 
 
 
@@ -569,20 +569,20 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
 
 /***/ }),
 
-/***/ "../dist/esm2015/geometry/polyline.js":
-/*!********************************************!*\
-  !*** ../dist/esm2015/geometry/polyline.js ***!
-  \********************************************/
+/***/ "../dist/geometry/polyline.js":
+/*!************************************!*\
+  !*** ../dist/geometry/polyline.js ***!
+  \************************************/
 /*! exports provided: Polyline */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Polyline", function() { return Polyline; });
-/* harmony import */ var _geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry */ "../dist/esm2015/geometry/geometry.js");
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/bound */ "../dist/esm2015/util/bound.js");
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/esm2015/symbol/symbol.js");
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
+/* harmony import */ var _geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/bound */ "../dist/util/bound.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/projection/web-mecator.js");
 
 
 
@@ -675,59 +675,59 @@ Polyline.TOLERANCE = 4; //screen pixel
 
 /***/ }),
 
-/***/ "../dist/esm2015/index.js":
-/*!********************************!*\
-  !*** ../dist/esm2015/index.js ***!
-  \********************************/
+/***/ "../dist/index.js":
+/*!************************!*\
+  !*** ../dist/index.js ***!
+  \************************/
 /*! exports provided: Map, Entity, FeatureClass, FieldType, Field, Graphic, Feature, GeometryType, Geometry, Point, Polyline, Polygon, Layer, GraphicLayer, FeatureLayer, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, Projection, WebMecator, Utility, Bound, ColorGenerator */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _map__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./map */ "../dist/esm2015/map.js");
+/* harmony import */ var _map__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./map */ "../dist/map.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Map", function() { return _map__WEBPACK_IMPORTED_MODULE_0__["Map"]; });
 
-/* harmony import */ var _entity__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./entity */ "../dist/esm2015/entity.js");
+/* harmony import */ var _entity__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./entity */ "../dist/entity.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Entity", function() { return _entity__WEBPACK_IMPORTED_MODULE_1__["Entity"]; });
 
-/* harmony import */ var _data_feature_class__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./data/feature-class */ "../dist/esm2015/data/feature-class.js");
+/* harmony import */ var _data_feature_class__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./data/feature-class */ "../dist/data/feature-class.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FeatureClass", function() { return _data_feature_class__WEBPACK_IMPORTED_MODULE_2__["FeatureClass"]; });
 
-/* harmony import */ var _data_field__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./data/field */ "../dist/esm2015/data/field.js");
+/* harmony import */ var _data_field__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./data/field */ "../dist/data/field.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FieldType", function() { return _data_field__WEBPACK_IMPORTED_MODULE_3__["FieldType"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Field", function() { return _data_field__WEBPACK_IMPORTED_MODULE_3__["Field"]; });
 
-/* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./element/graphic */ "../dist/esm2015/element/graphic.js");
+/* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./element/graphic */ "../dist/element/graphic.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Graphic", function() { return _element_graphic__WEBPACK_IMPORTED_MODULE_4__["Graphic"]; });
 
-/* harmony import */ var _element_feature__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./element/feature */ "../dist/esm2015/element/feature.js");
+/* harmony import */ var _element_feature__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./element/feature */ "../dist/element/feature.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Feature", function() { return _element_feature__WEBPACK_IMPORTED_MODULE_5__["Feature"]; });
 
-/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./geometry/geometry */ "../dist/esm2015/geometry/geometry.js");
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./geometry/geometry */ "../dist/geometry/geometry.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GeometryType", function() { return _geometry_geometry__WEBPACK_IMPORTED_MODULE_6__["GeometryType"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Geometry", function() { return _geometry_geometry__WEBPACK_IMPORTED_MODULE_6__["Geometry"]; });
 
-/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./geometry/point */ "../dist/esm2015/geometry/point.js");
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./geometry/point */ "../dist/geometry/point.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Point", function() { return _geometry_point__WEBPACK_IMPORTED_MODULE_7__["Point"]; });
 
-/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./geometry/polyline */ "../dist/esm2015/geometry/polyline.js");
+/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./geometry/polyline */ "../dist/geometry/polyline.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Polyline", function() { return _geometry_polyline__WEBPACK_IMPORTED_MODULE_8__["Polyline"]; });
 
-/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/esm2015/geometry/polygon.js");
+/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/geometry/polygon.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Polygon", function() { return _geometry_polygon__WEBPACK_IMPORTED_MODULE_9__["Polygon"]; });
 
-/* harmony import */ var _layer_layer__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./layer/layer */ "../dist/esm2015/layer/layer.js");
+/* harmony import */ var _layer_layer__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./layer/layer */ "../dist/layer/layer.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Layer", function() { return _layer_layer__WEBPACK_IMPORTED_MODULE_10__["Layer"]; });
 
-/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/esm2015/layer/graphic-layer.js");
+/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/layer/graphic-layer.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GraphicLayer", function() { return _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_11__["GraphicLayer"]; });
 
-/* harmony import */ var _layer_feature_layer__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./layer/feature-layer */ "../dist/esm2015/layer/feature-layer.js");
+/* harmony import */ var _layer_feature_layer__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./layer/feature-layer */ "../dist/layer/feature-layer.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FeatureLayer", function() { return _layer_feature_layer__WEBPACK_IMPORTED_MODULE_12__["FeatureLayer"]; });
 
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/esm2015/symbol/symbol.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/symbol/symbol.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Symbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_13__["Symbol"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimplePointSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_13__["SimplePointSymbol"]; });
@@ -738,35 +738,35 @@ __webpack_require__.r(__webpack_exports__);
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_13__["SimpleMarkerSymbol"]; });
 
-/* harmony import */ var _renderer_renderer__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./renderer/renderer */ "../dist/esm2015/renderer/renderer.js");
+/* harmony import */ var _renderer_renderer__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./renderer/renderer */ "../dist/renderer/renderer.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Renderer", function() { return _renderer_renderer__WEBPACK_IMPORTED_MODULE_14__["Renderer"]; });
 
-/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./renderer/simple-renderer */ "../dist/esm2015/renderer/simple-renderer.js");
+/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./renderer/simple-renderer */ "../dist/renderer/simple-renderer.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleRenderer", function() { return _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_15__["SimpleRenderer"]; });
 
-/* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./renderer/category-renderer */ "../dist/esm2015/renderer/category-renderer.js");
+/* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./renderer/category-renderer */ "../dist/renderer/category-renderer.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRendererItem", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_16__["CategoryRendererItem"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRenderer", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_16__["CategoryRenderer"]; });
 
-/* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./renderer/class-renderer */ "../dist/esm2015/renderer/class-renderer.js");
+/* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./renderer/class-renderer */ "../dist/renderer/class-renderer.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRendererItem", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_17__["ClassRendererItem"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRenderer", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_17__["ClassRenderer"]; });
 
-/* harmony import */ var _projection_projection__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./projection/projection */ "../dist/esm2015/projection/projection.js");
+/* harmony import */ var _projection_projection__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./projection/projection */ "../dist/projection/projection.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Projection", function() { return _projection_projection__WEBPACK_IMPORTED_MODULE_18__["Projection"]; });
 
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./projection/web-mecator */ "../dist/projection/web-mecator.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "WebMecator", function() { return _projection_web_mecator__WEBPACK_IMPORTED_MODULE_19__["WebMecator"]; });
 
-/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./util/utility */ "../dist/esm2015/util/utility.js");
+/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./util/utility */ "../dist/util/utility.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Utility", function() { return _util_utility__WEBPACK_IMPORTED_MODULE_20__["Utility"]; });
 
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./util/bound */ "../dist/esm2015/util/bound.js");
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Bound", function() { return _util_bound__WEBPACK_IMPORTED_MODULE_21__["Bound"]; });
 
-/* harmony import */ var _util_color_generator__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./util/color-generator */ "../dist/esm2015/util/color-generator.js");
+/* harmony import */ var _util_color_generator__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./util/color-generator */ "../dist/util/color-generator.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ColorGenerator", function() { return _util_color_generator__WEBPACK_IMPORTED_MODULE_22__["ColorGenerator"]; });
 
 
@@ -796,21 +796,21 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "../dist/esm2015/layer/feature-layer.js":
-/*!**********************************************!*\
-  !*** ../dist/esm2015/layer/feature-layer.js ***!
-  \**********************************************/
+/***/ "../dist/layer/feature-layer.js":
+/*!**************************************!*\
+  !*** ../dist/layer/feature-layer.js ***!
+  \**************************************/
 /*! exports provided: FeatureLayer */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FeatureLayer", function() { return FeatureLayer; });
-/* harmony import */ var _layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./layer */ "../dist/esm2015/layer/layer.js");
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
-/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../renderer/simple-renderer */ "../dist/esm2015/renderer/simple-renderer.js");
-/* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../renderer/category-renderer */ "../dist/esm2015/renderer/category-renderer.js");
-/* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../renderer/class-renderer */ "../dist/esm2015/renderer/class-renderer.js");
+/* harmony import */ var _layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./layer */ "../dist/layer/layer.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/projection/web-mecator.js");
+/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../renderer/simple-renderer */ "../dist/renderer/simple-renderer.js");
+/* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../renderer/category-renderer */ "../dist/renderer/category-renderer.js");
+/* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../renderer/class-renderer */ "../dist/renderer/class-renderer.js");
 
 
 
@@ -887,18 +887,18 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
 
 /***/ }),
 
-/***/ "../dist/esm2015/layer/graphic-layer.js":
-/*!**********************************************!*\
-  !*** ../dist/esm2015/layer/graphic-layer.js ***!
-  \**********************************************/
+/***/ "../dist/layer/graphic-layer.js":
+/*!**************************************!*\
+  !*** ../dist/layer/graphic-layer.js ***!
+  \**************************************/
 /*! exports provided: GraphicLayer */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GraphicLayer", function() { return GraphicLayer; });
-/* harmony import */ var _layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./layer */ "../dist/esm2015/layer/layer.js");
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
+/* harmony import */ var _layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./layer */ "../dist/layer/layer.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/projection/web-mecator.js");
 
 
 class GraphicLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
@@ -928,17 +928,17 @@ class GraphicLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
 
 /***/ }),
 
-/***/ "../dist/esm2015/layer/layer.js":
-/*!**************************************!*\
-  !*** ../dist/esm2015/layer/layer.js ***!
-  \**************************************/
+/***/ "../dist/layer/layer.js":
+/*!******************************!*\
+  !*** ../dist/layer/layer.js ***!
+  \******************************/
 /*! exports provided: Layer */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Layer", function() { return Layer; });
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../projection/web-mecator */ "../dist/projection/web-mecator.js");
 
 class Layer {
     constructor() {
@@ -957,21 +957,21 @@ class Layer {
 
 /***/ }),
 
-/***/ "../dist/esm2015/map.js":
-/*!******************************!*\
-  !*** ../dist/esm2015/map.js ***!
-  \******************************/
+/***/ "../dist/map.js":
+/*!**********************!*\
+  !*** ../dist/map.js ***!
+  \**********************/
 /*! exports provided: Map */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Map", function() { return Map; });
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/bound */ "../dist/esm2015/util/bound.js");
-/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./projection/web-mecator */ "../dist/esm2015/projection/web-mecator.js");
-/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/esm2015/layer/graphic-layer.js");
-/* harmony import */ var _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./layer/feature-layer */ "../dist/esm2015/layer/feature-layer.js");
-/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./util/utility */ "../dist/esm2015/util/utility.js");
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
+/* harmony import */ var _projection_web_mecator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./projection/web-mecator */ "../dist/projection/web-mecator.js");
+/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/layer/graphic-layer.js");
+/* harmony import */ var _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./layer/feature-layer */ "../dist/layer/feature-layer.js");
+/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./util/utility */ "../dist/util/utility.js");
 
 
 
@@ -1207,10 +1207,10 @@ class Map {
 
 /***/ }),
 
-/***/ "../dist/esm2015/projection/projection.js":
-/*!************************************************!*\
-  !*** ../dist/esm2015/projection/projection.js ***!
-  \************************************************/
+/***/ "../dist/projection/projection.js":
+/*!****************************************!*\
+  !*** ../dist/projection/projection.js ***!
+  \****************************************/
 /*! exports provided: Projection */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1233,17 +1233,17 @@ class Projection {
 
 /***/ }),
 
-/***/ "../dist/esm2015/projection/web-mecator.js":
-/*!*************************************************!*\
-  !*** ../dist/esm2015/projection/web-mecator.js ***!
-  \*************************************************/
+/***/ "../dist/projection/web-mecator.js":
+/*!*****************************************!*\
+  !*** ../dist/projection/web-mecator.js ***!
+  \*****************************************/
 /*! exports provided: WebMecator */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "WebMecator", function() { return WebMecator; });
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/bound */ "../dist/esm2015/util/bound.js");
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/bound */ "../dist/util/bound.js");
 
 class WebMecator {
     //投影后的平面坐标范围
@@ -1267,10 +1267,10 @@ WebMecator.R = 6378137;
 
 /***/ }),
 
-/***/ "../dist/esm2015/renderer/category-renderer.js":
-/*!*****************************************************!*\
-  !*** ../dist/esm2015/renderer/category-renderer.js ***!
-  \*****************************************************/
+/***/ "../dist/renderer/category-renderer.js":
+/*!*********************************************!*\
+  !*** ../dist/renderer/category-renderer.js ***!
+  \*********************************************/
 /*! exports provided: CategoryRendererItem, CategoryRenderer */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1278,9 +1278,9 @@ WebMecator.R = 6378137;
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CategoryRendererItem", function() { return CategoryRendererItem; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CategoryRenderer", function() { return CategoryRenderer; });
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/esm2015/symbol/symbol.js");
-/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/esm2015/geometry/geometry.js");
-/* harmony import */ var _util_color_generator__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/color-generator */ "../dist/esm2015/util/color-generator.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _util_color_generator__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/color-generator */ "../dist/util/color-generator.js");
 
 
 
@@ -1342,10 +1342,10 @@ class CategoryRenderer {
 
 /***/ }),
 
-/***/ "../dist/esm2015/renderer/class-renderer.js":
-/*!**************************************************!*\
-  !*** ../dist/esm2015/renderer/class-renderer.js ***!
-  \**************************************************/
+/***/ "../dist/renderer/class-renderer.js":
+/*!******************************************!*\
+  !*** ../dist/renderer/class-renderer.js ***!
+  \******************************************/
 /*! exports provided: ClassRendererItem, ClassRenderer */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1375,10 +1375,10 @@ class ClassRenderer {
 
 /***/ }),
 
-/***/ "../dist/esm2015/renderer/renderer.js":
-/*!********************************************!*\
-  !*** ../dist/esm2015/renderer/renderer.js ***!
-  \********************************************/
+/***/ "../dist/renderer/renderer.js":
+/*!************************************!*\
+  !*** ../dist/renderer/renderer.js ***!
+  \************************************/
 /*! exports provided: Renderer */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1391,10 +1391,10 @@ class Renderer {
 
 /***/ }),
 
-/***/ "../dist/esm2015/renderer/simple-renderer.js":
-/*!***************************************************!*\
-  !*** ../dist/esm2015/renderer/simple-renderer.js ***!
-  \***************************************************/
+/***/ "../dist/renderer/simple-renderer.js":
+/*!*******************************************!*\
+  !*** ../dist/renderer/simple-renderer.js ***!
+  \*******************************************/
 /*! exports provided: SimpleRenderer */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1407,10 +1407,10 @@ class SimpleRenderer {
 
 /***/ }),
 
-/***/ "../dist/esm2015/symbol/symbol.js":
-/*!****************************************!*\
-  !*** ../dist/esm2015/symbol/symbol.js ***!
-  \****************************************/
+/***/ "../dist/symbol/symbol.js":
+/*!********************************!*\
+  !*** ../dist/symbol/symbol.js ***!
+  \********************************/
 /*! exports provided: Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1478,10 +1478,10 @@ class SimpleMarkerSymbol extends Symbol {
 
 /***/ }),
 
-/***/ "../dist/esm2015/util/bound.js":
-/*!*************************************!*\
-  !*** ../dist/esm2015/util/bound.js ***!
-  \*************************************/
+/***/ "../dist/util/bound.js":
+/*!*****************************!*\
+  !*** ../dist/util/bound.js ***!
+  \*****************************/
 /*! exports provided: Bound */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1528,10 +1528,10 @@ class Bound {
 
 /***/ }),
 
-/***/ "../dist/esm2015/util/color-generator.js":
-/*!***********************************************!*\
-  !*** ../dist/esm2015/util/color-generator.js ***!
-  \***********************************************/
+/***/ "../dist/util/color-generator.js":
+/*!***************************************!*\
+  !*** ../dist/util/color-generator.js ***!
+  \***************************************/
 /*! exports provided: ColorGenerator */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1547,10 +1547,10 @@ class ColorGenerator {
 
 /***/ }),
 
-/***/ "../dist/esm2015/util/utility.js":
-/*!***************************************!*\
-  !*** ../dist/esm2015/util/utility.js ***!
-  \***************************************/
+/***/ "../dist/util/utility.js":
+/*!*******************************!*\
+  !*** ../dist/util/utility.js ***!
+  \*******************************/
 /*! exports provided: Utility */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1623,7 +1623,7 @@ class Utility {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/esm2015/index.js");
+/* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
 var AMap = window.AMap;

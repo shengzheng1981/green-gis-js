@@ -1,6 +1,6 @@
 import {Map} from "../dist/map.js";
 import {Point} from "../dist/geometry/point.js";
-import {Graphic, SimpleMarkerSymbol} from "../dist/esm2015";
+import {Graphic, SimpleMarkerSymbol} from "../dist";
 const map = new Map("foo");
 map.setView([116.397411,39.909186], 12);
 const marker = new SimpleMarkerSymbol();

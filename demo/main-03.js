@@ -89,7 +89,7 @@ window.load = () => {
         featureLayer.on("mouseover", (event) => {
             console.log(event.feature.properties["name"], "mouse over");
         });
-        featureLayer.on("mouseover", (event) => {
+        featureLayer.on("mouseout", (event) => {
             console.log(event.feature.properties["name"], "mouse out");
         });
         map.addLayer(featureLayer);
