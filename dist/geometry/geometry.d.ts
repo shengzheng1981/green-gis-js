@@ -1,6 +1,11 @@
 import { Bound } from "../util/bound";
-import { Symbol } from "../symbol/symbol";
+import { SimpleTextSymbol, Symbol } from "../symbol/symbol";
 import { Projection } from "../projection/projection";
+export declare enum CoordinateType {
+    Latlng = 0,
+    Projection = 1,
+    Screen = 2
+}
 export declare enum GeometryType {
     Point = 0,
     Polyline = 1,
@@ -15,4 +20,6 @@ export declare class Geometry {
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): void;
     contain(screenX: number, screenY: number): boolean;
     intersect(projection?: Projection, extent?: Bound): boolean;
+    label(text: string, ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: SimpleTextSymbol): void;
+    getCenter(type?: CoordinateType, projection?: Projection): void;
 }

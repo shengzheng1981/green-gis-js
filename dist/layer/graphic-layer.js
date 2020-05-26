@@ -1,5 +1,5 @@
 import { Layer } from "./layer";
-import { WebMecator } from "../projection/web-mecator";
+import { WebMercator } from "../projection/web-mercator";
 export class GraphicLayer extends Layer {
     constructor() {
         super(...arguments);
@@ -15,7 +15,7 @@ export class GraphicLayer extends Layer {
     clear() {
         this._graphics = [];
     }
-    draw(ctx, projection = new WebMecator(), extent = projection.bound, zoom = 10) {
+    draw(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
         if (this.visible) {
             this._graphics.forEach((graphic) => {
                 graphic.draw(ctx, projection, extent);

@@ -1,5 +1,5 @@
-import { SimplePointSymbol } from "../symbol/symbol";
-import { WebMecator } from "../projection/web-mecator";
+import { SimplePointSymbol, SimpleTextSymbol } from "../symbol/symbol";
+import { WebMercator } from "../projection/web-mercator";
 export class Feature {
     constructor(geometry, properties) {
         //要素事件的handlers
@@ -31,11 +31,15 @@ export class Feature {
     emit(event, param) {
         this._events[event].forEach(handler => handler(param));
     }
-    draw(ctx, projection = new WebMecator(), extent = projection.bound, symbol = new SimplePointSymbol()) {
+    draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimplePointSymbol()) {
         if (this.visible)
             this._geometry.draw(ctx, projection, extent, symbol);
     }
-    intersect(projection = new WebMecator(), extent = projection.bound) {
+    label(field, ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleTextSymbol()) {
+        if (this.visible)
+            this._geometry.label(this._properties[field.name], ctx, projection, extent, symbol);
+    }
+    intersect(projection = new WebMercator(), extent = projection.bound) {
         if (this.visible)
             return this._geometry.intersect(projection, extent);
     }

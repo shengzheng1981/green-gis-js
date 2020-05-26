@@ -26,3 +26,15 @@ export declare class SimpleMarkerSymbol extends Symbol {
     get loaded(): boolean;
     load(): Promise<any>;
 }
+export declare class SimpleTextSymbol extends Symbol {
+    lineWidth: number;
+    strokeStyle: string;
+    fillStyle: string;
+    offsetX: number;
+    offsetY: number;
+    padding: number;
+    fontColor: string;
+    fontSize: number;
+    fontFamily: string;
+    fontWeight: string;
+}

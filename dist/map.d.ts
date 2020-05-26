@@ -14,6 +14,7 @@ export declare class Map {
     private _layers;
     get projection(): Projection;
     constructor(id: string);
+    setProjection(projection: any): void;
     setView(center?: number[], zoom?: number): void;
     on(event: any, handler: any): void;
     off(event: any, handler: any): void;

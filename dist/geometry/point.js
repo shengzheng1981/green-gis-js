@@ -7,10 +7,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { Geometry } from "./geometry";
+import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
 import { SimpleMarkerSymbol, SimplePointSymbol } from "../symbol/symbol";
-import { WebMecator } from "../projection/web-mecator";
+import { WebMercator } from "../projection/web-mercator";
 //点
 export class Point extends Geometry {
     constructor(lng, lat) {
@@ -26,18 +26,18 @@ export class Point extends Geometry {
         this._bound = new Bound(this._x, this._y, this._x, this._y);
         this._projected = true;
     }
-    draw(ctx, projection = new WebMecator(), extent = projection.bound, symbol = new SimplePointSymbol()) {
+    draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimplePointSymbol()) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this._projected)
                 this.project(projection);
             if (!extent.intersect(this._bound))
                 return;
-            ctx.save();
             const matrix = ctx.getTransform();
             this._screenX = (matrix.a * this._x + matrix.e);
             this._screenY = (matrix.d * this._y + matrix.f);
             this._symbol = symbol;
             if (symbol instanceof SimplePointSymbol) {
+                ctx.save();
                 ctx.strokeStyle = symbol.strokeStyle;
                 ctx.fillStyle = symbol.fillStyle;
                 ctx.lineWidth = symbol.lineWidth;
@@ -47,19 +47,21 @@ export class Point extends Geometry {
                 ctx.arc(this._screenX, this._screenY, symbol.radius, 0, Math.PI * 2, true);
                 ctx.fill();
                 ctx.stroke();
+                ctx.restore();
             }
             else if (symbol instanceof SimpleMarkerSymbol) {
                 const marker = symbol;
                 if (!marker.loaded)
                     yield marker.load();
                 if (marker.icon) {
+                    ctx.save();
                     const matrix = ctx.getTransform();
                     //keep size
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
-                    ctx.drawImage(marker.icon, this._screenX - marker.offsetX, this._screenY - marker.offsetY, marker.width, marker.height);
+                    ctx.drawImage(marker.icon, this._screenX + marker.offsetX, this._screenY + marker.offsetY, marker.width, marker.height);
+                    ctx.restore();
                 }
             }
-            ctx.restore();
         });
     }
     ;
@@ -69,6 +71,16 @@ export class Point extends Geometry {
         }
         else if (this._symbol instanceof SimpleMarkerSymbol) {
             return screenX >= (this._screenX - this._symbol.offsetX) && screenX <= (this._screenX - this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY - this._symbol.offsetY) && screenY <= (this._screenY - this._symbol.offsetY + this._symbol.height);
+        }
+    }
+    getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) {
+        if (!this._projected)
+            this.project(projection);
+        if (type = CoordinateType.Latlng) {
+            return [this._lng, this._lat];
+        }
+        else {
+            return [this._x, this._y];
         }
     }
 }

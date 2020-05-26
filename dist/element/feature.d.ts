@@ -1,6 +1,7 @@
 import { Bound } from "../util/bound";
-import { Symbol } from "../symbol/symbol";
+import { Symbol, SimpleTextSymbol } from "../symbol/symbol";
 import { Projection } from "../projection/projection";
+import { Field } from "../data/field";
 export declare class Feature {
     private _geometry;
     private _properties;
@@ -14,6 +15,7 @@ export declare class Feature {
     off(event: any, handler: any): void;
     emit(event: any, param: any): void;
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): void;
+    label(field: Field, ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: SimpleTextSymbol): void;
     intersect(projection?: Projection, extent?: Bound): boolean;
     contain(screenX: number, screenY: number, event?: string): boolean;
 }

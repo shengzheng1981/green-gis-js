@@ -1,4 +1,4 @@
-import { WebMecator } from "../projection/web-mecator";
+import { WebMercator } from "../projection/web-mercator";
 export class Layer {
     constructor() {
         this._visible = true;
@@ -9,6 +9,6 @@ export class Layer {
     set visible(value) {
         this._visible = value;
     }
-    draw(ctx, projection = new WebMecator(), extent = projection.bound, zoom = 10) { }
+    draw(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) { }
     ;
 }

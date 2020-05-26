@@ -1,8 +1,9 @@
 import {Bound} from "../util/bound";
 import {Geometry} from "../geometry/geometry";
-import {Symbol, SimplePointSymbol} from "../symbol/symbol";
+import {Symbol, SimplePointSymbol, SimpleTextSymbol} from "../symbol/symbol";
 import {Projection} from "../projection/projection";
-import {WebMecator} from "../projection/web-mecator";
+import {WebMercator} from "../projection/web-mercator";
+import {Field} from "../data/field";
 
 export class Feature {
     private _geometry: Geometry;
@@ -47,11 +48,15 @@ export class Feature {
         this._events[event].forEach(handler => handler(param));
     }
 
-    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMecator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
+    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
         if (this.visible) this._geometry.draw(ctx, projection, extent, symbol);
     }
 
-    intersect(projection: Projection = new WebMecator(), extent: Bound = projection.bound): boolean {
+    label(field:Field, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: SimpleTextSymbol = new SimpleTextSymbol()) {
+        if (this.visible) this._geometry.label(this._properties[field.name], ctx, projection, extent, symbol);
+    }
+
+    intersect(projection: Projection = new WebMercator(), extent: Bound = projection.bound): boolean {
         if (this.visible) return this._geometry.intersect(projection, extent);
     }
 

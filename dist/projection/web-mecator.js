@@ -16,4 +16,5 @@ export class WebMecator {
         return [x * d / WebMecator.R, (2 * Math.atan(Math.exp(y / WebMecator.R)) - (Math.PI / 2)) * d];
     }
 }
-WebMecator.R = 6378137;
+//static R: number = 6378137;
+WebMecator.R = 6378245.0;

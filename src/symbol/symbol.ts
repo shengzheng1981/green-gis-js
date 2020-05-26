@@ -48,3 +48,16 @@ export class SimpleMarkerSymbol extends Symbol {
         })
     }
 }
+
+export class SimpleTextSymbol extends Symbol {
+    public lineWidth: number = 3;
+    public strokeStyle: string = "#ff0000"; //#ffffff
+    public fillStyle: string = "#ffffff";    //#ffffff
+    public offsetX: number = 0;
+    public offsetY: number = 1;
+    public padding: number = 5;
+    public fontColor: string = "#ff0000";
+    public fontSize: number = 12;
+    public fontFamily: string = "YaHei";
+    public fontWeight: string = "Bold";
+}

@@ -1,8 +1,8 @@
-import {Geometry} from "./geometry";
+import {CoordinateType, Geometry} from "./geometry";
 import {Bound} from "../util/bound";
 import {Projection} from "../projection/projection";
-import {SimpleFillSymbol, Symbol} from "../symbol/symbol";
-import {WebMecator} from "../projection/web-mecator";
+import {SimpleFillSymbol, SimpleTextSymbol, Symbol} from "../symbol/symbol";
+import {WebMercator} from "../projection/web-mercator";
 //面
 export class Polygon extends Geometry{
 
@@ -35,7 +35,7 @@ export class Polygon extends Geometry{
         this._bound = new Bound(xmin, ymin, xmax, ymax);
     }
 
-    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMecator(), extent: Bound = projection.bound, symbol: Symbol = new SimpleFillSymbol()) {
+    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimpleFillSymbol()) {
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
         ctx.save();
@@ -93,5 +93,42 @@ export class Polygon extends Geometry{
 
         return inside;
     };
+
+    //from Leaflet
+    getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {
+        if (!this._projected) this.project(projection);
+        let i, j, p1, p2, f, area, x, y, center,
+            points = this._coordinates[0],
+            len = points.length;
+
+        if (!len) { return null; }
+
+        // polygon centroid algorithm; only uses the first ring if there are multiple
+
+        area = x = y = 0;
+
+        for (i = 0, j = len - 1; i < len; j = i++) {
+            p1 = points[i];
+            p2 = points[j];
+
+            f = p1[1] * p2[0] - p2[1] * p1[0];
+            x += (p1[0] + p2[0]) * f;
+            y += (p1[1] + p2[1]) * f;
+            area += f * 3;
+        }
+
+        if (area === 0) {
+            // Polygon is so small that all points are on same pixel.
+            center = points[0];
+        } else {
+            center = [x / area, y / area];
+        }
+
+        if (type = CoordinateType.Latlng) {
+            return projection.unproject(center);
+        } else {
+            return center;
+        }
+    }
 
 }

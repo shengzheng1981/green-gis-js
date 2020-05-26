@@ -2,7 +2,7 @@ import {Bound} from "../util/bound";
 import {Geometry} from "../geometry/geometry";
 import {Symbol} from "../symbol/symbol";
 import {Projection} from "../projection/projection";
-import {WebMecator} from "../projection/web-mecator";
+import {WebMercator} from "../projection/web-mercator";
 
 export class Graphic {
     private _geometry: Geometry;
@@ -19,7 +19,7 @@ export class Graphic {
         this._symbol = symbol;
     }
 
-    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMecator(), extent: Bound = projection.bound) {
+    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound) {
         if (this.visible) this._geometry.draw(ctx, projection, extent, this._symbol);
     }
 

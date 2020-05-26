@@ -51,3 +51,18 @@ export class SimpleMarkerSymbol extends Symbol {
         });
     }
 }
+export class SimpleTextSymbol extends Symbol {
+    constructor() {
+        super(...arguments);
+        this.lineWidth = 3;
+        this.strokeStyle = "#ff0000"; //#ffffff
+        this.fillStyle = "#ffffff"; //#ffffff
+        this.offsetX = 0;
+        this.offsetY = 1;
+        this.padding = 5;
+        this.fontColor = "#ff0000";
+        this.fontSize = 12;
+        this.fontFamily = "YaHei";
+        this.fontWeight = "Bold";
+    }
+}

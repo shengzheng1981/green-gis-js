@@ -77,8 +77,8 @@ window.load = () => {
     const marker = new SimpleMarkerSymbol();
     marker.width = 32;
     marker.height = 32;
-    marker.offsetX = 16;
-    marker.offsetY = 32;
+    marker.offsetX = -16;
+    marker.offsetY = -32;
     marker.url = "assets/img/marker.svg";
     const point = new Point(116.397411,39.909186);
     const graphic = new Graphic(point, marker);

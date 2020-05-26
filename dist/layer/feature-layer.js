@@ -1,11 +1,12 @@
 import { Layer } from "./layer";
-import { WebMecator } from "../projection/web-mecator";
+import { WebMercator } from "../projection/web-mercator";
 import { SimpleRenderer } from "../renderer/simple-renderer";
 import { CategoryRenderer } from "../renderer/category-renderer";
 import { ClassRenderer } from "../renderer/class-renderer";
 export class FeatureLayer extends Layer {
     constructor() {
         super(...arguments);
+        this.labeled = false;
         this._zoom = [3, 20];
         this._interactive = true;
     }
@@ -17,6 +18,9 @@ export class FeatureLayer extends Layer {
     }
     set featureClass(value) {
         this._featureClass = value;
+    }
+    set label(value) {
+        this._label = value;
     }
     set renderer(value) {
         this._renderer = value;
@@ -40,14 +44,21 @@ export class FeatureLayer extends Layer {
             feature.emit(event, param);
         });
     }
-    draw(ctx, projection = new WebMecator(), extent = projection.bound, zoom = 10) {
+    draw(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             this._featureClass.features.forEach((feature) => {
                 feature.draw(ctx, projection, extent, this._getSymbol(feature));
             });
         }
     }
-    contain(screenX, screenY, projection = new WebMecator(), extent = projection.bound, event = undefined) {
+    drawLabel(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
+        if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
+            this._featureClass.features.forEach((feature) => {
+                feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
+            });
+        }
+    }
+    contain(screenX, screenY, projection = new WebMercator(), extent = projection.bound, event = undefined) {
         if (this.visible) {
             return this._featureClass.features.filter((feature) => feature.intersect(projection, extent)).some((feature) => {
                 return feature.contain(screenX, screenY, event);

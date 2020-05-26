@@ -1,4 +1,4 @@
-import { Geometry } from "./geometry";
+import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
 import { Projection } from "../projection/projection";
 import { Symbol } from "../symbol/symbol";
@@ -13,4 +13,5 @@ export declare class Polyline extends Geometry {
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): void;
     contain(screenX: number, screenY: number): boolean;
     _distanceToSegment(p: any, p1: any, p2: any): number;
+    getCenter(type?: CoordinateType, projection?: Projection): any;
 }

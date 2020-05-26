@@ -10,34 +10,20 @@ import {
     CategoryRendererItem,
     Field,
     FieldType,
-    Graphic, SimpleMarkerSymbol, Feature, LatLngType, GCJ02
+    Graphic, SimpleMarkerSymbol, Feature
 } from "../dist";
 
-var AMap = window.AMap;
-
 window.load = () => {
-
-    const amap = new AMap.Map("amap", {
-        fadeOnZoom: false,
-        navigationMode: 'classic',
-        optimizePanAnimation: false,
-        animateEnable: false,
-        dragEnable: false,
-        zoomEnable: false,
-        resizeEnable: true,
-        doubleClickZoom: false,
-        keyboardEnable: false,
-        scrollWheel: false,
-        expandZoomRange: true,
-        zooms: [1, 20],
-        mapStyle: 'normal',
-        features: ['road', 'point', 'bg'],
-        viewMode: '2D'
+    const gmap = new google.maps.Map(document.getElementById('gmap'), {
+        disableDefaultUI: true,
+        gestureHandling: "none",
+        scrollwheel: false
     });
 
     const map = new Map("foo");
     map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center);
+        gmap.setZoom(event.zoom);
+        gmap.setCenter({lat: event.center[1], lng: event.center[0]});
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;
@@ -79,8 +65,8 @@ window.load = () => {
         symbol2.strokeStyle = "#006837";
         item.symbol = symbol2;
         renderer.items.push(item);*/
-            /*const renderer = new SimpleRenderer();
-            renderer.symbol = new SimpleFillSymbol();*/
+        /*const renderer = new SimpleRenderer();
+        renderer.symbol = new SimpleFillSymbol();*/
         featureLayer.renderer = renderer;
         featureLayer.zoom = [5, 20];
         featureLayer.on("click", (event) => {
@@ -96,7 +82,7 @@ window.load = () => {
     };
     req.open("GET", "assets/geojson/chongqing.json", true);
     req.send(null);
-    map.setProjection(new GCJ02(LatLngType.GCJ02));
+
 
     //beijing gugong
     const point = new Point(116.397411,39.909186);

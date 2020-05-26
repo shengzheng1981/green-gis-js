@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
-    <script type="text/javascript"
-            src="https://webapi.amap.com/maps?v=1.4.15&key=您申请的key值"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2W6gt4OCx091gs_gfRHXgMN09NCUDrB4&callback=load"
+            async defer></script>
     <script type="text/javascript" src="dist/bundle.js"></script>
-
+    <link rel="stylesheet" type="text/css" href="assets/style/green.css">
 </head>
-<body onload="load()">
+<body>
 <canvas id="foo" width="800" height="800" style="position: absolute; z-index: 2;"></canvas>
-<div id="amap" style="width: 800px; height: 800px; position: absolute; z-index: 1; border: 1px solid #000; "></div>
+<div id="gmap" style="width: 800px; height: 800px; position: absolute; z-index: 1; border: 1px solid #000; "></div>
 
 <div style="position: absolute; z-index: 10; top: 10px; left: 10px">
     <div style="padding: 5px"><input style="width:120px;" id="x"/><input style="width:120px;" id="y"><input style="width:120px;" id="zoom"></div>

@@ -1,7 +1,7 @@
-import { Geometry } from "./geometry";
+import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
 import { SimpleFillSymbol } from "../symbol/symbol";
-import { WebMecator } from "../projection/web-mecator";
+import { WebMercator } from "../projection/web-mercator";
 //面
 export class Polygon extends Geometry {
     constructor(lnglats) {
@@ -23,7 +23,7 @@ export class Polygon extends Geometry {
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
     }
-    draw(ctx, projection = new WebMecator(), extent = projection.bound, symbol = new SimpleFillSymbol()) {
+    draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleFillSymbol()) {
         if (!this._projected)
             this.project(projection);
         if (!extent.intersect(this._bound))
@@ -79,4 +79,36 @@ export class Polygon extends Geometry {
         return inside;
     }
     ;
+    //from Leaflet
+    getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) {
+        if (!this._projected)
+            this.project(projection);
+        let i, j, p1, p2, f, area, x, y, center, points = this._coordinates[0], len = points.length;
+        if (!len) {
+            return null;
+        }
+        // polygon centroid algorithm; only uses the first ring if there are multiple
+        area = x = y = 0;
+        for (i = 0, j = len - 1; i < len; j = i++) {
+            p1 = points[i];
+            p2 = points[j];
+            f = p1[1] * p2[0] - p2[1] * p1[0];
+            x += (p1[0] + p2[0]) * f;
+            y += (p1[1] + p2[1]) * f;
+            area += f * 3;
+        }
+        if (area === 0) {
+            // Polygon is so small that all points are on same pixel.
+            center = points[0];
+        }
+        else {
+            center = [x / area, y / area];
+        }
+        if (type = CoordinateType.Latlng) {
+            return projection.unproject(center);
+        }
+        else {
+            return center;
+        }
+    }
 }

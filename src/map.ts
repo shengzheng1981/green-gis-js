@@ -1,7 +1,7 @@
 import {Geometry} from "./geometry/geometry";
 import {Bound} from "./util/bound";
 import {Projection} from "./projection/projection";
-import {WebMecator} from "./projection/web-mecator";
+import {WebMercator} from "./projection/web-mercator";
 import {GraphicLayer} from "./layer/graphic-layer";
 import {Layer} from "./layer/layer";
 import {Graphic} from "./element/graphic";
@@ -55,15 +55,22 @@ export class Map {
         this._canvas.addEventListener("mouseup", this._onMouseUp.bind(this));
         this._canvas.addEventListener("wheel", this._onWheel.bind(this));
 
-        this._projection = new WebMecator();
+        this._projection = new WebMercator();
         this._center = [0, 0];
-        this._zoom = 3;
+        this._zoom = 10;
         //Latlng [-180, 180] [-90, 90]
         //this._ctx.setTransform(256/180 * Math.pow(2, this._zoom - 1), 0, 0, -256/90 * Math.pow(2, this._zoom - 1), this._canvas.width/2, this._canvas.height/2);
         const bound: Bound = this._projection.bound;
         //设置初始矩阵，由于地图切片是256*256，Math.pow(2, this._zoom)代表在一定缩放级别下x与y轴的切片数量
         this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale , 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
     }
+    //设置投影
+    setProjection(projection) {
+        this._projection = projection;
+        const bound: Bound = this._projection.bound;
+        this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale , 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+    }
+
     //设置视图级别及视图中心
     setView(center: number[] = [0,0], zoom: number = 3) {
         this._center = center;
@@ -165,7 +172,9 @@ export class Map {
         this._layers.forEach(layer => {
             layer.draw(this._ctx, this._projection, this._extent, this._zoom);
         });
-
+        this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.labeled).forEach((layer: FeatureLayer) => {
+            layer.drawLabel(this._ctx, this._projection, this._extent, this._zoom);
+        });
     }
 
     clear() {

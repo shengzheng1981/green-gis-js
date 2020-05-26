@@ -1,7 +1,7 @@
 import {Layer} from "./layer";
 import {Graphic} from "../element/graphic";
 import {Projection} from "../projection/projection";
-import {WebMecator} from "../projection/web-mecator";
+import {WebMercator} from "../projection/web-mercator";
 import {Bound} from "../util/bound";
 
 export class GraphicLayer extends Layer{
@@ -20,7 +20,7 @@ export class GraphicLayer extends Layer{
         this._graphics = [];
     }
 
-    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMecator(), extent: Bound = projection.bound, zoom: number = 10) {
+    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
         if (this.visible) {
             this._graphics.forEach( (graphic: Graphic) => {
                 graphic.draw(ctx, projection, extent);
