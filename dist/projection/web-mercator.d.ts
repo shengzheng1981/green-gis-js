@@ -1,5 +1,6 @@
 import { Bound } from "../util/bound";
-export declare class WebMecator {
+import { Projection } from "./projection";
+export declare class WebMercator extends Projection {
     static R: number;
     get bound(): Bound;
     project([lng, lat]: [any, any]): number[];
