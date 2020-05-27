@@ -176,8 +176,10 @@ export class Map {
     }
     _onMouseMove(event) {
         if (!this._drag.flag) {
-            const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-            if (flag) {
+            //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
+            //const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
+            const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).filter((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
+            if (flag.length > 0) {
                 Utility.addClass(this._canvas, "green-hover");
             }
             else {

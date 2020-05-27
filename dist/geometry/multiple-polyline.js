@@ -3,7 +3,7 @@ import { Bound } from "../util/bound";
 import { SimpleLineSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 //线
-export class Polyline extends Geometry {
+export class MultiplePolyline extends Geometry {
     constructor(lnglats) {
         super();
         this._tolerance = 4; //TOLERANCE + symbol.lineWidth
@@ -12,13 +12,15 @@ export class Polyline extends Geometry {
     ;
     project(projection) {
         this._projection = projection;
-        this._coordinates = this._lnglats.map((point) => this._projection.project(point));
+        this._coordinates = this._lnglats.map((polyline) => polyline.map((point) => this._projection.project(point)));
         let xmin = Number.MAX_VALUE, ymin = Number.MAX_VALUE, xmax = -Number.MAX_VALUE, ymax = -Number.MAX_VALUE;
-        this._coordinates.forEach(point => {
-            xmin = Math.min(xmin, point[0]);
-            ymin = Math.min(ymin, point[1]);
-            xmax = Math.max(xmax, point[0]);
-            ymax = Math.max(ymax, point[1]);
+        this._coordinates.forEach(polyline => {
+            polyline.forEach(point => {
+                xmin = Math.min(xmin, point[0]);
+                ymin = Math.min(ymin, point[1]);
+                xmax = Math.max(xmax, point[0]);
+                ymax = Math.max(ymax, point[1]);
+            });
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
     }
@@ -30,40 +32,46 @@ export class Polyline extends Geometry {
         ctx.save();
         ctx.strokeStyle = symbol.strokeStyle;
         ctx.lineWidth = symbol.lineWidth;
-        this._tolerance = Polyline.TOLERANCE + symbol.lineWidth;
+        this._tolerance = MultiplePolyline.TOLERANCE + symbol.lineWidth;
         const matrix = ctx.getTransform();
         //keep lineWidth
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         this._screen = [];
-        ctx.beginPath();
-        this._coordinates.forEach((point, index) => {
-            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            if (index === 0) {
-                ctx.moveTo(screenX, screenY);
-            }
-            else {
-                ctx.lineTo(screenX, screenY);
-            }
-            this._screen.push([screenX, screenY]);
+        this._coordinates.forEach(polyline => {
+            ctx.beginPath();
+            const screen_polyline = [];
+            this._screen.push(screen_polyline);
+            polyline.forEach((point, index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                if (index === 0) {
+                    ctx.moveTo(screenX, screenY);
+                }
+                else {
+                    ctx.lineTo(screenX, screenY);
+                }
+                screen_polyline.push([screenX, screenY]);
+            });
+            ctx.stroke();
         });
-        ctx.stroke();
         ctx.restore();
     }
     contain(screenX, screenY) {
         let p2;
-        const distance = this._screen.reduce((acc, cur) => {
-            if (p2) {
-                const p1 = p2;
-                p2 = cur;
-                return Math.min(acc, this._distanceToSegment([screenX, screenY], p1, p2));
-            }
-            else {
-                p2 = cur;
-                return acc;
-            }
-        }, Number.MAX_VALUE);
-        return distance <= this._tolerance;
+        return this._screen.some(polyline => {
+            const distance = polyline.reduce((acc, cur) => {
+                if (p2) {
+                    const p1 = p2;
+                    p2 = cur;
+                    return Math.min(acc, this._distanceToSegment([screenX, screenY], p1, p2));
+                }
+                else {
+                    p2 = cur;
+                    return acc;
+                }
+            }, Number.MAX_VALUE);
+            return distance <= this._tolerance;
+        });
     }
     //from Leaflet
     _distanceToSegment(p, p1, p2) {
@@ -84,10 +92,11 @@ export class Polyline extends Geometry {
         return Math.sqrt(dx * dx + dy * dy);
     }
     //from Leaflet
+    //TODO: now return first polyline center
     getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) {
         if (!this._projected)
             this.project(projection);
-        let i, halfDist, segDist, dist, p1, p2, ratio, points = this._coordinates, len = points.length;
+        let i, halfDist, segDist, dist, p1, p2, ratio, points = this._coordinates[0], len = points.length;
         if (!len) {
             return null;
         }
@@ -121,7 +130,7 @@ export class Polyline extends Geometry {
         }
     }
 }
-//[point[xy]]
-//such as [[1,1],[2,2]]
+//[polyline[point[xy]]]
+//such as [[[1,1],[2,2]],[[3,3],[4,4]]]
 //interaction: hover && identify
-Polyline.TOLERANCE = 4; //screen pixel
+MultiplePolyline.TOLERANCE = 4; //screen pixel

@@ -50,7 +50,9 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setView([107.411, 29.89], 7);
+    map.setProjection(new GCJ02(LatLngType.GCJ02));
+    //map.setView([107.411, 29.89], 7);
+    map.setView([116.397411,39.909186], 7);
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -94,9 +96,8 @@ window.load = () => {
         });
         map.addLayer(featureLayer);
     };
-    req.open("GET", "assets/geojson/chongqing.json", true);
+    req.open("GET", "assets/geojson/beijing.json", true);
     req.send(null);
-    map.setProjection(new GCJ02(LatLngType.GCJ02));
 
     //beijing gugong
     const point = new Point(116.397411,39.909186);

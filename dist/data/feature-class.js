@@ -3,6 +3,9 @@ import { GeometryType } from "../geometry/geometry";
 import { Point } from "../geometry/point";
 import { Polyline } from "../geometry/polyline";
 import { Polygon } from "../geometry/polygon";
+import { MultiplePolygon } from "../geometry/multiple-polygon";
+import { MultiplePolyline } from "../geometry/multiple-polyline";
+import { MultiplePoint } from "../geometry/multiple-point";
 export class FeatureClass {
     constructor() {
         this._fields = [];
@@ -42,7 +45,7 @@ export class FeatureClass {
         Array.isArray(data.features) && data.features.forEach(item => {
             switch (item.geometry.type) {
                 case "Point":
-                    //TODO: ridiculous
+                    //TODO: each feature has one type that is ridiculous, cause geojson is a featurecollection, not a featurelayer.
                     this._type = GeometryType.Point;
                     const point = new Point(item.geometry.coordinates[0], item.geometry.coordinates[1]);
                     this._features.push(new Feature(point, item.properties));
@@ -56,6 +59,21 @@ export class FeatureClass {
                     this._type = GeometryType.Polygon;
                     const polygon = new Polygon(item.geometry.coordinates);
                     this._features.push(new Feature(polygon, item.properties));
+                    break;
+                case "MultiPoint":
+                    this._type = GeometryType.Point;
+                    const multipoint = new MultiplePoint(item.geometry.coordinates);
+                    this._features.push(new Feature(multipoint, item.properties));
+                    break;
+                case "MultiLineString":
+                    this._type = GeometryType.Polyline;
+                    const multipolyline = new MultiplePolyline(item.geometry.coordinates);
+                    this._features.push(new Feature(multipolyline, item.properties));
+                    break;
+                case "MultiPolygon":
+                    this._type = GeometryType.Polygon;
+                    const multipolygon = new MultiplePolygon(item.geometry.coordinates);
+                    this._features.push(new Feature(multipolygon, item.properties));
                     break;
             }
         });

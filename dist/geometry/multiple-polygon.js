@@ -3,7 +3,7 @@ import { Bound } from "../util/bound";
 import { SimpleFillSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 //面
-export class Polygon extends Geometry {
+export class MultiplePolygon extends Geometry {
     constructor(lnglats) {
         super();
         this._lnglats = lnglats;
@@ -11,14 +11,16 @@ export class Polygon extends Geometry {
     ;
     project(projection) {
         this._projection = projection;
-        this._coordinates = this._lnglats.map((ring) => ring.map((point) => this._projection.project(point)));
+        this._coordinates = this._lnglats.map((polygon) => polygon.map((ring) => ring.map((point) => this._projection.project(point))));
         let xmin = Number.MAX_VALUE, ymin = Number.MAX_VALUE, xmax = -Number.MAX_VALUE, ymax = -Number.MAX_VALUE;
-        this._coordinates.forEach(ring => {
-            ring.forEach(point => {
-                xmin = Math.min(xmin, point[0]);
-                ymin = Math.min(ymin, point[1]);
-                xmax = Math.max(xmax, point[0]);
-                ymax = Math.max(ymax, point[1]);
+        this._coordinates.forEach(polygon => {
+            polygon.forEach(ring => {
+                ring.forEach(point => {
+                    xmin = Math.min(xmin, point[0]);
+                    ymin = Math.min(ymin, point[1]);
+                    xmax = Math.max(xmax, point[0]);
+                    ymax = Math.max(ymax, point[1]);
+                });
             });
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
@@ -36,33 +38,35 @@ export class Polygon extends Geometry {
         //keep lineWidth
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
+        //TODO:  ring is not supported
         this._screen = [];
-        ctx.beginPath();
-        this._coordinates.forEach(ring => {
-            const temp = [];
-            this._screen.push(temp);
-            ring.forEach((point, index) => {
-                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-                if (index === 0) {
-                    ctx.moveTo(screenX, screenY);
-                }
-                else {
-                    ctx.lineTo(screenX, screenY);
-                }
-                temp.push([screenX, screenY]);
+        this._coordinates.forEach(polygon => {
+            const screen_polygon = [];
+            this._screen.push(screen_polygon);
+            ctx.beginPath();
+            polygon.forEach(ring => {
+                const screen_ring = [];
+                screen_polygon.push(screen_ring);
+                ring.forEach((point, index) => {
+                    const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                    if (index === 0) {
+                        ctx.moveTo(screenX, screenY);
+                    }
+                    else {
+                        ctx.lineTo(screenX, screenY);
+                    }
+                    screen_ring.push([screenX, screenY]);
+                });
             });
+            ctx.closePath();
+            ctx.fill("evenodd");
+            ctx.stroke();
         });
-        ctx.closePath();
-        ctx.fill("evenodd");
-        ctx.stroke();
         ctx.restore();
     }
     contain(screenX, screenY) {
-        const first = this._screen[0];
-        const others = this._screen.slice(1);
-        //first ring contained && others no contained
-        return this._pointInPolygon([screenX, screenY], first) && others.every(ring => !this._pointInPolygon([screenX, screenY], ring));
-        //return this._screen.some(ring => this._pointInPolygon([screenX, screenY], ring));
+        //TODO: ring is not supported
+        return this._screen.some(polygon => this._pointInPolygon([screenX, screenY], polygon[0]));
     }
     //from https://github.com/substack/point-in-polygon
     // ray-casting algorithm based on
@@ -82,6 +86,7 @@ export class Polygon extends Geometry {
     }
     ;
     //from Leaflet
+    //TODO: now return first polygon center
     getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) {
         if (!this._projected)
             this.project(projection);

@@ -79,9 +79,11 @@ export class FeatureLayer extends Layer{
 
     contain(screenX: number, screenY: number, projection: Projection = new WebMercator(), extent: Bound = projection.bound, event: string = undefined): boolean {
         if (this.visible) {
-            return this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).some( (feature: Feature) => {
+            //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
+            //return this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).some( (feature: Feature) => {
+            return this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).filter( (feature: Feature) => {
                 return feature.contain(screenX, screenY, event);
-            });
+            }).length > 0;
         }
     }
 

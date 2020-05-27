@@ -4,35 +4,37 @@ import {Projection} from "../projection/projection";
 import {SimpleLineSymbol, Symbol} from "../symbol/symbol";
 import {WebMercator} from "../projection/web-mercator";
 //线
-export class Polyline extends Geometry{
-    //[point[xy]]
-    //such as [[1,1],[2,2]]
+export class MultiplePolyline extends Geometry{
+    //[polyline[point[xy]]]
+    //such as [[[1,1],[2,2]],[[3,3],[4,4]]]
     //interaction: hover && identify
     static TOLERANCE: number = 4; //screen pixel
     private _tolerance: number = 4; //TOLERANCE + symbol.lineWidth
 
     //经纬度
-    private _lnglats: number[][];
+    private _lnglats: number[][][];
     //平面坐标
-    private _coordinates: number[][];
+    private _coordinates: number[][][];
     //屏幕坐标
-    private _screen: number[][];
+    private _screen: number[][][];
 
-    constructor(lnglats: number[][]) {
+    constructor(lnglats: number[][][]) {
         super();
         this._lnglats = lnglats;
     };
 
     project(projection: Projection) {
         this._projection = projection;
-        this._coordinates = this._lnglats.map( (point: any) => this._projection.project(point));
+        this._coordinates = this._lnglats.map((polyline: any) => polyline.map((point: any) => this._projection.project(point)));
 
         let xmin = Number.MAX_VALUE, ymin = Number.MAX_VALUE, xmax = -Number.MAX_VALUE, ymax = -Number.MAX_VALUE;
-        this._coordinates.forEach( point => {
-            xmin = Math.min(xmin, point[0]);
-            ymin = Math.min(ymin, point[1]);
-            xmax = Math.max(xmax, point[0]);
-            ymax = Math.max(ymax, point[1]);
+        this._coordinates.forEach( polyline => {
+            polyline.forEach(point => {
+                xmin = Math.min(xmin, point[0]);
+                ymin = Math.min(ymin, point[1]);
+                xmax = Math.max(xmax, point[0]);
+                ymax = Math.max(ymax, point[1]);
+            });
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
     }
@@ -43,39 +45,45 @@ export class Polyline extends Geometry{
         ctx.save();
         ctx.strokeStyle = (symbol as SimpleLineSymbol).strokeStyle;
         ctx.lineWidth = (symbol as SimpleLineSymbol).lineWidth;
-        this._tolerance = Polyline.TOLERANCE + (symbol as SimpleLineSymbol).lineWidth;
+        this._tolerance = MultiplePolyline.TOLERANCE + (symbol as SimpleLineSymbol).lineWidth;
         const matrix = (ctx as any).getTransform();
         //keep lineWidth
         ctx.setTransform(1,0,0,1,0,0);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         this._screen = [];
-        ctx.beginPath();
-        this._coordinates.forEach( (point: any,index) => {
-            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            if (index === 0){
-                ctx.moveTo(screenX, screenY);
-            } else {
-                ctx.lineTo(screenX, screenY);
-            }
-            this._screen.push([screenX, screenY]);
+        this._coordinates.forEach( polyline => {
+            ctx.beginPath();
+            const screen_polyline = [];
+            this._screen.push(screen_polyline);
+            polyline.forEach((point: any,index) =>{
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                if (index === 0) {
+                    ctx.moveTo(screenX, screenY);
+                } else {
+                    ctx.lineTo(screenX, screenY);
+                }
+                screen_polyline.push([screenX, screenY]);
+            });
+            ctx.stroke();
         });
-        ctx.stroke();
         ctx.restore();
     }
 
     contain(screenX: number, screenY: number): boolean {
         let p2;
-        const distance = this._screen.reduce( (acc, cur) => {
-            if (p2) {
-                const p1 = p2;
-                p2 = cur;
-                return Math.min(acc, this._distanceToSegment([screenX, screenY], p1, p2));
-            } else {
-                p2 = cur;
-                return acc;
-            }
-        }, Number.MAX_VALUE);
-        return distance <= this._tolerance;
+        return this._screen.some(polyline => {
+            const distance = polyline.reduce( (acc, cur) => {
+                if (p2) {
+                    const p1 = p2;
+                    p2 = cur;
+                    return Math.min(acc, this._distanceToSegment([screenX, screenY], p1, p2));
+                } else {
+                    p2 = cur;
+                    return acc;
+                }
+            }, Number.MAX_VALUE);
+            return distance <= this._tolerance;
+        });
     }
 
     //from Leaflet
@@ -106,10 +114,11 @@ export class Polyline extends Geometry{
     }
 
     //from Leaflet
+    //TODO: now return first polyline center
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {
         if (!this._projected) this.project(projection);
         let i, halfDist, segDist, dist, p1, p2, ratio,
-            points = this._coordinates,
+            points = this._coordinates[0],
             len = points.length;
 
         if (!len) { return null; }

@@ -39,7 +39,7 @@ window.load = () => {
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
 
-    map.setProjection(new BD09(LatLngType.BD09));
+    map.setProjection(new BD09(LatLngType.GPS));
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -69,7 +69,7 @@ window.load = () => {
     //req.send(null);
 
     //beijing gugong
-    const point = new Point(116.404, 39.915);
+    const point = new Point(116.327158, 39.990912);
     const feature = new Feature(point, {});
     const featureClass = new FeatureClass();
     featureClass.addFeature(feature);
@@ -86,6 +86,6 @@ window.load = () => {
     featureLayer.renderer = renderer;
     map.addLayer(featureLayer);
 
-    map.setView([116.404, 39.915], 12);
+    map.setView([116.327158, 39.990912], 16);
 
 }
