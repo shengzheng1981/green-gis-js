@@ -15,6 +15,7 @@ export * from './layer/layer';
 export * from './layer/graphic-layer';
 export * from './layer/feature-layer';
 export * from './label/label';
+export * from './tooltip/tooltip';
 export * from './symbol/symbol';
 export * from './renderer/renderer';
 export * from './renderer/simple-renderer';

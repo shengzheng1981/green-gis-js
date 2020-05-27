@@ -9,14 +9,17 @@ import {SimpleRenderer} from "../renderer/simple-renderer";
 import {CategoryRenderer} from "../renderer/category-renderer";
 import {ClassRenderer} from "../renderer/class-renderer";
 import {Label} from "../label/label";
+import {Tooltip} from "../tooltip/tooltip";
 
 export class FeatureLayer extends Layer{
     public labeled: boolean = false;
     private _featureClass: FeatureClass;
     private _renderer: Renderer;
     private _label: Label;
+    private _tooltip: Tooltip;
     private _zoom: number[] = [3, 20];
     private _interactive: boolean = true;
+    private _hoverFeature: Feature;
 
     get interactive(): boolean {
         return this._interactive;
@@ -32,6 +35,13 @@ export class FeatureLayer extends Layer{
 
     set label(value: Label) {
         this._label = value;
+    }
+
+    get tooltip(): Tooltip {
+        return this._tooltip;
+    }
+    set tooltip(value: Tooltip) {
+        this._tooltip = value;
     }
 
     set renderer(value: Renderer) {
@@ -81,10 +91,21 @@ export class FeatureLayer extends Layer{
         if (this.visible) {
             //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
             //return this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).some( (feature: Feature) => {
-            return this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).filter( (feature: Feature) => {
+            const features = this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).filter( (feature: Feature) => {
                 return feature.contain(screenX, screenY, event);
-            }).length > 0;
+            });
+            if (features.length > 0) {
+                this._hoverFeature = features[0];
+                return true;
+            } else {
+                this._hoverFeature = null;
+                return false;
+            }
         }
+    }
+
+    getTooltip() {
+        return (this._hoverFeature && this._tooltip && this._tooltip.field) ? this._hoverFeature.properties[this._tooltip.field.name] : "";
     }
 
     _getSymbol(feature) {

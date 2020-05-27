@@ -9,7 +9,7 @@ import {
     SimpleRenderer,
     CategoryRenderer,
     CategoryRendererItem,
-    Field, Label,
+    Field, Label, Tooltip,
     FieldType,
     Graphic, SimpleMarkerSymbol, Feature, SimpleTextSymbol
 } from "../dist";
@@ -68,6 +68,9 @@ window.load = () => {
         featureLayer.label = label;
         featureLayer.labeled = true;
         featureLayer.zoom = [5, 20];
+        const tooltip = new Tooltip();
+        tooltip.field = field;
+        featureLayer.tooltip = tooltip;
         map.addLayer(featureLayer);
 
         map.setView([107.411, 29.89], 7);

@@ -25,9 +25,31 @@ export class Map {
             "click": [],
             "extent": [] //view updated
         };
+        //图层列表
         this._defaultGraphicLayer = new GraphicLayer();
         this._layers = [];
-        this._canvas = document.getElementById(id);
+        this._container = document.getElementById(id);
+        //create canvas
+        this._canvas = document.createElement("canvas");
+        this._canvas.style.cssText = "height: 100%; width: 100%";
+        this._canvas.width = this._container.clientWidth;
+        this._canvas.height = this._container.clientHeight;
+        this._container.appendChild(this._canvas);
+        //create tooltip
+        this._tooltip = document.createElement("div");
+        Utility.addClass(this._tooltip, "green-tooltip");
+        Utility.addClass(this._tooltip, "green-tooltip-placement-top");
+        this._container.appendChild(this._tooltip);
+        this._tooltipBody = document.createElement("div");
+        Utility.addClass(this._tooltipBody, "green-tooltip-body");
+        this._tooltip.appendChild(this._tooltipBody);
+        this._tooltipArrow = document.createElement("div");
+        Utility.addClass(this._tooltipArrow, "green-tooltip-arrow");
+        Utility.addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
+        this._tooltipBody.appendChild(this._tooltipArrow);
+        this._tooltipText = document.createElement("div");
+        Utility.addClass(this._tooltipText, "green-tooltip-text");
+        this._tooltipBody.appendChild(this._tooltipText);
         this._ctx = this._canvas.getContext("2d");
         this._canvas.addEventListener("click", this._onClick.bind(this));
         this._canvas.addEventListener("dblclick", this._onDoubleClick.bind(this));
@@ -46,6 +68,15 @@ export class Map {
     }
     get projection() {
         return this._projection;
+    }
+    //show tooltip
+    _showTooltip(text, screenX, screenY) {
+        this._tooltipText.innerHTML = text;
+        //TODO: timeout is useless
+        this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
+    }
+    _hideTooltip() {
+        this._tooltip.style.cssText = "display: none";
     }
     //设置投影
     setProjection(projection) {
@@ -86,6 +117,16 @@ export class Map {
     addLayer(layer) {
         this._layers.push(layer);
         layer.draw(this._ctx, this._projection, this._extent);
+    }
+    insertLayer(layer, index = -1) {
+        index = index > this._layers.length ? -1 : index;
+        if (index == -1) {
+            this.addLayer(layer);
+        }
+        else {
+            this._layers.splice(index, 0, layer);
+            this.redraw();
+        }
     }
     removeLayer(layer) {
         const index = this._layers.findIndex(item => item === layer);
@@ -178,11 +219,14 @@ export class Map {
         if (!this._drag.flag) {
             //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
             //const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-            const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).filter((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-            if (flag.length > 0) {
+            const layers = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).filter((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
+            if (layers.length > 0) {
                 Utility.addClass(this._canvas, "green-hover");
+                const layer = layers.find((layer) => layer.getTooltip());
+                layer && this._showTooltip(layer.getTooltip(), event.offsetX, event.offsetY);
             }
             else {
+                this._hideTooltip();
                 Utility.removeClass(this._canvas, "green-hover");
             }
         }

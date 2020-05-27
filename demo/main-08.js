@@ -1,5 +1,6 @@
 import {
     Map,
+    GCJ02, LatLngType,
     Point,
     Polyline,
     SimpleFillSymbol,
@@ -8,15 +9,12 @@ import {
     SimpleRenderer,
     CategoryRenderer,
     CategoryRendererItem,
-    Field,
+    Field, Label, Tooltip,
     FieldType,
-    Graphic, SimpleMarkerSymbol, Feature, LatLngType, GCJ02
+    Graphic, SimpleMarkerSymbol, Feature, SimpleTextSymbol
 } from "../dist";
 
-var AMap = window.AMap;
-
 window.load = () => {
-
     const amap = new AMap.Map("amap", {
         fadeOnZoom: false,
         navigationMode: 'classic',
@@ -50,9 +48,6 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setProjection(new GCJ02(LatLngType.GCJ02));
-    //map.setView([107.411, 29.89], 7);
-    map.setView([116.397411,39.909186], 7);
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -61,44 +56,32 @@ window.load = () => {
         const featureLayer = new FeatureLayer();
         featureLayer.featureClass = featureClass;
         const field = new Field();
-        field.name = "name";
+        field.name = "TYPE";
         field.type = FieldType.String;
         const renderer = new CategoryRenderer();
         renderer.generate(featureClass, field);
-
-        /*renderer.field = field;
-        let item = new CategoryRendererItem();
-        item.value = "WEAR";
-        const symbol1 = new SimpleFillSymbol();
-        symbol1.fillStyle = "#0868ac";
-        symbol1.strokeStyle = "#084081";
-        item.symbol = symbol1;
-        renderer.items.push(item);
-        item = new CategoryRendererItem();
-        item.value = "GAAR";
-        const symbol2 = new SimpleFillSymbol();
-        symbol2.fillStyle = "#1a9850";
-        symbol2.strokeStyle = "#006837";
-        item.symbol = symbol2;
-        renderer.items.push(item);*/
-            /*const renderer = new SimpleRenderer();
-            renderer.symbol = new SimpleFillSymbol();*/
         featureLayer.renderer = renderer;
+        const label = new Label();
+        const symbol = new SimpleTextSymbol();
+        label.field = field;
+        label.symbol = symbol;
+        //featureLayer.label = label;
+        //featureLayer.labeled = true;
         featureLayer.zoom = [5, 20];
-        featureLayer.on("click", (event) => {
-            console.log(event.feature.properties["name"], "click");
-        });
-        featureLayer.on("mouseover", (event) => {
-            console.log(event.feature.properties["name"], "mouse over");
-        });
-        featureLayer.on("mouseout", (event) => {
-            console.log(event.feature.properties["name"], "mouse out");
-        });
-        map.insertLayer(featureLayer, 0);
+        const tooltip = new Tooltip();
+        const field2 = new Field();
+        field2.name = "NAME";
+        field2.type = FieldType.String;
+        tooltip.field = field2;
+        featureLayer.tooltip = tooltip;
+        map.addLayer(featureLayer);
+
+        map.setView([109.519, 18.271], 13);
     };
-    req.open("GET", "assets/geojson/beijing.json", true);
+    req.open("GET", "assets/geojson/junction.json", true);
     req.send(null);
 
+    map.setProjection(new GCJ02(LatLngType.GCJ02));
     //beijing gugong
     const point = new Point(116.397411,39.909186);
     const feature = new Feature(point, {});

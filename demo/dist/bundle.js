@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./main-03.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./main-08.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -102,6 +102,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../geometry/polyline */ "../dist/geometry/polyline.js");
 /* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../geometry/polygon */ "../dist/geometry/polygon.js");
 /* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../geometry/multiple-polygon */ "../dist/geometry/multiple-polygon.js");
+/* harmony import */ var _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../geometry/multiple-polyline */ "../dist/geometry/multiple-polyline.js");
+/* harmony import */ var _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../geometry/multiple-point */ "../dist/geometry/multiple-point.js");
+
+
 
 
 
@@ -147,7 +151,7 @@ class FeatureClass {
         Array.isArray(data.features) && data.features.forEach(item => {
             switch (item.geometry.type) {
                 case "Point":
-                    //TODO: ridiculous
+                    //TODO: each feature has one type that is ridiculous, cause geojson is a featurecollection, not a featurelayer.
                     this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Point;
                     const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"](item.geometry.coordinates[0], item.geometry.coordinates[1]);
                     this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, item.properties));
@@ -161,6 +165,16 @@ class FeatureClass {
                     this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Polygon;
                     const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_4__["Polygon"](item.geometry.coordinates);
                     this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__["Feature"](polygon, item.properties));
+                    break;
+                case "MultiPoint":
+                    this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Point;
+                    const multipoint = new _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_7__["MultiplePoint"](item.geometry.coordinates);
+                    this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__["Feature"](multipoint, item.properties));
+                    break;
+                case "MultiLineString":
+                    this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Polyline;
+                    const multipolyline = new _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_6__["MultiplePolyline"](item.geometry.coordinates);
+                    this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__["Feature"](multipolyline, item.properties));
                     break;
                 case "MultiPolygon":
                     this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Polygon;
@@ -422,6 +436,126 @@ class Geometry {
 
 /***/ }),
 
+/***/ "../dist/geometry/multiple-point.js":
+/*!******************************************!*\
+  !*** ../dist/geometry/multiple-point.js ***!
+  \******************************************/
+/*! exports provided: MultiplePoint */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MultiplePoint", function() { return MultiplePoint; });
+/* harmony import */ var _geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/bound */ "../dist/util/bound.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../projection/web-mercator */ "../dist/projection/web-mercator.js");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+//点
+class MultiplePoint extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
+    constructor(lnglats) {
+        super();
+        this._lnglats = lnglats;
+    }
+    ;
+    project(projection) {
+        this._projection = projection;
+        this._coordinates = this._lnglats.map((point) => this._projection.project(point));
+        let xmin = Number.MAX_VALUE, ymin = Number.MAX_VALUE, xmax = -Number.MAX_VALUE, ymax = -Number.MAX_VALUE;
+        this._coordinates.forEach(point => {
+            xmin = Math.min(xmin, point[0]);
+            ymin = Math.min(ymin, point[1]);
+            xmax = Math.max(xmax, point[0]);
+            ymax = Math.max(ymax, point[1]);
+        });
+        this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](xmin, ymin, xmax, ymax);
+    }
+    draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimplePointSymbol"]()) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this._projected)
+                this.project(projection);
+            if (!extent.intersect(this._bound))
+                return;
+            const matrix = ctx.getTransform();
+            this._screen = [];
+            this._symbol = symbol;
+            if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
+                const marker = symbol;
+                if (!marker.loaded)
+                    yield marker.load();
+            }
+            this._coordinates.forEach((point) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                this._screen.push([screenX, screenY]);
+                if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimplePointSymbol"]) {
+                    ctx.save();
+                    ctx.strokeStyle = symbol.strokeStyle;
+                    ctx.fillStyle = symbol.fillStyle;
+                    ctx.lineWidth = symbol.lineWidth;
+                    ctx.beginPath(); //Start path
+                    //keep size
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.arc(screenX, screenY, symbol.radius, 0, Math.PI * 2, true);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
+                    const marker = symbol;
+                    if (marker.icon) {
+                        ctx.save();
+                        const matrix = ctx.getTransform();
+                        //keep size
+                        ctx.setTransform(1, 0, 0, 1, 0, 0);
+                        ctx.drawImage(marker.icon, screenX + marker.offsetX, screenY + marker.offsetY, marker.width, marker.height);
+                        ctx.restore();
+                    }
+                }
+            });
+        });
+    }
+    ;
+    contain(screenX, screenY) {
+        return this._screen.some((point) => {
+            if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimplePointSymbol"]) {
+                return Math.sqrt((point[0] - screenX) * (point[0] - screenX) + (point[1] - screenY) * (point[1] - screenY)) <= this._symbol.radius;
+            }
+            else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
+                return screenX >= (point[0] - this._symbol.offsetX) && screenX <= (point[0] - this._symbol.offsetX + this._symbol.width) && screenY >= (point[1] - this._symbol.offsetY) && screenY <= (point[1] - this._symbol.offsetY + this._symbol.height);
+            }
+        });
+    }
+    //TODO: now return first point center
+    getCenter(type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"]()) {
+        if (!this._projected)
+            this.project(projection);
+        if (type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
+            return [this._lnglats[0][0], this._lnglats[0][1]];
+        }
+        else {
+            return [this._coordinates[0][0], this._coordinates[0][1]];
+        }
+    }
+}
+//such as [[1,1],[2,2]]
+//interaction: hover && identify
+MultiplePoint.TOLERANCE = 0; //screen pixel
+
+
+/***/ }),
+
 /***/ "../dist/geometry/multiple-polygon.js":
 /*!********************************************!*\
   !*** ../dist/geometry/multiple-polygon.js ***!
@@ -524,6 +658,7 @@ class MultiplePolygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"]
     }
     ;
     //from Leaflet
+    //TODO: now return first polygon center
     getCenter(type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"]()) {
         if (!this._projected)
             this.project(projection);
@@ -556,6 +691,160 @@ class MultiplePolygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"]
         }
     }
 }
+
+
+/***/ }),
+
+/***/ "../dist/geometry/multiple-polyline.js":
+/*!*********************************************!*\
+  !*** ../dist/geometry/multiple-polyline.js ***!
+  \*********************************************/
+/*! exports provided: MultiplePolyline */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MultiplePolyline", function() { return MultiplePolyline; });
+/* harmony import */ var _geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/bound */ "../dist/util/bound.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../projection/web-mercator */ "../dist/projection/web-mercator.js");
+
+
+
+
+//线
+class MultiplePolyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
+    constructor(lnglats) {
+        super();
+        this._tolerance = 4; //TOLERANCE + symbol.lineWidth
+        this._lnglats = lnglats;
+    }
+    ;
+    project(projection) {
+        this._projection = projection;
+        this._coordinates = this._lnglats.map((polyline) => polyline.map((point) => this._projection.project(point)));
+        let xmin = Number.MAX_VALUE, ymin = Number.MAX_VALUE, xmax = -Number.MAX_VALUE, ymax = -Number.MAX_VALUE;
+        this._coordinates.forEach(polyline => {
+            polyline.forEach(point => {
+                xmin = Math.min(xmin, point[0]);
+                ymin = Math.min(ymin, point[1]);
+                xmax = Math.max(xmax, point[0]);
+                ymax = Math.max(ymax, point[1]);
+            });
+        });
+        this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](xmin, ymin, xmax, ymax);
+    }
+    draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleLineSymbol"]()) {
+        if (!this._projected)
+            this.project(projection);
+        if (!extent.intersect(this._bound))
+            return;
+        ctx.save();
+        ctx.strokeStyle = symbol.strokeStyle;
+        ctx.lineWidth = symbol.lineWidth;
+        this._tolerance = MultiplePolyline.TOLERANCE + symbol.lineWidth;
+        const matrix = ctx.getTransform();
+        //keep lineWidth
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
+        this._screen = [];
+        this._coordinates.forEach(polyline => {
+            ctx.beginPath();
+            const screen_polyline = [];
+            this._screen.push(screen_polyline);
+            polyline.forEach((point, index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                if (index === 0) {
+                    ctx.moveTo(screenX, screenY);
+                }
+                else {
+                    ctx.lineTo(screenX, screenY);
+                }
+                screen_polyline.push([screenX, screenY]);
+            });
+            ctx.stroke();
+        });
+        ctx.restore();
+    }
+    contain(screenX, screenY) {
+        let p2;
+        return this._screen.some(polyline => {
+            const distance = polyline.reduce((acc, cur) => {
+                if (p2) {
+                    const p1 = p2;
+                    p2 = cur;
+                    return Math.min(acc, this._distanceToSegment([screenX, screenY], p1, p2));
+                }
+                else {
+                    p2 = cur;
+                    return acc;
+                }
+            }, Number.MAX_VALUE);
+            return distance <= this._tolerance;
+        });
+    }
+    //from Leaflet
+    _distanceToSegment(p, p1, p2) {
+        let x = p1[0], y = p1[1], dx = p2[0] - x, dy = p2[1] - y, dot = dx * dx + dy * dy, t;
+        if (dot > 0) {
+            t = ((p[0] - x) * dx + (p[1] - y) * dy) / dot;
+            if (t > 1) {
+                x = p2[0];
+                y = p2[1];
+            }
+            else if (t > 0) {
+                x += dx * t;
+                y += dy * t;
+            }
+        }
+        dx = p[0] - x;
+        dy = p[1] - y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+    //from Leaflet
+    //TODO: now return first polyline center
+    getCenter(type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"]()) {
+        if (!this._projected)
+            this.project(projection);
+        let i, halfDist, segDist, dist, p1, p2, ratio, points = this._coordinates[0], len = points.length;
+        if (!len) {
+            return null;
+        }
+        // polyline centroid algorithm; only uses the first ring if there are multiple
+        for (i = 0, halfDist = 0; i < len - 1; i++) {
+            halfDist += Math.sqrt((points[i + 1][0] - points[i][0]) * (points[i + 1][0] - points[i][0]) + (points[i + 1][1] - points[i][1]) * (points[i + 1][1] - points[i][1])) / 2;
+        }
+        let center;
+        // The line is so small in the current view that all points are on the same pixel.
+        if (halfDist === 0) {
+            center = points[0];
+        }
+        for (i = 0, dist = 0; i < len - 1; i++) {
+            p1 = points[i];
+            p2 = points[i + 1];
+            segDist = Math.sqrt((p2[0] - p1[0]) * (p2[0] - p1[0]) + (p2[1] - p1[1]) * (p2[1] - p1[1]));
+            dist += segDist;
+            if (dist > halfDist) {
+                ratio = (dist - halfDist) / segDist;
+                center = [
+                    p2[0] - ratio * (p2[0] - p1[0]),
+                    p2[1] - ratio * (p2[1] - p1[1])
+                ];
+            }
+        }
+        if (type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
+            return projection.unproject(center);
+        }
+        else {
+            return center;
+        }
+    }
+}
+//[polyline[point[xy]]]
+//such as [[[1,1],[2,2]],[[3,3],[4,4]]]
+//interaction: hover && identify
+MultiplePolyline.TOLERANCE = 4; //screen pixel
 
 
 /***/ }),
@@ -847,12 +1136,12 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         ctx.strokeStyle = symbol.strokeStyle;
         ctx.lineWidth = symbol.lineWidth;
         this._tolerance = Polyline.TOLERANCE + symbol.lineWidth;
-        ctx.beginPath();
         const matrix = ctx.getTransform();
         //keep lineWidth
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         this._screen = [];
+        ctx.beginPath();
         this._coordinates.forEach((point, index) => {
             const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
             if (index === 0) {
@@ -949,7 +1238,7 @@ Polyline.TOLERANCE = 4; //screen pixel
 /*!************************!*\
   !*** ../dist/index.js ***!
   \************************/
-/*! exports provided: Map, Entity, FeatureClass, FieldType, Field, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, ColorGenerator */
+/*! exports provided: Map, Entity, FeatureClass, FieldType, Field, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Tooltip, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, ColorGenerator */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -990,72 +1279,84 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/geometry/polygon.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Polygon", function() { return _geometry_polygon__WEBPACK_IMPORTED_MODULE_9__["Polygon"]; });
 
-/* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./geometry/multiple-polygon */ "../dist/geometry/multiple-polygon.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePolygon", function() { return _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_10__["MultiplePolygon"]; });
+/* harmony import */ var _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./geometry/multiple-point */ "../dist/geometry/multiple-point.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePoint", function() { return _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_10__["MultiplePoint"]; });
 
-/* harmony import */ var _layer_layer__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./layer/layer */ "../dist/layer/layer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Layer", function() { return _layer_layer__WEBPACK_IMPORTED_MODULE_11__["Layer"]; });
+/* harmony import */ var _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./geometry/multiple-polyline */ "../dist/geometry/multiple-polyline.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePolyline", function() { return _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_11__["MultiplePolyline"]; });
 
-/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/layer/graphic-layer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GraphicLayer", function() { return _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_12__["GraphicLayer"]; });
+/* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./geometry/multiple-polygon */ "../dist/geometry/multiple-polygon.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePolygon", function() { return _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_12__["MultiplePolygon"]; });
 
-/* harmony import */ var _layer_feature_layer__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./layer/feature-layer */ "../dist/layer/feature-layer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FeatureLayer", function() { return _layer_feature_layer__WEBPACK_IMPORTED_MODULE_13__["FeatureLayer"]; });
+/* harmony import */ var _layer_layer__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./layer/layer */ "../dist/layer/layer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Layer", function() { return _layer_layer__WEBPACK_IMPORTED_MODULE_13__["Layer"]; });
 
-/* harmony import */ var _label_label__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./label/label */ "../dist/label/label.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Label", function() { return _label_label__WEBPACK_IMPORTED_MODULE_14__["Label"]; });
+/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/layer/graphic-layer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GraphicLayer", function() { return _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_14__["GraphicLayer"]; });
 
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/symbol/symbol.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Symbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__["Symbol"]; });
+/* harmony import */ var _layer_feature_layer__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./layer/feature-layer */ "../dist/layer/feature-layer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FeatureLayer", function() { return _layer_feature_layer__WEBPACK_IMPORTED_MODULE_15__["FeatureLayer"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimplePointSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__["SimplePointSymbol"]; });
+/* harmony import */ var _label_label__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./label/label */ "../dist/label/label.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Label", function() { return _label_label__WEBPACK_IMPORTED_MODULE_16__["Label"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleLineSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__["SimpleLineSymbol"]; });
+/* harmony import */ var _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./tooltip/tooltip */ "../dist/tooltip/tooltip.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Tooltip", function() { return _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_17__["Tooltip"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleFillSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__["SimpleFillSymbol"]; });
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Symbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["Symbol"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__["SimpleMarkerSymbol"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimplePointSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimplePointSymbol"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleTextSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__["SimpleTextSymbol"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleLineSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimpleLineSymbol"]; });
 
-/* harmony import */ var _renderer_renderer__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./renderer/renderer */ "../dist/renderer/renderer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Renderer", function() { return _renderer_renderer__WEBPACK_IMPORTED_MODULE_16__["Renderer"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleFillSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimpleFillSymbol"]; });
 
-/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./renderer/simple-renderer */ "../dist/renderer/simple-renderer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleRenderer", function() { return _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_17__["SimpleRenderer"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimpleMarkerSymbol"]; });
 
-/* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./renderer/category-renderer */ "../dist/renderer/category-renderer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRendererItem", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_18__["CategoryRendererItem"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleTextSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimpleTextSymbol"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRenderer", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_18__["CategoryRenderer"]; });
+/* harmony import */ var _renderer_renderer__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./renderer/renderer */ "../dist/renderer/renderer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Renderer", function() { return _renderer_renderer__WEBPACK_IMPORTED_MODULE_19__["Renderer"]; });
 
-/* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./renderer/class-renderer */ "../dist/renderer/class-renderer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRendererItem", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_19__["ClassRendererItem"]; });
+/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./renderer/simple-renderer */ "../dist/renderer/simple-renderer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleRenderer", function() { return _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_20__["SimpleRenderer"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRenderer", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_19__["ClassRenderer"]; });
+/* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./renderer/category-renderer */ "../dist/renderer/category-renderer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRendererItem", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_21__["CategoryRendererItem"]; });
 
-/* harmony import */ var _projection_projection__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./projection/projection */ "../dist/projection/projection.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "LatLngType", function() { return _projection_projection__WEBPACK_IMPORTED_MODULE_20__["LatLngType"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRenderer", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_21__["CategoryRenderer"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Projection", function() { return _projection_projection__WEBPACK_IMPORTED_MODULE_20__["Projection"]; });
+/* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./renderer/class-renderer */ "../dist/renderer/class-renderer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRendererItem", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_22__["ClassRendererItem"]; });
 
-/* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./projection/web-mercator */ "../dist/projection/web-mercator.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "WebMercator", function() { return _projection_web_mercator__WEBPACK_IMPORTED_MODULE_21__["WebMercator"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRenderer", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_22__["ClassRenderer"]; });
 
-/* harmony import */ var _projection_bd09__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./projection/bd09 */ "../dist/projection/bd09.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "BD09", function() { return _projection_bd09__WEBPACK_IMPORTED_MODULE_22__["BD09"]; });
+/* harmony import */ var _projection_projection__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./projection/projection */ "../dist/projection/projection.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "LatLngType", function() { return _projection_projection__WEBPACK_IMPORTED_MODULE_23__["LatLngType"]; });
 
-/* harmony import */ var _projection_gcj02__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./projection/gcj02 */ "../dist/projection/gcj02.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GCJ02", function() { return _projection_gcj02__WEBPACK_IMPORTED_MODULE_23__["GCJ02"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Projection", function() { return _projection_projection__WEBPACK_IMPORTED_MODULE_23__["Projection"]; });
 
-/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./util/utility */ "../dist/util/utility.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Utility", function() { return _util_utility__WEBPACK_IMPORTED_MODULE_24__["Utility"]; });
+/* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./projection/web-mercator */ "../dist/projection/web-mercator.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "WebMercator", function() { return _projection_web_mercator__WEBPACK_IMPORTED_MODULE_24__["WebMercator"]; });
 
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Bound", function() { return _util_bound__WEBPACK_IMPORTED_MODULE_25__["Bound"]; });
+/* harmony import */ var _projection_bd09__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./projection/bd09 */ "../dist/projection/bd09.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "BD09", function() { return _projection_bd09__WEBPACK_IMPORTED_MODULE_25__["BD09"]; });
 
-/* harmony import */ var _util_color_generator__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./util/color-generator */ "../dist/util/color-generator.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ColorGenerator", function() { return _util_color_generator__WEBPACK_IMPORTED_MODULE_26__["ColorGenerator"]; });
+/* harmony import */ var _projection_gcj02__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./projection/gcj02 */ "../dist/projection/gcj02.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GCJ02", function() { return _projection_gcj02__WEBPACK_IMPORTED_MODULE_26__["GCJ02"]; });
+
+/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./util/utility */ "../dist/util/utility.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Utility", function() { return _util_utility__WEBPACK_IMPORTED_MODULE_27__["Utility"]; });
+
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Bound", function() { return _util_bound__WEBPACK_IMPORTED_MODULE_28__["Bound"]; });
+
+/* harmony import */ var _util_color_generator__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./util/color-generator */ "../dist/util/color-generator.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ColorGenerator", function() { return _util_color_generator__WEBPACK_IMPORTED_MODULE_29__["ColorGenerator"]; });
+
+
+
 
 
 
@@ -1143,6 +1444,12 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
     set label(value) {
         this._label = value;
     }
+    get tooltip() {
+        return this._tooltip;
+    }
+    set tooltip(value) {
+        this._tooltip = value;
+    }
     set renderer(value) {
         this._renderer = value;
     }
@@ -1183,10 +1490,21 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
         if (this.visible) {
             //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
             //return this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).some( (feature: Feature) => {
-            return this._featureClass.features.filter((feature) => feature.intersect(projection, extent)).filter((feature) => {
+            const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent)).filter((feature) => {
                 return feature.contain(screenX, screenY, event);
-            }).length > 0;
+            });
+            if (features.length > 0) {
+                this._hoverFeature = features[0];
+                return true;
+            }
+            else {
+                this._hoverFeature = null;
+                return false;
+            }
         }
+    }
+    getTooltip() {
+        return (this._hoverFeature && this._tooltip && this._tooltip.field) ? this._hoverFeature.properties[this._tooltip.field.name] : "";
     }
     _getSymbol(feature) {
         if (this._renderer instanceof _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_2__["SimpleRenderer"]) {
@@ -1320,9 +1638,31 @@ class Map {
             "click": [],
             "extent": [] //view updated
         };
+        //图层列表
         this._defaultGraphicLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_2__["GraphicLayer"]();
         this._layers = [];
-        this._canvas = document.getElementById(id);
+        this._container = document.getElementById(id);
+        //create canvas
+        this._canvas = document.createElement("canvas");
+        this._canvas.style.cssText = "height: 100%; width: 100%";
+        this._canvas.width = this._container.clientWidth;
+        this._canvas.height = this._container.clientHeight;
+        this._container.appendChild(this._canvas);
+        //create tooltip
+        this._tooltip = document.createElement("div");
+        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltip, "green-tooltip");
+        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltip, "green-tooltip-placement-top");
+        this._container.appendChild(this._tooltip);
+        this._tooltipBody = document.createElement("div");
+        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipBody, "green-tooltip-body");
+        this._tooltip.appendChild(this._tooltipBody);
+        this._tooltipArrow = document.createElement("div");
+        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow");
+        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
+        this._tooltipBody.appendChild(this._tooltipArrow);
+        this._tooltipText = document.createElement("div");
+        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipText, "green-tooltip-text");
+        this._tooltipBody.appendChild(this._tooltipText);
         this._ctx = this._canvas.getContext("2d");
         this._canvas.addEventListener("click", this._onClick.bind(this));
         this._canvas.addEventListener("dblclick", this._onDoubleClick.bind(this));
@@ -1341,6 +1681,15 @@ class Map {
     }
     get projection() {
         return this._projection;
+    }
+    //show tooltip
+    _showTooltip(text, screenX, screenY) {
+        this._tooltipText.innerHTML = text;
+        //TODO: timeout is useless
+        this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
+    }
+    _hideTooltip() {
+        this._tooltip.style.cssText = "display: none";
     }
     //设置投影
     setProjection(projection) {
@@ -1381,6 +1730,16 @@ class Map {
     addLayer(layer) {
         this._layers.push(layer);
         layer.draw(this._ctx, this._projection, this._extent);
+    }
+    insertLayer(layer, index = -1) {
+        index = index > this._layers.length ? -1 : index;
+        if (index == -1) {
+            this.addLayer(layer);
+        }
+        else {
+            this._layers.splice(index, 0, layer);
+            this.redraw();
+        }
     }
     removeLayer(layer) {
         const index = this._layers.findIndex(item => item === layer);
@@ -1473,11 +1832,14 @@ class Map {
         if (!this._drag.flag) {
             //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
             //const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-            const flag = this._layers.filter(layer => (layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__["FeatureLayer"]) && layer.interactive).filter((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-            if (flag.length > 0) {
+            const layers = this._layers.filter(layer => (layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__["FeatureLayer"]) && layer.interactive).filter((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
+            if (layers.length > 0) {
                 _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._canvas, "green-hover");
+                const layer = layers.find((layer) => layer.getTooltip());
+                layer && this._showTooltip(layer.getTooltip(), event.offsetX, event.offsetY);
             }
             else {
+                this._hideTooltip();
                 _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].removeClass(this._canvas, "green-hover");
             }
         }
@@ -2039,6 +2401,22 @@ class SimpleTextSymbol extends Symbol {
 
 /***/ }),
 
+/***/ "../dist/tooltip/tooltip.js":
+/*!**********************************!*\
+  !*** ../dist/tooltip/tooltip.js ***!
+  \**********************************/
+/*! exports provided: Tooltip */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Tooltip", function() { return Tooltip; });
+class Tooltip {
+}
+
+
+/***/ }),
+
 /***/ "../dist/util/bound.js":
 /*!*****************************!*\
   !*** ../dist/util/bound.js ***!
@@ -2175,9 +2553,9 @@ class Utility {
 
 /***/ }),
 
-/***/ "./main-03.js":
+/***/ "./main-08.js":
 /*!********************!*\
-  !*** ./main-03.js ***!
+  !*** ./main-08.js ***!
   \********************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
@@ -2187,10 +2565,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
-var AMap = window.AMap;
-
 window.load = () => {
-
     const amap = new AMap.Map("amap", {
         fadeOnZoom: false,
         navigationMode: 'classic',
@@ -2224,9 +2599,6 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-    //map.setView([107.411, 29.89], 7);
-    map.setView([116.397411,39.909186], 7);
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -2235,44 +2607,32 @@ window.load = () => {
         const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
         featureLayer.featureClass = featureClass;
         const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field.name = "name";
+        field.name = "TYPE";
         field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
         const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
         renderer.generate(featureClass, field);
-
-        /*renderer.field = field;
-        let item = new CategoryRendererItem();
-        item.value = "WEAR";
-        const symbol1 = new SimpleFillSymbol();
-        symbol1.fillStyle = "#0868ac";
-        symbol1.strokeStyle = "#084081";
-        item.symbol = symbol1;
-        renderer.items.push(item);
-        item = new CategoryRendererItem();
-        item.value = "GAAR";
-        const symbol2 = new SimpleFillSymbol();
-        symbol2.fillStyle = "#1a9850";
-        symbol2.strokeStyle = "#006837";
-        item.symbol = symbol2;
-        renderer.items.push(item);*/
-            /*const renderer = new SimpleRenderer();
-            renderer.symbol = new SimpleFillSymbol();*/
         featureLayer.renderer = renderer;
+        const label = new _dist__WEBPACK_IMPORTED_MODULE_0__["Label"]();
+        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleTextSymbol"]();
+        label.field = field;
+        label.symbol = symbol;
+        //featureLayer.label = label;
+        //featureLayer.labeled = true;
         featureLayer.zoom = [5, 20];
-        featureLayer.on("click", (event) => {
-            console.log(event.feature.properties["name"], "click");
-        });
-        featureLayer.on("mouseover", (event) => {
-            console.log(event.feature.properties["name"], "mouse over");
-        });
-        featureLayer.on("mouseout", (event) => {
-            console.log(event.feature.properties["name"], "mouse out");
-        });
+        const tooltip = new _dist__WEBPACK_IMPORTED_MODULE_0__["Tooltip"]();
+        const field2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
+        field2.name = "NAME";
+        field2.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
+        tooltip.field = field2;
+        featureLayer.tooltip = tooltip;
         map.addLayer(featureLayer);
+
+        map.setView([109.519, 18.271], 13);
     };
-    req.open("GET", "assets/geojson/beijing.json", true);
+    req.open("GET", "assets/geojson/junction.json", true);
     req.send(null);
 
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
     //beijing gugong
     const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
     const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {});

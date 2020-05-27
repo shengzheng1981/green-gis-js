@@ -22,6 +22,12 @@ export class FeatureLayer extends Layer {
     set label(value) {
         this._label = value;
     }
+    get tooltip() {
+        return this._tooltip;
+    }
+    set tooltip(value) {
+        this._tooltip = value;
+    }
     set renderer(value) {
         this._renderer = value;
     }
@@ -62,10 +68,21 @@ export class FeatureLayer extends Layer {
         if (this.visible) {
             //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
             //return this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).some( (feature: Feature) => {
-            return this._featureClass.features.filter((feature) => feature.intersect(projection, extent)).filter((feature) => {
+            const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent)).filter((feature) => {
                 return feature.contain(screenX, screenY, event);
-            }).length > 0;
+            });
+            if (features.length > 0) {
+                this._hoverFeature = features[0];
+                return true;
+            }
+            else {
+                this._hoverFeature = null;
+                return false;
+            }
         }
+    }
+    getTooltip() {
+        return (this._hoverFeature && this._tooltip && this._tooltip.field) ? this._hoverFeature.properties[this._tooltip.field.name] : "";
     }
     _getSymbol(feature) {
         if (this._renderer instanceof SimpleRenderer) {

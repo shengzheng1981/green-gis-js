@@ -4,17 +4,22 @@ import { Projection } from "../projection/projection";
 import { FeatureClass } from "../data/feature-class";
 import { Renderer } from "../renderer/renderer";
 import { Label } from "../label/label";
+import { Tooltip } from "../tooltip/tooltip";
 export declare class FeatureLayer extends Layer {
     labeled: boolean;
     private _featureClass;
     private _renderer;
     private _label;
+    private _tooltip;
     private _zoom;
     private _interactive;
+    private _hoverFeature;
     get interactive(): boolean;
     set interactive(value: boolean);
     set featureClass(value: FeatureClass);
     set label(value: Label);
+    get tooltip(): Tooltip;
+    set tooltip(value: Tooltip);
     set renderer(value: Renderer);
     set zoom(value: number[]);
     on(event: any, handler: any): void;
@@ -23,5 +28,6 @@ export declare class FeatureLayer extends Layer {
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, zoom?: number): void;
     drawLabel(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, zoom?: number): void;
     contain(screenX: number, screenY: number, projection?: Projection, extent?: Bound, event?: string): boolean;
+    getTooltip(): any;
     _getSymbol(feature: any): import("..").Symbol;
 }
