@@ -1486,8 +1486,8 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
             });
         }
     }
-    contain(screenX, screenY, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, event = undefined) {
-        if (this.visible) {
+    contain(screenX, screenY, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, zoom = 10, event = undefined) {
+        if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
             //return this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).some( (feature: Feature) => {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent)).filter((feature) => {
@@ -1653,16 +1653,13 @@ class Map {
         _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltip, "green-tooltip");
         _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltip, "green-tooltip-placement-top");
         this._container.appendChild(this._tooltip);
-        this._tooltipBody = document.createElement("div");
-        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipBody, "green-tooltip-body");
-        this._tooltip.appendChild(this._tooltipBody);
         this._tooltipArrow = document.createElement("div");
         _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow");
         _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
-        this._tooltipBody.appendChild(this._tooltipArrow);
+        this._tooltip.appendChild(this._tooltipArrow);
         this._tooltipText = document.createElement("div");
         _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipText, "green-tooltip-text");
-        this._tooltipBody.appendChild(this._tooltipText);
+        this._tooltip.appendChild(this._tooltipText);
         this._ctx = this._canvas.getContext("2d");
         this._canvas.addEventListener("click", this._onClick.bind(this));
         this._canvas.addEventListener("dblclick", this._onDoubleClick.bind(this));
@@ -1685,8 +1682,8 @@ class Map {
     //show tooltip
     _showTooltip(text, screenX, screenY) {
         this._tooltipText.innerHTML = text;
-        //TODO: timeout is useless
-        this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
+        //this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
+        this._tooltip.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
     }
     _hideTooltip() {
         this._tooltip.style.cssText = "display: none";
@@ -1805,7 +1802,7 @@ class Map {
         this.updateExtent();
     }
     _onClick(event) {
-        const flag = this._layers.filter(layer => (layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__["FeatureLayer"]) && layer.interactive).some((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "click"));
+        const flag = this._layers.filter(layer => (layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__["FeatureLayer"]) && layer.interactive).some((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, this._zoom, "click"));
         if (!flag) {
             this._events.click.forEach(handler => handler({ event: event }));
         }
@@ -1832,7 +1829,7 @@ class Map {
         if (!this._drag.flag) {
             //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
             //const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-            const layers = this._layers.filter(layer => (layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__["FeatureLayer"]) && layer.interactive).filter((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
+            const layers = this._layers.filter(layer => (layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__["FeatureLayer"]) && layer.interactive).filter((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, this._zoom, "mousemove"));
             if (layers.length > 0) {
                 _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._canvas, "green-hover");
                 const layer = layers.find((layer) => layer.getTooltip());
@@ -2618,7 +2615,7 @@ window.load = () => {
         label.symbol = symbol;
         //featureLayer.label = label;
         //featureLayer.labeled = true;
-        featureLayer.zoom = [5, 20];
+        featureLayer.zoom = [16, 20];
         const tooltip = new _dist__WEBPACK_IMPORTED_MODULE_0__["Tooltip"]();
         const field2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
         field2.name = "NAME";

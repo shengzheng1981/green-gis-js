@@ -27,7 +27,7 @@ export declare class FeatureLayer extends Layer {
     emit(event: any, param: any): void;
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, zoom?: number): void;
     drawLabel(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, zoom?: number): void;
-    contain(screenX: number, screenY: number, projection?: Projection, extent?: Bound, event?: string): boolean;
+    contain(screenX: number, screenY: number, projection?: Projection, extent?: Bound, zoom?: number, event?: string): boolean;
     getTooltip(): any;
     _getSymbol(feature: any): import("..").Symbol;
 }

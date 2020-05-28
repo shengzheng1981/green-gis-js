@@ -45,7 +45,6 @@ export class Map {
 
     //提示框
     private _tooltip: HTMLDivElement;
-    private _tooltipBody: HTMLDivElement;
     private _tooltipArrow: HTMLDivElement;
     private _tooltipText: HTMLDivElement;
 
@@ -66,16 +65,13 @@ export class Map {
         Utility.addClass(this._tooltip, "green-tooltip");
         Utility.addClass(this._tooltip, "green-tooltip-placement-top");
         this._container.appendChild(this._tooltip);
-        this._tooltipBody = document.createElement("div");
-        Utility.addClass(this._tooltipBody, "green-tooltip-body");
-        this._tooltip.appendChild(this._tooltipBody);
         this._tooltipArrow = document.createElement("div");
         Utility.addClass(this._tooltipArrow, "green-tooltip-arrow");
         Utility.addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
-        this._tooltipBody.appendChild(this._tooltipArrow);
+        this._tooltip.appendChild(this._tooltipArrow);
         this._tooltipText = document.createElement("div");
         Utility.addClass(this._tooltipText, "green-tooltip-text");
-        this._tooltipBody.appendChild(this._tooltipText);
+        this._tooltip.appendChild(this._tooltipText);
 
         this._ctx = this._canvas.getContext("2d");
         this._canvas.addEventListener("click", this._onClick.bind(this));
@@ -97,8 +93,8 @@ export class Map {
     //show tooltip
     _showTooltip(text, screenX, screenY){
         this._tooltipText.innerHTML = text;
-        //TODO: timeout is useless
-        this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
+        //this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
+        this._tooltip.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
     }
 
     _hideTooltip() {
@@ -235,7 +231,7 @@ export class Map {
     }
 
     _onClick(event) {
-        const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "click"));
+        const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, this._zoom,"click"));
         if (!flag) {
             this._events.click.forEach(handler => handler({event: event}));
         }
@@ -264,7 +260,7 @@ export class Map {
         if (!this._drag.flag) {
             //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
             //const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-            const layers = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).filter((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
+            const layers = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).filter((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, this._zoom, "mousemove"));
             if (layers.length > 0) {
                 Utility.addClass(this._canvas, "green-hover");
                 const layer = layers.find((layer: FeatureLayer) => layer.getTooltip());

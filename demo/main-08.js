@@ -67,7 +67,7 @@ window.load = () => {
         label.symbol = symbol;
         //featureLayer.label = label;
         //featureLayer.labeled = true;
-        featureLayer.zoom = [5, 20];
+        featureLayer.zoom = [16, 20];
         const tooltip = new Tooltip();
         const field2 = new Field();
         field2.name = "NAME";

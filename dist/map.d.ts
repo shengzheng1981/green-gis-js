@@ -14,7 +14,6 @@ export declare class Map {
     private _defaultGraphicLayer;
     private _layers;
     private _tooltip;
-    private _tooltipBody;
     private _tooltipArrow;
     private _tooltipText;
     get projection(): Projection;

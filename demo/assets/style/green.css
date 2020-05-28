@@ -16,8 +16,7 @@
 }
 .green-tooltip-placement-top{
     padding-bottom: 8px;
-}
-.green-tooltip-body {
+    transform: translateX(-50%) translateY(-100%);
 }
 .green-tooltip-text {
     min-width: 30px;

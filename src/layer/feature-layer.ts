@@ -87,8 +87,8 @@ export class FeatureLayer extends Layer{
         }
     }
 
-    contain(screenX: number, screenY: number, projection: Projection = new WebMercator(), extent: Bound = projection.bound, event: string = undefined): boolean {
-        if (this.visible) {
+    contain(screenX: number, screenY: number, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10, event: string = undefined): boolean {
+        if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
             //return this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).some( (feature: Feature) => {
             const features = this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent)).filter( (feature: Feature) => {
