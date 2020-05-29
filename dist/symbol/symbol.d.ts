@@ -38,3 +38,26 @@ export declare class SimpleTextSymbol extends Symbol {
     fontFamily: string;
     fontWeight: string;
 }
+export declare class ArrowSymbol extends Symbol {
+    lineWidth: number;
+    strokeStyle: string;
+    minLength: number;
+    arrowLength: number;
+    arrowAngle: number;
+}
+export declare class ClusterSymbol extends Symbol {
+    private _count;
+    radius: number;
+    lineWidth: number;
+    strokeStyle: string;
+    outerFillStyle: string;
+    fontColor: string;
+    fontFamily: string;
+    fontWeight: string;
+    get text(): string;
+    get inner(): number;
+    get outer(): number;
+    get fontSize(): number;
+    get innerFillStyle(): string;
+    constructor(count: number);
+}

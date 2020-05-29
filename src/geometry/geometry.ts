@@ -2,6 +2,7 @@ import {Bound} from "../util/bound";
 import {SimplePointSymbol, SimpleTextSymbol, Symbol} from "../symbol/symbol";
 import {Projection} from "../projection/projection";
 import {WebMercator} from "../projection/web-mercator";
+import {Point} from "./point";
 
 export enum CoordinateType {
     Latlng = 0,
@@ -64,5 +65,19 @@ export class Geometry {
     };
 
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {};
+
+    distance(geometry: Geometry, type: CoordinateType, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator()) {
+        const center = this.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
+        const point = geometry.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
+        if (type == CoordinateType.Screen) {
+            const matrix = (ctx as any).getTransform();
+            const screenX1 = (matrix.a * center[0] + matrix.e), screenY1 = (matrix.d * center[1] + matrix.f);
+            const screenX2 = (matrix.a * point[0] + matrix.e), screenY2 = (matrix.d * point[1] + matrix.f);
+            return Math.sqrt((screenX2-screenX1) * (screenX2-screenX1) + (screenY2-screenY1) * (screenY2-screenY1));
+        } else {
+            return Math.sqrt((point[0]-center[0]) * (point[0]-center[0]) + (point[1]-center[1]) * (point[1]-center[1]));
+
+        }
+    }
 
 }

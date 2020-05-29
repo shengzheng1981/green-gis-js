@@ -2,7 +2,7 @@ import {SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol, Symbol} from "../
 import {Field} from "../data/field";
 import {FeatureClass} from "../data/feature-class";
 import {GeometryType} from "../geometry/geometry";
-import {ColorGenerator} from "../util/color-generator";
+import {Color} from "../util/color";
 
 export class CategoryRendererItem {
     value: any;
@@ -33,23 +33,23 @@ export class CategoryRenderer {
                 switch (featureClass.type) {
                     case GeometryType.Point:
                         const symbol1: SimplePointSymbol = new SimplePointSymbol();
-                        symbol1.fillStyle = ColorGenerator.random();
-                        symbol1.strokeStyle = ColorGenerator.random();
+                        symbol1.fillStyle = Color.random().toString();
+                        symbol1.strokeStyle = Color.random().toString();
                         item.symbol = symbol1;
                         item.value = value;
                         this._items.push(item);
                         break;
                     case GeometryType.Polyline:
                         const symbol2: SimpleLineSymbol = new SimpleLineSymbol();
-                        symbol2.strokeStyle = ColorGenerator.random();
+                        symbol2.strokeStyle = Color.random().toString();
                         item.symbol = symbol2;
                         item.value = value;
                         this._items.push(item);
                         break;
                     case GeometryType.Polygon:
                         const symbol3: SimpleFillSymbol = new SimpleFillSymbol();
-                        symbol3.fillStyle = ColorGenerator.random();
-                        symbol3.strokeStyle = ColorGenerator.random();
+                        symbol3.fillStyle = Color.random().toString();
+                        symbol3.strokeStyle = Color.random().toString();
                         item.symbol = symbol3;
                         item.value = value;
                         this._items.push(item);

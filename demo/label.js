@@ -58,22 +58,19 @@ window.load = () => {
         const field = new Field();
         field.name = "TYPE";
         field.type = FieldType.String;
+        const field2 = new Field();
+        field2.name = "NAME";
+        field2.type = FieldType.String;
         const renderer = new CategoryRenderer();
         renderer.generate(featureClass, field);
         featureLayer.renderer = renderer;
         const label = new Label();
         const symbol = new SimpleTextSymbol();
-        label.field = field;
+        label.field = field2;
         label.symbol = symbol;
-        //featureLayer.label = label;
-        //featureLayer.labeled = true;
+        featureLayer.label = label;
+        featureLayer.labeled = true;
         featureLayer.zoom = [16, 20];
-        const tooltip = new Tooltip();
-        const field2 = new Field();
-        field2.name = "NAME";
-        field2.type = FieldType.String;
-        tooltip.field = field2;
-        featureLayer.tooltip = tooltip;
         map.addLayer(featureLayer);
 
         map.setView([109.519, 18.271], 13);

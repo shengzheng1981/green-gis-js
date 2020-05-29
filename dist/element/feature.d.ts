@@ -1,4 +1,5 @@
 import { Bound } from "../util/bound";
+import { Geometry } from "../geometry/geometry";
 import { Symbol, SimpleTextSymbol } from "../symbol/symbol";
 import { Projection } from "../projection/projection";
 import { Field } from "../data/field";
@@ -8,6 +9,7 @@ export declare class Feature {
     private _contained;
     private _events;
     visible: boolean;
+    get geometry(): Geometry;
     get properties(): any;
     get bound(): Bound;
     constructor(geometry: any, properties: any);

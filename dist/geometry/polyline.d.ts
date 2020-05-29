@@ -11,6 +11,8 @@ export declare class Polyline extends Geometry {
     constructor(lnglats: number[][]);
     project(projection: Projection): void;
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): void;
+    _getPointAlongLine(p1: any, p2: any, d: any): number[];
+    _getPointAlongLine2(k: any, b: any, p: any, d: any): any[][];
     contain(screenX: number, screenY: number): boolean;
     _distanceToSegment(p: any, p1: any, p2: any): number;
     getCenter(type?: CoordinateType, projection?: Projection): any;

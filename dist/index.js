@@ -27,4 +27,4 @@ export * from './projection/bd09';
 export * from './projection/gcj02';
 export * from './util/utility';
 export * from './util/bound';
-export * from './util/color-generator';
+export * from './util/color';

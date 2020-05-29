@@ -55,4 +55,17 @@ export class Geometry {
     ;
     getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) { }
     ;
+    distance(geometry, type, ctx, projection = new WebMercator()) {
+        const center = this.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
+        const point = geometry.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
+        if (type == CoordinateType.Screen) {
+            const matrix = ctx.getTransform();
+            const screenX1 = (matrix.a * center[0] + matrix.e), screenY1 = (matrix.d * center[1] + matrix.f);
+            const screenX2 = (matrix.a * point[0] + matrix.e), screenY2 = (matrix.d * point[1] + matrix.f);
+            return Math.sqrt((screenX2 - screenX1) * (screenX2 - screenX1) + (screenY2 - screenY1) * (screenY2 - screenY1));
+        }
+        else {
+            return Math.sqrt((point[0] - center[0]) * (point[0] - center[0]) + (point[1] - center[1]) * (point[1] - center[1]));
+        }
+    }
 }

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
-import { SimpleMarkerSymbol, SimplePointSymbol } from "../symbol/symbol";
+import { ClusterSymbol, SimpleMarkerSymbol, SimplePointSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 //点
 export class Point extends Geometry {
@@ -17,6 +17,18 @@ export class Point extends Geometry {
         super();
         this._lng = lng;
         this._lat = lat;
+    }
+    get lng() {
+        return this._lng;
+    }
+    get lat() {
+        return this._lat;
+    }
+    get x() {
+        return this._x;
+    }
+    get y() {
+        return this._y;
     }
     ;
     project(projection) {
@@ -61,6 +73,31 @@ export class Point extends Geometry {
                     ctx.drawImage(marker.icon, this._screenX + marker.offsetX, this._screenY + marker.offsetY, marker.width, marker.height);
                     ctx.restore();
                 }
+            }
+            else if (symbol instanceof ClusterSymbol) {
+                const cluster = symbol;
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.strokeStyle = cluster.strokeStyle;
+                ctx.fillStyle = cluster.outerFillStyle;
+                ctx.lineWidth = cluster.lineWidth;
+                ctx.beginPath(); //Start path
+                //keep size
+                ctx.arc(this._screenX, this._screenY, cluster.outer, 0, Math.PI * 2, true);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = cluster.innerFillStyle;
+                ctx.beginPath(); //Start path
+                //keep size
+                ctx.arc(this._screenX, this._screenY, cluster.inner, 0, Math.PI * 2, true);
+                ctx.fill();
+                ctx.stroke();
+                ctx.textBaseline = "middle";
+                ctx.textAlign = "center";
+                ctx.fillStyle = cluster.fontColor;
+                ctx.font = cluster.fontSize + "px/1 " + cluster.fontFamily + " " + cluster.fontWeight;
+                ctx.fillText(cluster.text, this._screenX, this._screenY);
+                ctx.restore();
             }
         });
     }

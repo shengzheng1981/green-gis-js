@@ -12,6 +12,9 @@ export class Feature {
         this._geometry = geometry;
         this._properties = properties;
     }
+    get geometry() {
+        return this._geometry;
+    }
     get properties() {
         return this._properties;
     }

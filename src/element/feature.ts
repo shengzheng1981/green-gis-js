@@ -19,6 +19,10 @@ export class Feature {
 
     public visible: boolean = true;
 
+    get geometry(): Geometry {
+        return this._geometry;
+    }
+
     get properties(): any {
         return this._properties;
     }

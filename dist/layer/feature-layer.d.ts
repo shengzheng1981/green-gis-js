@@ -7,6 +7,7 @@ import { Label } from "../label/label";
 import { Tooltip } from "../tooltip/tooltip";
 export declare class FeatureLayer extends Layer {
     labeled: boolean;
+    cluster: boolean;
     private _featureClass;
     private _renderer;
     private _label;

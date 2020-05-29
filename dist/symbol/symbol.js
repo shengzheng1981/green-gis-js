@@ -1,3 +1,4 @@
+import { Color } from "../util/color";
 export class Symbol {
 }
 export class SimplePointSymbol extends Symbol {
@@ -20,7 +21,7 @@ export class SimpleLineSymbol extends Symbol {
 export class SimpleFillSymbol extends Symbol {
     constructor() {
         super(...arguments);
-        this.lineWidth = 1;
+        this.lineWidth = 2;
         this.strokeStyle = "#ff0000"; //#ff0000
         this.fillStyle = "#ff0000"; //#ff0000
     }
@@ -64,5 +65,59 @@ export class SimpleTextSymbol extends Symbol {
         this.fontSize = 12;
         this.fontFamily = "YaHei";
         this.fontWeight = "Bold";
+    }
+}
+export class ArrowSymbol extends Symbol {
+    constructor() {
+        super(...arguments);
+        this.lineWidth = 2;
+        this.strokeStyle = "#ff0000"; //#ff0000
+        this.minLength = 50; //>50pixel will draw arrow
+        this.arrowLength = 10;
+        this.arrowAngle = Math.PI / 6; //angle 30
+    }
+}
+export class ClusterSymbol extends Symbol {
+    constructor(count) {
+        super();
+        this._count = 2;
+        this.radius = 10;
+        this.lineWidth = 1;
+        this.strokeStyle = "#ffffff"; //#ff0000
+        this.outerFillStyle = "#ffffff"; //#ff0000
+        this.fontColor = "#ffffff";
+        this.fontFamily = "YaHei";
+        this.fontWeight = "Bold";
+        this._count = count;
+    }
+    get text() {
+        return this._count <= 99 ? this._count.toString() : "99+";
+    }
+    get inner() {
+        return this._count <= 15 ? this.radius + this._count : this.radius + 15;
+    }
+    get outer() {
+        return this.inner + 4;
+    }
+    get fontSize() {
+        if (this._count < 10) {
+            return 12;
+        }
+        else if (this._count >= 10 && this._count < 30) {
+            return 14;
+        }
+        else if (this._count >= 30 && this._count < 50) {
+            return 16;
+        }
+        else if (this._count >= 30 && this._count < 50) {
+            return 18;
+        }
+        else if (this._count > 50) {
+            return 20;
+        }
+    }
+    get innerFillStyle() {
+        const colors = Color.ramp(new Color(0, 255, 0), new Color(255, 0, 0), 16);
+        return colors[this._count <= 15 ? this._count : 15].toString();
     }
 }

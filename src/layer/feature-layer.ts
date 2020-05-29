@@ -10,9 +10,13 @@ import {CategoryRenderer} from "../renderer/category-renderer";
 import {ClassRenderer} from "../renderer/class-renderer";
 import {Label} from "../label/label";
 import {Tooltip} from "../tooltip/tooltip";
+import {GeometryType, CoordinateType} from "../geometry/geometry";
+import {Point} from "../geometry/point";
+import {ClusterSymbol} from "..";
 
 export class FeatureLayer extends Layer{
     public labeled: boolean = false;
+    public cluster: boolean = false;
     private _featureClass: FeatureClass;
     private _renderer: Renderer;
     private _label: Label;
@@ -73,16 +77,55 @@ export class FeatureLayer extends Layer{
 
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
-            this._featureClass.features.forEach( (feature: Feature) => {
-                feature.draw(ctx, projection, extent, this._getSymbol(feature));
-            });
+            const features = this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent));
+            if (this._featureClass.type == GeometryType.Point && this.cluster) {
+                const cluster = features.reduce( (acc, cur) => {
+                    if (cur.geometry instanceof Point) {
+                        const point: Point = cur.geometry;
+                        const item: any = acc.find((item: any) => {
+                            const distance = point.distance(item.feature.geometry, CoordinateType.Screen, ctx, projection);
+                            return distance <= 50;
+                        });
+                        if (item) {
+                            item.count += 1;
+                        } else {
+                            acc.push({feature: cur, count: 1});
+                        }
+                        return acc;
+                    }
+                }, []); // {feature, count}
+                cluster.forEach( (item: any) => {
+                    if (item.count == 1) {
+                        item.feature.draw(ctx, projection, extent, this._getSymbol(item.feature));
+                    } else {
+                        item.feature.draw(ctx, projection, extent, new ClusterSymbol(item.count));
+                    }
+                });
+            } else {
+                features.forEach( (feature: Feature) => {
+                    feature.draw(ctx, projection, extent, this._getSymbol(feature));
+                });
+            }
         }
     }
 
     drawLabel(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
-        if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
-            this._featureClass.features.forEach( (feature: Feature) => {
-                feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
+        if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
+            const features = this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent));
+            const cluster = features.reduce( (acc, cur) => {
+                const item: any = acc.find((item: any) => {
+                    const distance = cur.geometry.distance(item.feature.geometry, CoordinateType.Screen, ctx, projection);
+                    return distance <= 50;
+                });
+                if (item) {
+                    item.count += 1;
+                } else {
+                    acc.push({feature: cur, count: 1});
+                }
+                return acc;
+            }, []); // {feature, count}
+            cluster.forEach( (item: any) => {
+                item.feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
             });
         }
     }

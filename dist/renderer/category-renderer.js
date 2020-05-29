@@ -1,6 +1,6 @@
 import { SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol } from "../symbol/symbol";
 import { GeometryType } from "../geometry/geometry";
-import { ColorGenerator } from "../util/color-generator";
+import { Color } from "../util/color";
 export class CategoryRendererItem {
     constructor() {
         this.count = 1;
@@ -29,23 +29,23 @@ export class CategoryRenderer {
                 switch (featureClass.type) {
                     case GeometryType.Point:
                         const symbol1 = new SimplePointSymbol();
-                        symbol1.fillStyle = ColorGenerator.random();
-                        symbol1.strokeStyle = ColorGenerator.random();
+                        symbol1.fillStyle = Color.random().toString();
+                        symbol1.strokeStyle = Color.random().toString();
                         item.symbol = symbol1;
                         item.value = value;
                         this._items.push(item);
                         break;
                     case GeometryType.Polyline:
                         const symbol2 = new SimpleLineSymbol();
-                        symbol2.strokeStyle = ColorGenerator.random();
+                        symbol2.strokeStyle = Color.random().toString();
                         item.symbol = symbol2;
                         item.value = value;
                         this._items.push(item);
                         break;
                     case GeometryType.Polygon:
                         const symbol3 = new SimpleFillSymbol();
-                        symbol3.fillStyle = ColorGenerator.random();
-                        symbol3.strokeStyle = ColorGenerator.random();
+                        symbol3.fillStyle = Color.random().toString();
+                        symbol3.strokeStyle = Color.random().toString();
                         item.symbol = symbol3;
                         item.value = value;
                         this._items.push(item);

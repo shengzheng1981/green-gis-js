@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./main-08.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./basic.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -236,6 +236,9 @@ class Feature {
         this.visible = true;
         this._geometry = geometry;
         this._properties = properties;
+    }
+    get geometry() {
+        return this._geometry;
     }
     get properties() {
         return this._properties;
@@ -431,6 +434,19 @@ class Geometry {
     ;
     getCenter(type = CoordinateType.Latlng, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"]()) { }
     ;
+    distance(geometry, type, ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"]()) {
+        const center = this.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
+        const point = geometry.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
+        if (type == CoordinateType.Screen) {
+            const matrix = ctx.getTransform();
+            const screenX1 = (matrix.a * center[0] + matrix.e), screenY1 = (matrix.d * center[1] + matrix.f);
+            const screenX2 = (matrix.a * point[0] + matrix.e), screenY2 = (matrix.d * point[1] + matrix.f);
+            return Math.sqrt((screenX2 - screenX1) * (screenX2 - screenX1) + (screenY2 - screenY1) * (screenY2 - screenY1));
+        }
+        else {
+            return Math.sqrt((point[0] - center[0]) * (point[0] - center[0]) + (point[1] - center[1]) * (point[1] - center[1]));
+        }
+    }
 }
 
 
@@ -883,6 +899,18 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         this._lng = lng;
         this._lat = lat;
     }
+    get lng() {
+        return this._lng;
+    }
+    get lat() {
+        return this._lat;
+    }
+    get x() {
+        return this._x;
+    }
+    get y() {
+        return this._y;
+    }
     ;
     project(projection) {
         this._projection = projection;
@@ -926,6 +954,31 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
                     ctx.drawImage(marker.icon, this._screenX + marker.offsetX, this._screenY + marker.offsetY, marker.width, marker.height);
                     ctx.restore();
                 }
+            }
+            else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["ClusterSymbol"]) {
+                const cluster = symbol;
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.strokeStyle = cluster.strokeStyle;
+                ctx.fillStyle = cluster.outerFillStyle;
+                ctx.lineWidth = cluster.lineWidth;
+                ctx.beginPath(); //Start path
+                //keep size
+                ctx.arc(this._screenX, this._screenY, cluster.outer, 0, Math.PI * 2, true);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = cluster.innerFillStyle;
+                ctx.beginPath(); //Start path
+                //keep size
+                ctx.arc(this._screenX, this._screenY, cluster.inner, 0, Math.PI * 2, true);
+                ctx.fill();
+                ctx.stroke();
+                ctx.textBaseline = "middle";
+                ctx.textAlign = "center";
+                ctx.fillStyle = cluster.fontColor;
+                ctx.font = cluster.fontSize + "px/1 " + cluster.fontFamily + " " + cluster.fontWeight;
+                ctx.fillText(cluster.text, this._screenX, this._screenY);
+                ctx.restore();
             }
         });
     }
@@ -1153,7 +1206,47 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             this._screen.push([screenX, screenY]);
         });
         ctx.stroke();
+        if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["ArrowSymbol"]) {
+            const arrow = symbol;
+            this._screen.reduce((prev, cur) => {
+                if (prev) {
+                    const length = Math.sqrt((cur[0] - prev[0]) * (cur[0] - prev[0]) + (cur[1] - prev[1]) * (cur[1] - prev[1]));
+                    if (length >= arrow.minLength) {
+                        //中点 即箭头
+                        const [middleX, middleY] = [(prev[0] + cur[0]) / 2, (prev[1] + cur[1]) / 2];
+                        //箭尾垂线的垂足
+                        const [footX, footY] = this._getPointAlongLine([middleX, middleY], prev, Math.cos(arrow.arrowAngle) * arrow.arrowLength);
+                        const k = (cur[1] - prev[1]) / (cur[0] - prev[0]);
+                        // 1/k 垂线
+                        const points = this._getPointAlongLine2(-1 / k, footY - footX * -1 / k, [footX, footY], Math.sin(arrow.arrowAngle) * arrow.arrowLength);
+                        //两点
+                        points.forEach(point => {
+                            ctx.beginPath();
+                            ctx.moveTo(middleX, middleY);
+                            ctx.lineTo(point[0], point[1]);
+                            ctx.stroke();
+                        });
+                    }
+                    return cur;
+                }
+                else {
+                    return cur;
+                }
+            });
+        }
         ctx.restore();
+    }
+    //已知 起点和终点  求沿线距起点定长的点
+    _getPointAlongLine(p1, p2, d) {
+        //line length
+        let l = Math.sqrt((p2[0] - p1[0]) * (p2[0] - p1[0]) + (p2[1] - p1[1]) * (p2[1] - p1[1]));
+        let t = d / l;
+        return [(1 - t) * p1[0] + t * p2[0], (1 - t) * p1[1] + t * p2[1]];
+    }
+    //已知 起点 y = kx + b   求沿线距起点定长的点 两个点
+    _getPointAlongLine2(k, b, p, d) {
+        let x0 = p[0] + Math.sqrt((d * d) / (k * k + 1)), x1 = p[0] - Math.sqrt((d * d) / (k * k + 1));
+        return [[x0, k * x0 + b], [x1, k * x1 + b]];
     }
     contain(screenX, screenY) {
         let p2;
@@ -1238,7 +1331,7 @@ Polyline.TOLERANCE = 4; //screen pixel
 /*!************************!*\
   !*** ../dist/index.js ***!
   \************************/
-/*! exports provided: Map, Entity, FeatureClass, FieldType, Field, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Tooltip, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, ColorGenerator */
+/*! exports provided: Map, Entity, FeatureClass, FieldType, Field, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Tooltip, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, ArrowSymbol, ClusterSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1316,6 +1409,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleTextSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimpleTextSymbol"]; });
 
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ArrowSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["ArrowSymbol"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClusterSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["ClusterSymbol"]; });
+
 /* harmony import */ var _renderer_renderer__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./renderer/renderer */ "../dist/renderer/renderer.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Renderer", function() { return _renderer_renderer__WEBPACK_IMPORTED_MODULE_19__["Renderer"]; });
 
@@ -1352,8 +1449,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Bound", function() { return _util_bound__WEBPACK_IMPORTED_MODULE_28__["Bound"]; });
 
-/* harmony import */ var _util_color_generator__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./util/color-generator */ "../dist/util/color-generator.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ColorGenerator", function() { return _util_color_generator__WEBPACK_IMPORTED_MODULE_29__["ColorGenerator"]; });
+/* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./util/color */ "../dist/util/color.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Color", function() { return _util_color__WEBPACK_IMPORTED_MODULE_29__["Color"]; });
 
 
 
@@ -1420,6 +1517,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../renderer/simple-renderer */ "../dist/renderer/simple-renderer.js");
 /* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../renderer/category-renderer */ "../dist/renderer/category-renderer.js");
 /* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../renderer/class-renderer */ "../dist/renderer/class-renderer.js");
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../geometry/point */ "../dist/geometry/point.js");
+/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! .. */ "../dist/index.js");
+
+
+
 
 
 
@@ -1429,6 +1532,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
     constructor() {
         super(...arguments);
         this.labeled = false;
+        this.cluster = false;
         this._zoom = [3, 20];
         this._interactive = true;
     }
@@ -1474,15 +1578,58 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
     }
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, zoom = 10) {
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
-            this._featureClass.features.forEach((feature) => {
-                feature.draw(ctx, projection, extent, this._getSymbol(feature));
-            });
+            const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
+            if (this._featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_5__["GeometryType"].Point && this.cluster) {
+                const cluster = features.reduce((acc, cur) => {
+                    if (cur.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_6__["Point"]) {
+                        const point = cur.geometry;
+                        const item = acc.find((item) => {
+                            const distance = point.distance(item.feature.geometry, _geometry_geometry__WEBPACK_IMPORTED_MODULE_5__["CoordinateType"].Screen, ctx, projection);
+                            return distance <= 50;
+                        });
+                        if (item) {
+                            item.count += 1;
+                        }
+                        else {
+                            acc.push({ feature: cur, count: 1 });
+                        }
+                        return acc;
+                    }
+                }, []); // {feature, count}
+                cluster.forEach((item) => {
+                    if (item.count == 1) {
+                        item.feature.draw(ctx, projection, extent, this._getSymbol(item.feature));
+                    }
+                    else {
+                        item.feature.draw(ctx, projection, extent, new ___WEBPACK_IMPORTED_MODULE_7__["ClusterSymbol"](item.count));
+                    }
+                });
+            }
+            else {
+                features.forEach((feature) => {
+                    feature.draw(ctx, projection, extent, this._getSymbol(feature));
+                });
+            }
         }
     }
     drawLabel(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, zoom = 10) {
-        if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
-            this._featureClass.features.forEach((feature) => {
-                feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
+        if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
+            const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
+            const cluster = features.reduce((acc, cur) => {
+                const item = acc.find((item) => {
+                    const distance = cur.geometry.distance(item.feature.geometry, _geometry_geometry__WEBPACK_IMPORTED_MODULE_5__["CoordinateType"].Screen, ctx, projection);
+                    return distance <= 50;
+                });
+                if (item) {
+                    item.count += 1;
+                }
+                else {
+                    acc.push({ feature: cur, count: 1 });
+                }
+                return acc;
+            }, []); // {feature, count}
+            cluster.forEach((item) => {
+                item.feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
             });
         }
     }
@@ -2184,7 +2331,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CategoryRenderer", function() { return CategoryRenderer; });
 /* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
 /* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
-/* harmony import */ var _util_color_generator__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/color-generator */ "../dist/util/color-generator.js");
+/* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/color */ "../dist/util/color.js");
 
 
 
@@ -2216,23 +2363,23 @@ class CategoryRenderer {
                 switch (featureClass.type) {
                     case _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Point:
                         const symbol1 = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
-                        symbol1.fillStyle = _util_color_generator__WEBPACK_IMPORTED_MODULE_2__["ColorGenerator"].random();
-                        symbol1.strokeStyle = _util_color_generator__WEBPACK_IMPORTED_MODULE_2__["ColorGenerator"].random();
+                        symbol1.fillStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
+                        symbol1.strokeStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
                         item.symbol = symbol1;
                         item.value = value;
                         this._items.push(item);
                         break;
                     case _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Polyline:
                         const symbol2 = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimpleLineSymbol"]();
-                        symbol2.strokeStyle = _util_color_generator__WEBPACK_IMPORTED_MODULE_2__["ColorGenerator"].random();
+                        symbol2.strokeStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
                         item.symbol = symbol2;
                         item.value = value;
                         this._items.push(item);
                         break;
                     case _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Polygon:
                         const symbol3 = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimpleFillSymbol"]();
-                        symbol3.fillStyle = _util_color_generator__WEBPACK_IMPORTED_MODULE_2__["ColorGenerator"].random();
-                        symbol3.strokeStyle = _util_color_generator__WEBPACK_IMPORTED_MODULE_2__["ColorGenerator"].random();
+                        symbol3.fillStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
+                        symbol3.strokeStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
                         item.symbol = symbol3;
                         item.value = value;
                         this._items.push(item);
@@ -2315,7 +2462,7 @@ class SimpleRenderer {
 /*!********************************!*\
   !*** ../dist/symbol/symbol.js ***!
   \********************************/
-/*! exports provided: Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol */
+/*! exports provided: Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, ArrowSymbol, ClusterSymbol */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2326,6 +2473,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleFillSymbol", function() { return SimpleFillSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return SimpleMarkerSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleTextSymbol", function() { return SimpleTextSymbol; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ArrowSymbol", function() { return ArrowSymbol; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ClusterSymbol", function() { return ClusterSymbol; });
+/* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/color */ "../dist/util/color.js");
+
 class Symbol {
 }
 class SimplePointSymbol extends Symbol {
@@ -2348,7 +2499,7 @@ class SimpleLineSymbol extends Symbol {
 class SimpleFillSymbol extends Symbol {
     constructor() {
         super(...arguments);
-        this.lineWidth = 1;
+        this.lineWidth = 2;
         this.strokeStyle = "#ff0000"; //#ff0000
         this.fillStyle = "#ff0000"; //#ff0000
     }
@@ -2392,6 +2543,60 @@ class SimpleTextSymbol extends Symbol {
         this.fontSize = 12;
         this.fontFamily = "YaHei";
         this.fontWeight = "Bold";
+    }
+}
+class ArrowSymbol extends Symbol {
+    constructor() {
+        super(...arguments);
+        this.lineWidth = 2;
+        this.strokeStyle = "#ff0000"; //#ff0000
+        this.minLength = 50; //>50pixel will draw arrow
+        this.arrowLength = 10;
+        this.arrowAngle = Math.PI / 6; //angle 30
+    }
+}
+class ClusterSymbol extends Symbol {
+    constructor(count) {
+        super();
+        this._count = 2;
+        this.radius = 10;
+        this.lineWidth = 1;
+        this.strokeStyle = "#ffffff"; //#ff0000
+        this.outerFillStyle = "#ffffff"; //#ff0000
+        this.fontColor = "#ffffff";
+        this.fontFamily = "YaHei";
+        this.fontWeight = "Bold";
+        this._count = count;
+    }
+    get text() {
+        return this._count <= 99 ? this._count.toString() : "99+";
+    }
+    get inner() {
+        return this._count <= 15 ? this.radius + this._count : this.radius + 15;
+    }
+    get outer() {
+        return this.inner + 4;
+    }
+    get fontSize() {
+        if (this._count < 10) {
+            return 12;
+        }
+        else if (this._count >= 10 && this._count < 30) {
+            return 14;
+        }
+        else if (this._count >= 30 && this._count < 50) {
+            return 16;
+        }
+        else if (this._count >= 30 && this._count < 50) {
+            return 18;
+        }
+        else if (this._count > 50) {
+            return 20;
+        }
+    }
+    get innerFillStyle() {
+        const colors = _util_color__WEBPACK_IMPORTED_MODULE_0__["Color"].ramp(new _util_color__WEBPACK_IMPORTED_MODULE_0__["Color"](0, 255, 0), new _util_color__WEBPACK_IMPORTED_MODULE_0__["Color"](255, 0, 0), 16);
+        return colors[this._count <= 15 ? this._count : 15].toString();
     }
 }
 
@@ -2464,19 +2669,59 @@ class Bound {
 
 /***/ }),
 
-/***/ "../dist/util/color-generator.js":
-/*!***************************************!*\
-  !*** ../dist/util/color-generator.js ***!
-  \***************************************/
-/*! exports provided: ColorGenerator */
+/***/ "../dist/util/color.js":
+/*!*****************************!*\
+  !*** ../dist/util/color.js ***!
+  \*****************************/
+/*! exports provided: Color */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ColorGenerator", function() { return ColorGenerator; });
-class ColorGenerator {
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Color", function() { return Color; });
+class Color {
+    constructor(r, g, b, a = 1) {
+        this.a = 1;
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
+    }
+    toString() {
+        return "rgba(" + this.r + "," + this.g + "," + this.b + "," + this.a + ")";
+    }
+    static fromHex(hex) {
+        let reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6}|[0-9a-fA-f]{8})$/;
+        hex = hex.toLowerCase();
+        if (hex && reg.test(hex)) {
+            //处理三位的颜色值
+            if (hex.length === 4) {
+                var sColorNew = "#";
+                for (var i = 1; i < 4; i += 1) {
+                    sColorNew += hex.slice(i, i + 1).concat(hex.slice(i, i + 1));
+                }
+                hex = sColorNew;
+            }
+            //处理六位的颜色值
+            if (hex.length === 4) {
+                hex += "ff";
+            }
+            let sColorChange = [];
+            for (let i = 1; i < 9; i += 2) {
+                sColorChange.push(parseInt("0x" + hex.slice(i, i + 2)));
+            }
+            return new Color(sColorChange[0], sColorChange[1], sColorChange[2], sColorChange[3] / 255);
+        }
+    }
+    static ramp(start, end, count = 10) {
+        const colors = [];
+        for (let i = 0; i < count; i += 1) {
+            colors.push(new Color((end.r - start.r) * i / count + start.r, (end.g - start.g) * i / count + start.g, (end.b - start.b) * i / count + start.b, (end.a - start.a) * i / count + start.a));
+        }
+        return colors;
+    }
     static random() {
-        return "rgb(" + Math.random() * 255 + "," + Math.random() * 255 + "," + Math.random() * 255 + ")";
+        return new Color(Math.random() * 255, Math.random() * 255, Math.random() * 255);
     }
 }
 
@@ -2550,16 +2795,17 @@ class Utility {
 
 /***/ }),
 
-/***/ "./main-08.js":
-/*!********************!*\
-  !*** ./main-08.js ***!
-  \********************/
+/***/ "./basic.js":
+/*!******************!*\
+  !*** ./basic.js ***!
+  \******************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
+
 
 
 window.load = () => {
@@ -2584,72 +2830,20 @@ window.load = () => {
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
         amap.setZoomAndCenter(event.zoom, event.center);
-        document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
-        document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
-        document.getElementById("zoom").value = event.zoom;
-        document.getElementById("x1").value = Math.round(event.extent.xmin * 1000)/1000;
-        document.getElementById("y1").value = Math.round(event.extent.ymin * 1000)/1000;
-        document.getElementById("x2").value = Math.round(event.extent.xmax * 1000)/1000;
-        document.getElementById("y2").value = Math.round(event.extent.ymax * 1000)/1000;
-        document.getElementById("a").value = Math.round(event.matrix.a * 1000)/1000;
-        document.getElementById("d").value = Math.round(event.matrix.d * 1000)/1000;
-        document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
-        document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-
-    var req = new XMLHttpRequest();
-    req.onload = (event) => {
-        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
-        featureClass.loadGeoJSON(JSON.parse(req.responseText));
-        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-        featureLayer.featureClass = featureClass;
-        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field.name = "TYPE";
-        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
-        renderer.generate(featureClass, field);
-        featureLayer.renderer = renderer;
-        const label = new _dist__WEBPACK_IMPORTED_MODULE_0__["Label"]();
-        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleTextSymbol"]();
-        label.field = field;
-        label.symbol = symbol;
-        //featureLayer.label = label;
-        //featureLayer.labeled = true;
-        featureLayer.zoom = [16, 20];
-        const tooltip = new _dist__WEBPACK_IMPORTED_MODULE_0__["Tooltip"]();
-        const field2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field2.name = "NAME";
-        field2.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
-        tooltip.field = field2;
-        featureLayer.tooltip = tooltip;
-        map.addLayer(featureLayer);
-
-        map.setView([109.519, 18.271], 13);
-    };
-    req.open("GET", "assets/geojson/junction.json", true);
-    req.send(null);
-
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-    //beijing gugong
-    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
-    const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {});
-    const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
-    featureClass.addFeature(feature);
+    map.setView([116.397411,39.909186], 12);
     const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
     marker.width = 32;
     marker.height = 32;
     marker.offsetX = -16;
     marker.offsetY = -32;
     marker.url = "assets/img/marker.svg";
-    const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-    featureLayer.featureClass = featureClass;
-    const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
-    renderer.symbol = marker;
-    featureLayer.renderer = renderer;
-    map.addLayer(featureLayer);
-
+    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
+    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, marker);
+    map.addGraphic(graphic);
 }
 
+//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 

@@ -11,6 +11,10 @@ export declare class Point extends Geometry {
     private _y;
     private _screenX;
     private _screenY;
+    get lng(): number;
+    get lat(): number;
+    get x(): number;
+    get y(): number;
     constructor(lng: number, lat: number);
     project(projection: Projection): void;
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): Promise<void>;

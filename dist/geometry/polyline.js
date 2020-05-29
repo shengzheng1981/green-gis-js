@@ -1,6 +1,6 @@
 import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
-import { SimpleLineSymbol } from "../symbol/symbol";
+import { ArrowSymbol, SimpleLineSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 //线
 export class Polyline extends Geometry {
@@ -48,7 +48,47 @@ export class Polyline extends Geometry {
             this._screen.push([screenX, screenY]);
         });
         ctx.stroke();
+        if (symbol instanceof ArrowSymbol) {
+            const arrow = symbol;
+            this._screen.reduce((prev, cur) => {
+                if (prev) {
+                    const length = Math.sqrt((cur[0] - prev[0]) * (cur[0] - prev[0]) + (cur[1] - prev[1]) * (cur[1] - prev[1]));
+                    if (length >= arrow.minLength) {
+                        //中点 即箭头
+                        const [middleX, middleY] = [(prev[0] + cur[0]) / 2, (prev[1] + cur[1]) / 2];
+                        //箭尾垂线的垂足
+                        const [footX, footY] = this._getPointAlongLine([middleX, middleY], prev, Math.cos(arrow.arrowAngle) * arrow.arrowLength);
+                        const k = (cur[1] - prev[1]) / (cur[0] - prev[0]);
+                        // 1/k 垂线
+                        const points = this._getPointAlongLine2(-1 / k, footY - footX * -1 / k, [footX, footY], Math.sin(arrow.arrowAngle) * arrow.arrowLength);
+                        //两点
+                        points.forEach(point => {
+                            ctx.beginPath();
+                            ctx.moveTo(middleX, middleY);
+                            ctx.lineTo(point[0], point[1]);
+                            ctx.stroke();
+                        });
+                    }
+                    return cur;
+                }
+                else {
+                    return cur;
+                }
+            });
+        }
         ctx.restore();
+    }
+    //已知 起点和终点  求沿线距起点定长的点
+    _getPointAlongLine(p1, p2, d) {
+        //line length
+        let l = Math.sqrt((p2[0] - p1[0]) * (p2[0] - p1[0]) + (p2[1] - p1[1]) * (p2[1] - p1[1]));
+        let t = d / l;
+        return [(1 - t) * p1[0] + t * p2[0], (1 - t) * p1[1] + t * p2[1]];
+    }
+    //已知 起点 y = kx + b   求沿线距起点定长的点 两个点
+    _getPointAlongLine2(k, b, p, d) {
+        let x0 = p[0] + Math.sqrt((d * d) / (k * k + 1)), x1 = p[0] - Math.sqrt((d * d) / (k * k + 1));
+        return [[x0, k * x0 + b], [x1, k * x1 + b]];
     }
     contain(screenX, screenY) {
         let p2;

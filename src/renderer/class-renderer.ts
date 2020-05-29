@@ -2,7 +2,6 @@ import {SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol, Symbol} from "../
 import {Field} from "../data/field";
 import {FeatureClass} from "../data/feature-class";
 import {GeometryType} from "../geometry/geometry";
-import {ColorGenerator} from "../util/color-generator";
 
 export class ClassRendererItem {
     low: number;
