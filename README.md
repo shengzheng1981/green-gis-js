@@ -147,4 +147,4 @@ map.setView([107.411, 29.89], 7);
 More Sample And Information: [Re-learning GIS](https://zhuanlan.zhihu.com/c_165676639) .
 
 ## License
-[MIT](LICENSE) © Sheng Zheng
+[GPL](LICENSE) © Sheng Zheng
