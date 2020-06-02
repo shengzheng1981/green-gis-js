@@ -134,17 +134,8 @@ map.on("extent", (event) => {
 map.setView([107.411, 29.89], 7);
 ```
 
-
-## Route Map
-1. Label and Tooltip
-2. Multiple point/line/polygon
-3. Event Management
-4. ObjectID Management
-5. And More...
-
-
 ## Blog & Article
 More Sample And Information: [Re-learning GIS](https://zhuanlan.zhihu.com/c_165676639) .
 
 ## License
-[MIT](LICENSE) © Sheng Zheng
+[BSD](LICENSE) © Sheng Zheng

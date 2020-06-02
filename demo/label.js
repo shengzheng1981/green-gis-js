@@ -59,10 +59,10 @@ window.load = () => {
         field.name = "TYPE";
         field.type = FieldType.String;
         const field2 = new Field();
-        field2.name = "NAME";
+        field2.name = "name";
         field2.type = FieldType.String;
         const renderer = new CategoryRenderer();
-        renderer.generate(featureClass, field);
+        renderer.generate(featureClass, field2);
         featureLayer.renderer = renderer;
         const label = new Label();
         const symbol = new SimpleTextSymbol();
@@ -70,12 +70,12 @@ window.load = () => {
         label.symbol = symbol;
         featureLayer.label = label;
         featureLayer.labeled = true;
-        featureLayer.zoom = [16, 20];
+        featureLayer.zoom = [5, 20];
         map.addLayer(featureLayer);
 
-        map.setView([109.519, 18.271], 13);
+        map.setView([107.777, 29.809], 7);
     };
-    req.open("GET", "assets/geojson/junction.json", true);
+    req.open("GET", "assets/geojson/chongqing.json", true);
     req.send(null);
 
     map.setProjection(new GCJ02(LatLngType.GCJ02));

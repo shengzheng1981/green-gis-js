@@ -72,6 +72,13 @@ export class ArrowSymbol extends Symbol {
     public arrowAngle: number = Math.PI / 6;   //angle 30
 }
 
+export class VertexSymbol extends Symbol {
+    public size: number = 10;
+    public lineWidth: number = 1;
+    public strokeStyle: string = "#ff0000"; //#ff0000
+    public fillStyle: string = "#ff000088";    //#ff0000
+}
+
 export class ClusterSymbol extends Symbol {
     private _count: number = 2;
     public radius: number = 10;

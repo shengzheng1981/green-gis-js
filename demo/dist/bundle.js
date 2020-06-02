@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./basic.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./editor-polygon.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -211,6 +211,265 @@ class Field {
 
 /***/ }),
 
+/***/ "../dist/editor/editor.js":
+/*!********************************!*\
+  !*** ../dist/editor/editor.js ***!
+  \********************************/
+/*! exports provided: Editor */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Editor", function() { return Editor; });
+/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../layer/graphic-layer */ "../dist/layer/graphic-layer.js");
+/* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../element/graphic */ "../dist/element/graphic.js");
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../geometry/point */ "../dist/geometry/point.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/subject */ "../dist/util/subject.js");
+/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../geometry/polyline */ "../dist/geometry/polyline.js");
+/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../geometry/polygon */ "../dist/geometry/polygon.js");
+
+
+
+
+
+
+
+class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
+    constructor(map) {
+        super(["mouseover", "mouseout", "startedit", "stopedit"]); //when mouseover feature or vertex
+        this._drag = {
+            flag: false,
+            vertex: null,
+            start: {
+                x: 0,
+                y: 0
+            },
+            end: {
+                x: 0,
+                y: 0
+            }
+        };
+        this._map = map;
+        const container = map.container;
+        //create canvas
+        this._canvas = document.createElement("canvas");
+        this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 90";
+        this._canvas.width = container.clientWidth;
+        this._canvas.height = container.clientHeight;
+        container.appendChild(this._canvas);
+        this._ctx = this._canvas.getContext("2d");
+        this._extentChange = this._extentChange.bind(this);
+        this._switchEditing = this._switchEditing.bind(this);
+        this._map.on("extent", this._extentChange);
+    }
+    get editing() {
+        return this._editing;
+    }
+    setFeatureLayer(layer) {
+        if (this._editing) {
+            this._featureLayer = layer;
+            this._featureLayer.editing = true;
+            this._featureLayer.on("dblclick", this._switchEditing);
+            //layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        }
+        else {
+            throw new Error("please start editing!");
+        }
+    }
+    start() {
+        if (!this._editing) {
+            this._editing = true;
+            this._vertexLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+            this._handlers["startedit"].forEach(handler => handler());
+        }
+        //TODO: edit stack for undo/redo
+    }
+    save() {
+    }
+    stop() {
+        if (this._editing) {
+            this._editing = false;
+            this._featureLayer.editing = false;
+            this._featureLayer.off("dblclick", this._switchEditing);
+            this._featureLayer = null;
+            this._vertexLayer = null;
+            this.clear();
+            this._handlers["stopedit"].forEach(handler => handler());
+        }
+    }
+    _extentChange(event) {
+        this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
+        this.redraw();
+    }
+    _switchEditing(event) {
+        if (!this._editingFeature) {
+            this._editingFeature = event.feature;
+            if (this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"]) {
+                const point = this._editingFeature.geometry;
+                const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                this._vertexLayer.add(vertex);
+                this.redraw();
+            }
+            else if (this._editingFeature.geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_5__["Polyline"]) {
+                const polyline = this._editingFeature.geometry;
+                polyline.lnglats.forEach(lnglat => {
+                    const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"](lnglat[0], lnglat[1]);
+                    const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                    this._vertexLayer.add(vertex);
+                    vertex.on("dragstart", (event) => {
+                        this._drag.vertex = vertex;
+                    });
+                    vertex.on("dblclick", (event) => {
+                        this._vertexLayer.remove(vertex);
+                        polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
+                        this.redraw();
+                    });
+                });
+                this.redraw();
+            }
+            else if (this._editingFeature.geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_6__["Polygon"]) {
+                const polygon = this._editingFeature.geometry;
+                polygon.lnglats.forEach(ring => {
+                    ring.forEach(lnglat => {
+                        const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"](lnglat[0], lnglat[1]);
+                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                        this._vertexLayer.add(vertex);
+                        vertex.on("dragstart", (event) => {
+                            this._drag.vertex = vertex;
+                        });
+                        vertex.on("dblclick", (event) => {
+                            this._vertexLayer.remove(vertex);
+                            polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
+                            this.redraw();
+                        });
+                    });
+                });
+                this.redraw();
+            }
+        }
+        else if (this._editingFeature === event.feature) {
+            this._editingFeature = null;
+            this._vertexLayer.clear();
+            this.redraw();
+        }
+    }
+    redraw() {
+        this._ctx.save();
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
+        this._featureLayer && this._featureLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this._vertexLayer && this._vertexLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+    }
+    clear() {
+        this._ctx.save();
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
+    }
+    _onClick(event) {
+    }
+    _onDoubleClick(event) {
+        if (this._editingFeature && !(this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"])) {
+            const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");
+            if (flag)
+                return;
+        }
+        this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");
+    }
+    _onMouseDown(event) {
+        if (this._editingFeature) {
+            this._drag.flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dragstart");
+            this._drag.start.x = event.x;
+            this._drag.start.y = event.y;
+        }
+    }
+    _onMouseMove(event) {
+        if (!this._drag.flag) {
+            const flag1 = this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");
+            const flag2 = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");
+            if (flag1 || flag2) {
+                this.emit("mouseover", event);
+            }
+            else {
+                this.emit("mouseout", event);
+            }
+        }
+    }
+    _onMouseUp(event) {
+        if (this._drag.flag) {
+            this._drag.end.x = event.x;
+            this._drag.end.y = event.y;
+            this._drag.flag = false;
+            if (this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"]) {
+                const point = this._editingFeature.geometry;
+                point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
+                this.redraw();
+            }
+            else if (this._editingFeature.geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_5__["Polyline"]) {
+                if (this._drag.vertex) {
+                    const polyline = this._editingFeature.geometry;
+                    const point = this._drag.vertex.geometry;
+                    polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat], event.offsetX, event.offsetY, !event.shiftKey);
+                    if (event.shiftKey) {
+                        const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"](point.lng, point.lat);
+                        shift.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
+                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](shift, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                        this._vertexLayer.add(vertex);
+                        vertex.on("dragstart", (event) => {
+                            this._drag.vertex = vertex;
+                        });
+                        vertex.on("dblclick", (event) => {
+                            this._vertexLayer.remove(vertex);
+                            polyline.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
+                            this.redraw();
+                        });
+                    }
+                    else {
+                        point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
+                    }
+                    this._drag.vertex = null;
+                    this.redraw();
+                }
+            }
+            else if (this._editingFeature.geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_6__["Polygon"]) {
+                if (this._drag.vertex) {
+                    const polygon = this._editingFeature.geometry;
+                    const point = this._drag.vertex.geometry;
+                    polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat], event.offsetX, event.offsetY, !event.shiftKey);
+                    if (event.shiftKey) {
+                        const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"](point.lng, point.lat);
+                        shift.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
+                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](shift, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                        this._vertexLayer.add(vertex);
+                        vertex.on("dragstart", (event) => {
+                            this._drag.vertex = vertex;
+                        });
+                        vertex.on("dblclick", (event) => {
+                            this._vertexLayer.remove(vertex);
+                            polygon.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
+                            this.redraw();
+                        });
+                    }
+                    else {
+                        point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
+                    }
+                    this._drag.vertex = null;
+                    this.redraw();
+                }
+            }
+        }
+    }
+    destroy() {
+        this._featureLayer = null;
+        this._map.off("extent", this._extentChange);
+    }
+}
+
+
+/***/ }),
+
 /***/ "../dist/element/feature.js":
 /*!**********************************!*\
   !*** ../dist/element/feature.js ***!
@@ -223,16 +482,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Feature", function() { return Feature; });
 /* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
 /* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mercator */ "../dist/projection/web-mercator.js");
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/subject */ "../dist/util/subject.js");
 
 
-class Feature {
+
+class Feature extends _util_subject__WEBPACK_IMPORTED_MODULE_2__["Subject"] {
     constructor(geometry, properties) {
-        //要素事件的handlers
-        this._events = {
-            "click": [],
-            "mouseover": [],
-            "mouseout": [] //鼠标退出
-        };
+        super(["click", "dblclick", "mouseover", "mouseout"]);
         this.visible = true;
         this._geometry = geometry;
         this._properties = properties;
@@ -245,19 +501,6 @@ class Feature {
     }
     get bound() {
         return this._geometry ? this._geometry.bound : null;
-    }
-    //地图事件注册监听
-    on(event, handler) {
-        this._events[event].push(handler);
-    }
-    off(event, handler) {
-        if (Array.isArray(this._events[event])) {
-            const index = this._events[event].findIndex(item => item === handler);
-            index != -1 && this._events[event].splice(index, 1);
-        }
-    }
-    emit(event, param) {
-        this._events[event].forEach(handler => handler(param));
     }
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]()) {
         if (this.visible)
@@ -276,15 +519,11 @@ class Feature {
             const flag = this._geometry.contain(screenX, screenY);
             if (event == "mousemove") {
                 if (!this._contained && flag) {
-                    this._events.mouseover.forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
+                    this._handlers["mouseover"].forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
                 }
                 else if (this._contained && !flag) {
-                    this._events.mouseout.forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
+                    this._handlers["mouseout"].forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
                 }
-            }
-            else if (event == "click") {
-                if (flag)
-                    this._events.click.forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
             }
             this._contained = flag;
             return flag;
@@ -306,12 +545,21 @@ class Feature {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Graphic", function() { return Graphic; });
 /* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../projection/web-mercator */ "../dist/projection/web-mercator.js");
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/subject */ "../dist/util/subject.js");
 
-class Graphic {
+
+class Graphic extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
     constructor(geometry, symbol) {
+        super(["click", "dblclick", "mouseover", "mouseout", "dragstart"]);
         this.visible = true;
         this._geometry = geometry;
         this._symbol = symbol;
+    }
+    get geometry() {
+        return this._geometry;
+    }
+    get symbol() {
+        return this._symbol;
     }
     get bound() {
         return this._geometry ? this._geometry.bound : null;
@@ -319,6 +567,25 @@ class Graphic {
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_0__["WebMercator"](), extent = projection.bound) {
         if (this.visible)
             this._geometry.draw(ctx, projection, extent, this._symbol);
+    }
+    intersect(projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_0__["WebMercator"](), extent = projection.bound) {
+        if (this.visible)
+            return this._geometry.intersect(projection, extent);
+    }
+    contain(screenX, screenY, event = undefined) {
+        if (this.visible) {
+            const flag = this._geometry.contain(screenX, screenY);
+            if (event == "mousemove") {
+                if (!this._contained && flag) {
+                    this._handlers["mouseover"].forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
+                }
+                else if (this._contained && !flag) {
+                    this._handlers["mouseout"].forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
+                }
+            }
+            this._contained = flag;
+            return flag;
+        }
     }
 }
 
@@ -919,6 +1186,17 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](this._x, this._y, this._x, this._y);
         this._projected = true;
     }
+    move(ctx, projection, screenX, screenY) {
+        const matrix = ctx.getTransform();
+        this._screenX = screenX;
+        this._screenY = screenY;
+        this._x = (this._screenX - matrix.e) / matrix.a;
+        this._y = (this._screenY - matrix.f) / matrix.d;
+        this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](this._x, this._y, this._x, this._y);
+        this._projection = projection;
+        [this._lng, this._lat] = this._projection.unproject([this._x, this._y]);
+        this._projected = true;
+    }
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimplePointSymbol"]()) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this._projected)
@@ -955,6 +1233,20 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
                     ctx.restore();
                 }
             }
+            else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["VertexSymbol"]) {
+                ctx.save();
+                ctx.strokeStyle = symbol.strokeStyle;
+                ctx.fillStyle = symbol.fillStyle;
+                ctx.lineWidth = symbol.lineWidth;
+                ctx.beginPath(); //Start path
+                //keep size
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                const size = symbol.size;
+                ctx.rect(this._screenX - size / 2, this._screenY - size / 2, size, size);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
             else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["ClusterSymbol"]) {
                 const cluster = symbol;
                 ctx.save();
@@ -989,6 +1281,9 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         }
         else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
             return screenX >= (this._screenX - this._symbol.offsetX) && screenX <= (this._screenX - this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY - this._symbol.offsetY) && screenY <= (this._screenY - this._symbol.offsetY + this._symbol.height);
+        }
+        else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["VertexSymbol"]) {
+            return screenX >= (this._screenX - this._symbol.size / 2) && screenX <= (this._screenX + this._symbol.size / 2) && screenY >= (this._screenY - this._symbol.size / 2) && screenY <= (this._screenY + this._symbol.size / 2);
         }
     }
     getCenter(type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"]()) {
@@ -1032,6 +1327,9 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         super();
         this._lnglats = lnglats;
     }
+    get lnglats() {
+        return this._lnglats;
+    }
     ;
     project(projection) {
         this._projection = projection;
@@ -1046,6 +1344,26 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             });
         });
         this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](xmin, ymin, xmax, ymax);
+    }
+    splice(ctx, projection, lnglat, screenX = undefined, screenY = undefined, replaced = true) {
+        if (screenX == undefined && screenY == undefined) {
+            this._lnglats.forEach(ring => {
+                const index = ring.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+                ring.length > 3 && index != -1 && ring.splice(index, 1);
+            });
+        }
+        else {
+            const matrix = ctx.getTransform();
+            const x = (screenX - matrix.e) / matrix.a;
+            const y = (screenY - matrix.f) / matrix.d;
+            this._projection = projection;
+            const [lng, lat] = this._projection.unproject([x, y]);
+            this._lnglats.forEach(ring => {
+                const index = ring.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+                index != -1 && ring.splice(index, replaced ? 1 : 0, [lng, lat]);
+            });
+        }
+        this.project(projection);
     }
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleFillSymbol"]()) {
         if (!this._projected)
@@ -1167,6 +1485,9 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         this._tolerance = 4; //TOLERANCE + symbol.lineWidth
         this._lnglats = lnglats;
     }
+    get lnglats() {
+        return this._lnglats;
+    }
     ;
     project(projection) {
         this._projection = projection;
@@ -1179,6 +1500,22 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             ymax = Math.max(ymax, point[1]);
         });
         this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](xmin, ymin, xmax, ymax);
+    }
+    splice(ctx, projection, lnglat, screenX = undefined, screenY = undefined, replaced = true) {
+        if (screenX == undefined && screenY == undefined) {
+            const index = this._lnglats.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+            this._lnglats.length > 2 && index != -1 && this._lnglats.splice(index, 1);
+        }
+        else {
+            const matrix = ctx.getTransform();
+            const x = (screenX - matrix.e) / matrix.a;
+            const y = (screenY - matrix.f) / matrix.d;
+            this._projection = projection;
+            const [lng, lat] = this._projection.unproject([x, y]);
+            const index = this._lnglats.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+            index != -1 && this._lnglats.splice(index, replaced ? 1 : 0, [lng, lat]);
+        }
+        this.project(projection);
     }
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleLineSymbol"]()) {
         if (!this._projected)
@@ -1331,7 +1668,7 @@ Polyline.TOLERANCE = 4; //screen pixel
 /*!************************!*\
   !*** ../dist/index.js ***!
   \************************/
-/*! exports provided: Map, Entity, FeatureClass, FieldType, Field, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Tooltip, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, ArrowSymbol, ClusterSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color */
+/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Tooltip, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1339,118 +1676,132 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _map__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./map */ "../dist/map.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Map", function() { return _map__WEBPACK_IMPORTED_MODULE_0__["Map"]; });
 
-/* harmony import */ var _entity__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./entity */ "../dist/entity.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Entity", function() { return _entity__WEBPACK_IMPORTED_MODULE_1__["Entity"]; });
+/* harmony import */ var _viewer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./viewer */ "../dist/viewer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Viewer", function() { return _viewer__WEBPACK_IMPORTED_MODULE_1__["Viewer"]; });
 
-/* harmony import */ var _data_feature_class__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./data/feature-class */ "../dist/data/feature-class.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FeatureClass", function() { return _data_feature_class__WEBPACK_IMPORTED_MODULE_2__["FeatureClass"]; });
+/* harmony import */ var _entity__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./entity */ "../dist/entity.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Entity", function() { return _entity__WEBPACK_IMPORTED_MODULE_2__["Entity"]; });
 
-/* harmony import */ var _data_field__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./data/field */ "../dist/data/field.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FieldType", function() { return _data_field__WEBPACK_IMPORTED_MODULE_3__["FieldType"]; });
+/* harmony import */ var _data_feature_class__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./data/feature-class */ "../dist/data/feature-class.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FeatureClass", function() { return _data_feature_class__WEBPACK_IMPORTED_MODULE_3__["FeatureClass"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Field", function() { return _data_field__WEBPACK_IMPORTED_MODULE_3__["Field"]; });
+/* harmony import */ var _data_field__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./data/field */ "../dist/data/field.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FieldType", function() { return _data_field__WEBPACK_IMPORTED_MODULE_4__["FieldType"]; });
 
-/* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./element/graphic */ "../dist/element/graphic.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Graphic", function() { return _element_graphic__WEBPACK_IMPORTED_MODULE_4__["Graphic"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Field", function() { return _data_field__WEBPACK_IMPORTED_MODULE_4__["Field"]; });
 
-/* harmony import */ var _element_feature__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./element/feature */ "../dist/element/feature.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Feature", function() { return _element_feature__WEBPACK_IMPORTED_MODULE_5__["Feature"]; });
+/* harmony import */ var _editor_editor__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./editor/editor */ "../dist/editor/editor.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Editor", function() { return _editor_editor__WEBPACK_IMPORTED_MODULE_5__["Editor"]; });
 
-/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./geometry/geometry */ "../dist/geometry/geometry.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CoordinateType", function() { return _geometry_geometry__WEBPACK_IMPORTED_MODULE_6__["CoordinateType"]; });
+/* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./element/graphic */ "../dist/element/graphic.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Graphic", function() { return _element_graphic__WEBPACK_IMPORTED_MODULE_6__["Graphic"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GeometryType", function() { return _geometry_geometry__WEBPACK_IMPORTED_MODULE_6__["GeometryType"]; });
+/* harmony import */ var _element_feature__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./element/feature */ "../dist/element/feature.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Feature", function() { return _element_feature__WEBPACK_IMPORTED_MODULE_7__["Feature"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Geometry", function() { return _geometry_geometry__WEBPACK_IMPORTED_MODULE_6__["Geometry"]; });
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CoordinateType", function() { return _geometry_geometry__WEBPACK_IMPORTED_MODULE_8__["CoordinateType"]; });
 
-/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./geometry/point */ "../dist/geometry/point.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Point", function() { return _geometry_point__WEBPACK_IMPORTED_MODULE_7__["Point"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GeometryType", function() { return _geometry_geometry__WEBPACK_IMPORTED_MODULE_8__["GeometryType"]; });
 
-/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./geometry/polyline */ "../dist/geometry/polyline.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Polyline", function() { return _geometry_polyline__WEBPACK_IMPORTED_MODULE_8__["Polyline"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Geometry", function() { return _geometry_geometry__WEBPACK_IMPORTED_MODULE_8__["Geometry"]; });
 
-/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/geometry/polygon.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Polygon", function() { return _geometry_polygon__WEBPACK_IMPORTED_MODULE_9__["Polygon"]; });
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./geometry/point */ "../dist/geometry/point.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Point", function() { return _geometry_point__WEBPACK_IMPORTED_MODULE_9__["Point"]; });
 
-/* harmony import */ var _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./geometry/multiple-point */ "../dist/geometry/multiple-point.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePoint", function() { return _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_10__["MultiplePoint"]; });
+/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./geometry/polyline */ "../dist/geometry/polyline.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Polyline", function() { return _geometry_polyline__WEBPACK_IMPORTED_MODULE_10__["Polyline"]; });
 
-/* harmony import */ var _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./geometry/multiple-polyline */ "../dist/geometry/multiple-polyline.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePolyline", function() { return _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_11__["MultiplePolyline"]; });
+/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/geometry/polygon.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Polygon", function() { return _geometry_polygon__WEBPACK_IMPORTED_MODULE_11__["Polygon"]; });
 
-/* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./geometry/multiple-polygon */ "../dist/geometry/multiple-polygon.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePolygon", function() { return _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_12__["MultiplePolygon"]; });
+/* harmony import */ var _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./geometry/multiple-point */ "../dist/geometry/multiple-point.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePoint", function() { return _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_12__["MultiplePoint"]; });
 
-/* harmony import */ var _layer_layer__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./layer/layer */ "../dist/layer/layer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Layer", function() { return _layer_layer__WEBPACK_IMPORTED_MODULE_13__["Layer"]; });
+/* harmony import */ var _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./geometry/multiple-polyline */ "../dist/geometry/multiple-polyline.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePolyline", function() { return _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_13__["MultiplePolyline"]; });
 
-/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/layer/graphic-layer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GraphicLayer", function() { return _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_14__["GraphicLayer"]; });
+/* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./geometry/multiple-polygon */ "../dist/geometry/multiple-polygon.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MultiplePolygon", function() { return _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_14__["MultiplePolygon"]; });
 
-/* harmony import */ var _layer_feature_layer__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./layer/feature-layer */ "../dist/layer/feature-layer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FeatureLayer", function() { return _layer_feature_layer__WEBPACK_IMPORTED_MODULE_15__["FeatureLayer"]; });
+/* harmony import */ var _layer_layer__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./layer/layer */ "../dist/layer/layer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Layer", function() { return _layer_layer__WEBPACK_IMPORTED_MODULE_15__["Layer"]; });
 
-/* harmony import */ var _label_label__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./label/label */ "../dist/label/label.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Label", function() { return _label_label__WEBPACK_IMPORTED_MODULE_16__["Label"]; });
+/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/layer/graphic-layer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GraphicLayer", function() { return _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_16__["GraphicLayer"]; });
 
-/* harmony import */ var _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./tooltip/tooltip */ "../dist/tooltip/tooltip.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Tooltip", function() { return _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_17__["Tooltip"]; });
+/* harmony import */ var _layer_feature_layer__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./layer/feature-layer */ "../dist/layer/feature-layer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FeatureLayer", function() { return _layer_feature_layer__WEBPACK_IMPORTED_MODULE_17__["FeatureLayer"]; });
 
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/symbol/symbol.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Symbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["Symbol"]; });
+/* harmony import */ var _label_label__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./label/label */ "../dist/label/label.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Label", function() { return _label_label__WEBPACK_IMPORTED_MODULE_18__["Label"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimplePointSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimplePointSymbol"]; });
+/* harmony import */ var _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./tooltip/tooltip */ "../dist/tooltip/tooltip.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Tooltip", function() { return _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_19__["Tooltip"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleLineSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimpleLineSymbol"]; });
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Symbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["Symbol"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleFillSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimpleFillSymbol"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimplePointSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["SimplePointSymbol"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimpleMarkerSymbol"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleLineSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["SimpleLineSymbol"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleTextSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["SimpleTextSymbol"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleFillSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["SimpleFillSymbol"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ArrowSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["ArrowSymbol"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["SimpleMarkerSymbol"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClusterSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_18__["ClusterSymbol"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleTextSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["SimpleTextSymbol"]; });
 
-/* harmony import */ var _renderer_renderer__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./renderer/renderer */ "../dist/renderer/renderer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Renderer", function() { return _renderer_renderer__WEBPACK_IMPORTED_MODULE_19__["Renderer"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ArrowSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["ArrowSymbol"]; });
 
-/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./renderer/simple-renderer */ "../dist/renderer/simple-renderer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleRenderer", function() { return _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_20__["SimpleRenderer"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "VertexSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["VertexSymbol"]; });
 
-/* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./renderer/category-renderer */ "../dist/renderer/category-renderer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRendererItem", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_21__["CategoryRendererItem"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClusterSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["ClusterSymbol"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRenderer", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_21__["CategoryRenderer"]; });
+/* harmony import */ var _renderer_renderer__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./renderer/renderer */ "../dist/renderer/renderer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Renderer", function() { return _renderer_renderer__WEBPACK_IMPORTED_MODULE_21__["Renderer"]; });
 
-/* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./renderer/class-renderer */ "../dist/renderer/class-renderer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRendererItem", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_22__["ClassRendererItem"]; });
+/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./renderer/simple-renderer */ "../dist/renderer/simple-renderer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleRenderer", function() { return _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_22__["SimpleRenderer"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRenderer", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_22__["ClassRenderer"]; });
+/* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./renderer/category-renderer */ "../dist/renderer/category-renderer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRendererItem", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_23__["CategoryRendererItem"]; });
 
-/* harmony import */ var _projection_projection__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./projection/projection */ "../dist/projection/projection.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "LatLngType", function() { return _projection_projection__WEBPACK_IMPORTED_MODULE_23__["LatLngType"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "CategoryRenderer", function() { return _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_23__["CategoryRenderer"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Projection", function() { return _projection_projection__WEBPACK_IMPORTED_MODULE_23__["Projection"]; });
+/* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./renderer/class-renderer */ "../dist/renderer/class-renderer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRendererItem", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_24__["ClassRendererItem"]; });
 
-/* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./projection/web-mercator */ "../dist/projection/web-mercator.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "WebMercator", function() { return _projection_web_mercator__WEBPACK_IMPORTED_MODULE_24__["WebMercator"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ClassRenderer", function() { return _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_24__["ClassRenderer"]; });
 
-/* harmony import */ var _projection_bd09__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./projection/bd09 */ "../dist/projection/bd09.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "BD09", function() { return _projection_bd09__WEBPACK_IMPORTED_MODULE_25__["BD09"]; });
+/* harmony import */ var _projection_projection__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./projection/projection */ "../dist/projection/projection.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "LatLngType", function() { return _projection_projection__WEBPACK_IMPORTED_MODULE_25__["LatLngType"]; });
 
-/* harmony import */ var _projection_gcj02__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./projection/gcj02 */ "../dist/projection/gcj02.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GCJ02", function() { return _projection_gcj02__WEBPACK_IMPORTED_MODULE_26__["GCJ02"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Projection", function() { return _projection_projection__WEBPACK_IMPORTED_MODULE_25__["Projection"]; });
 
-/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./util/utility */ "../dist/util/utility.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Utility", function() { return _util_utility__WEBPACK_IMPORTED_MODULE_27__["Utility"]; });
+/* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./projection/web-mercator */ "../dist/projection/web-mercator.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "WebMercator", function() { return _projection_web_mercator__WEBPACK_IMPORTED_MODULE_26__["WebMercator"]; });
 
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Bound", function() { return _util_bound__WEBPACK_IMPORTED_MODULE_28__["Bound"]; });
+/* harmony import */ var _projection_bd09__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./projection/bd09 */ "../dist/projection/bd09.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "BD09", function() { return _projection_bd09__WEBPACK_IMPORTED_MODULE_27__["BD09"]; });
 
-/* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./util/color */ "../dist/util/color.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Color", function() { return _util_color__WEBPACK_IMPORTED_MODULE_29__["Color"]; });
+/* harmony import */ var _projection_gcj02__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./projection/gcj02 */ "../dist/projection/gcj02.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GCJ02", function() { return _projection_gcj02__WEBPACK_IMPORTED_MODULE_28__["GCJ02"]; });
+
+/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./util/utility */ "../dist/util/utility.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Utility", function() { return _util_utility__WEBPACK_IMPORTED_MODULE_29__["Utility"]; });
+
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Bound", function() { return _util_bound__WEBPACK_IMPORTED_MODULE_30__["Bound"]; });
+
+/* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ./util/color */ "../dist/util/color.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Color", function() { return _util_color__WEBPACK_IMPORTED_MODULE_31__["Color"]; });
+
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Subject", function() { return _util_subject__WEBPACK_IMPORTED_MODULE_32__["Subject"]; });
+
+
+
 
 
 
@@ -1519,7 +1870,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../renderer/class-renderer */ "../dist/renderer/class-renderer.js");
 /* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
 /* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../geometry/point */ "../dist/geometry/point.js");
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! .. */ "../dist/index.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
 
 
 
@@ -1531,8 +1882,12 @@ __webpack_require__.r(__webpack_exports__);
 class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
     constructor() {
         super(...arguments);
+        //是否显示标注
         this.labeled = false;
+        //是否聚合
         this.cluster = false;
+        //是否正在编辑
+        this.editing = false;
         this._zoom = [3, 20];
         this._interactive = true;
     }
@@ -1547,12 +1902,6 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
     }
     set label(value) {
         this._label = value;
-    }
-    get tooltip() {
-        return this._tooltip;
-    }
-    set tooltip(value) {
-        this._tooltip = value;
     }
     set renderer(value) {
         this._renderer = value;
@@ -1601,7 +1950,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
                         item.feature.draw(ctx, projection, extent, this._getSymbol(item.feature));
                     }
                     else {
-                        item.feature.draw(ctx, projection, extent, new ___WEBPACK_IMPORTED_MODULE_7__["ClusterSymbol"](item.count));
+                        item.feature.draw(ctx, projection, extent, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_7__["ClusterSymbol"](item.count));
                     }
                 });
             }
@@ -1615,6 +1964,9 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
     drawLabel(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, zoom = 10) {
         if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
+            /*features.forEach( feature => {
+                feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
+            });*/
             const cluster = features.reduce((acc, cur) => {
                 const item = acc.find((item) => {
                     const distance = cur.geometry.distance(item.feature.geometry, _geometry_geometry__WEBPACK_IMPORTED_MODULE_5__["CoordinateType"].Screen, ctx, projection);
@@ -1641,17 +1993,18 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
                 return feature.contain(screenX, screenY, event);
             });
             if (features.length > 0) {
-                this._hoverFeature = features[0];
+                if (event == "dblclick") {
+                    features[0].emit("dblclick", { feature: features[0], screenX: screenX, screenY: screenY });
+                }
+                else if (event == "click") {
+                    features[0].emit("click", { feature: features[0], screenX: screenX, screenY: screenY });
+                }
                 return true;
             }
             else {
-                this._hoverFeature = null;
                 return false;
             }
         }
-    }
-    getTooltip() {
-        return (this._hoverFeature && this._tooltip && this._tooltip.field) ? this._hoverFeature.properties[this._tooltip.field.name] : "";
     }
     _getSymbol(feature) {
         if (this._renderer instanceof _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_2__["SimpleRenderer"]) {
@@ -1692,6 +2045,22 @@ class GraphicLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
         super(...arguments);
         this._graphics = [];
     }
+    //地图事件注册监听
+    on(event, handler) {
+        this._graphics.forEach((graphic) => {
+            graphic.on(event, handler);
+        });
+    }
+    off(event, handler) {
+        this._graphics.forEach((graphic) => {
+            graphic.off(event, handler);
+        });
+    }
+    emit(event, param) {
+        this._graphics.forEach((graphic) => {
+            graphic.emit(event, param);
+        });
+    }
     add(graphic) {
         this._graphics.push(graphic);
     }
@@ -1707,6 +2076,28 @@ class GraphicLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
             this._graphics.forEach((graphic) => {
                 graphic.draw(ctx, projection, extent);
             });
+        }
+    }
+    contain(screenX, screenY, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, zoom = 10, event = undefined) {
+        if (this.visible) {
+            const graphics = this._graphics.filter((graphic) => graphic.intersect(projection, extent)).filter((graphic) => {
+                return graphic.contain(screenX, screenY, event);
+            });
+            if (graphics.length > 0) {
+                if (event == "dblclick") {
+                    graphics[0].emit("dblclick", { graphic: graphics[0], screenX: screenX, screenY: screenY });
+                }
+                else if (event == "click") {
+                    graphics[0].emit("click", { graphic: graphics[0], screenX: screenX, screenY: screenY });
+                }
+                else if (event == "dragstart") {
+                    graphics[0].emit("dragstart", { graphic: graphics[0], screenX: screenX, screenY: screenY });
+                }
+                return true;
+            }
+            else {
+                return false;
+            }
         }
     }
 }
@@ -1753,18 +2144,27 @@ class Layer {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Map", function() { return Map; });
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
-/* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./projection/web-mercator */ "../dist/projection/web-mercator.js");
-/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/layer/graphic-layer.js");
-/* harmony import */ var _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./layer/feature-layer */ "../dist/layer/feature-layer.js");
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
+/* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./projection/web-mercator */ "../dist/projection/web-mercator.js");
+/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/layer/graphic-layer.js");
 /* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./util/utility */ "../dist/util/utility.js");
+/* harmony import */ var _editor_editor__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./editor/editor */ "../dist/editor/editor.js");
+/* harmony import */ var _viewer__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./viewer */ "../dist/viewer.js");
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
+/* harmony import */ var _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./tooltip/tooltip */ "../dist/tooltip/tooltip.js");
 
 
 
 
 
-class Map {
+
+
+
+
+class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
     constructor(id) {
+        super(["extent", "click", "mousemove"]);
         this._drag = {
             flag: false,
             start: {
@@ -1780,41 +2180,41 @@ class Map {
         this._zoom = 1;
         //地图视图中心
         this._center = [0, 0];
-        //地图事件的handlers
-        this._events = {
-            "click": [],
-            "extent": [] //view updated
-        };
-        //图层列表
-        this._defaultGraphicLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_2__["GraphicLayer"]();
-        this._layers = [];
+        //默认图形图层
+        this._defaultGraphicLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_3__["GraphicLayer"]();
         this._container = document.getElementById(id);
         //create canvas
         this._canvas = document.createElement("canvas");
-        this._canvas.style.cssText = "height: 100%; width: 100%";
+        this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 100";
         this._canvas.width = this._container.clientWidth;
         this._canvas.height = this._container.clientHeight;
         this._container.appendChild(this._canvas);
-        //create tooltip
-        this._tooltip = document.createElement("div");
-        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltip, "green-tooltip");
-        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltip, "green-tooltip-placement-top");
-        this._container.appendChild(this._tooltip);
-        this._tooltipArrow = document.createElement("div");
-        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow");
-        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
-        this._tooltip.appendChild(this._tooltipArrow);
-        this._tooltipText = document.createElement("div");
-        _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._tooltipText, "green-tooltip-text");
-        this._tooltip.appendChild(this._tooltipText);
+        this._onClick = this._onClick.bind(this);
+        this._onDoubleClick = this._onDoubleClick.bind(this);
+        this._onMouseDown = this._onMouseDown.bind(this);
+        this._onMouseMove = this._onMouseMove.bind(this);
+        this._onMouseUp = this._onMouseUp.bind(this);
+        this._onWheel = this._onWheel.bind(this);
         this._ctx = this._canvas.getContext("2d");
-        this._canvas.addEventListener("click", this._onClick.bind(this));
-        this._canvas.addEventListener("dblclick", this._onDoubleClick.bind(this));
-        this._canvas.addEventListener("mousedown", this._onMouseDown.bind(this));
-        this._canvas.addEventListener("mousemove", this._onMouseMove.bind(this));
-        this._canvas.addEventListener("mouseup", this._onMouseUp.bind(this));
-        this._canvas.addEventListener("wheel", this._onWheel.bind(this));
-        this._projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"]();
+        this._canvas.addEventListener("click", this._onClick);
+        this._canvas.addEventListener("dblclick", this._onDoubleClick);
+        this._canvas.addEventListener("mousedown", this._onMouseDown);
+        this._canvas.addEventListener("mousemove", this._onMouseMove);
+        this._canvas.addEventListener("mouseup", this._onMouseUp);
+        this._canvas.addEventListener("wheel", this._onWheel);
+        //viewer
+        this._viewer = new _viewer__WEBPACK_IMPORTED_MODULE_6__["Viewer"](this);
+        this._viewer.on("mouseover", () => { _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._canvas, "green-hover"); });
+        this._viewer.on("mouseout", () => { _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].removeClass(this._canvas, "green-hover"); });
+        //editor
+        this._editor = new _editor_editor__WEBPACK_IMPORTED_MODULE_5__["Editor"](this);
+        this._editor.on("mouseover", () => { _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._canvas, "green-hover"); });
+        this._editor.on("mouseout", () => { _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].removeClass(this._canvas, "green-hover"); });
+        this._editor.on("startedit", () => { this._viewer.redraw(); });
+        this._editor.on("stopedit", () => { this._viewer.redraw(); });
+        //tooltip
+        this._tooltip = new _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_8__["Tooltip"](this);
+        this._projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_2__["WebMercator"]();
         this._center = [0, 0];
         this._zoom = 10;
         //Latlng [-180, 180] [-90, 90]
@@ -1823,17 +2223,29 @@ class Map {
         //设置初始矩阵，由于地图切片是256*256，Math.pow(2, this._zoom)代表在一定缩放级别下x与y轴的切片数量
         this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale, 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
     }
+    get container() {
+        return this._container;
+    }
+    get viewer() {
+        return this._viewer;
+    }
+    get editor() {
+        return this._editor;
+    }
+    set editor(value) {
+        this._editor = value;
+    }
+    get center() {
+        return this._center;
+    }
+    get extent() {
+        return this._extent;
+    }
+    get zoom() {
+        return this._zoom;
+    }
     get projection() {
         return this._projection;
-    }
-    //show tooltip
-    _showTooltip(text, screenX, screenY) {
-        this._tooltipText.innerHTML = text;
-        //this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
-        this._tooltip.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
-    }
-    _hideTooltip() {
-        this._tooltip.style.cssText = "display: none";
     }
     //设置投影
     setProjection(projection) {
@@ -1858,41 +2270,18 @@ class Map {
         this._ctx.setTransform(a, 0, 0, d, e, f);
         this.redraw();
     }
-    //地图事件注册监听
-    on(event, handler) {
-        this._events[event].push(handler);
-    }
-    off(event, handler) {
-        if (Array.isArray(this._events[event])) {
-            const index = this._events[event].findIndex(item => item === handler);
-            index != -1 && this._events[event].splice(index, 1);
-        }
-    }
-    emit(event, param) {
-        this._events[event].forEach(handler => handler(param));
-    }
+    //viewer
     addLayer(layer) {
-        this._layers.push(layer);
-        layer.draw(this._ctx, this._projection, this._extent);
+        this._viewer.addLayer(layer);
     }
     insertLayer(layer, index = -1) {
-        index = index > this._layers.length ? -1 : index;
-        if (index == -1) {
-            this.addLayer(layer);
-        }
-        else {
-            this._layers.splice(index, 0, layer);
-            this.redraw();
-        }
+        this._viewer.insertLayer(layer, index);
     }
     removeLayer(layer) {
-        const index = this._layers.findIndex(item => item === layer);
-        index != -1 && this._layers.splice(index, 1);
-        this.redraw();
+        this._viewer.removeLayer(layer);
     }
     clearLayers() {
-        this._layers = [];
-        this.redraw();
+        this._viewer.clear();
     }
     //shortcut
     addGraphic(graphic) {
@@ -1901,60 +2290,48 @@ class Map {
     }
     removeGraphic(graphic) {
         this._defaultGraphicLayer.remove(graphic);
-        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent);
+        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
     }
     clearGraphics() {
         this._defaultGraphicLayer.clear();
-        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent);
+        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
     }
     //更新地图视图范围以及中心点
     updateExtent() {
         const matrix = this._ctx.getTransform();
         const x1 = (0 - matrix.e) / matrix.a, y1 = (0 - matrix.f) / matrix.d, x2 = (this._canvas.width - matrix.e) / matrix.a, y2 = (this._canvas.height - matrix.f) / matrix.d;
-        this._extent = new _util_bound__WEBPACK_IMPORTED_MODULE_0__["Bound"](Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
+        this._extent = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
         this._center = this._projection.unproject([(x1 + x2) / 2, (y1 + y2) / 2]);
-        this._events.extent.forEach(handler => handler({ extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix }));
+        this._handlers["extent"].forEach(handler => handler({ extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix }));
     }
     redraw() {
         this._ctx.save();
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-        /* //start axis
-        this._ctx.strokeStyle = "#0000ff";
-        //x axis
-        this._ctx.lineWidth = 1;
-        this._ctx.beginPath();
-        this._ctx.moveTo(0, this._canvas.height/2);
-        this._ctx.lineTo(this._canvas.width, this._canvas.height/2);
-        this._ctx.stroke();
-        //y axis
-        this._ctx.beginPath();
-        this._ctx.moveTo(this._canvas.width/2, this._canvas.height);
-        this._ctx.lineTo(this._canvas.width/2, 0);
-        this._ctx.stroke();
-        //end axis*/
         this._ctx.restore();
         this.updateExtent();
-        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent);
-        this._layers.forEach(layer => {
-            layer.draw(this._ctx, this._projection, this._extent, this._zoom);
-        });
-        this._layers.filter(layer => (layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__["FeatureLayer"]) && layer.labeled).forEach((layer) => {
-            layer.drawLabel(this._ctx, this._projection, this._extent, this._zoom);
-        });
+        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
+        this.hideTooltip();
     }
     clear() {
+        this._ctx.save();
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
         this.updateExtent();
     }
     _onClick(event) {
-        const flag = this._layers.filter(layer => (layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__["FeatureLayer"]) && layer.interactive).some((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, this._zoom, "click"));
-        if (!flag) {
-            this._events.click.forEach(handler => handler({ event: event }));
+        if (this._editor && this._editor.editing) {
+            this._editor._onClick(event);
+            return;
         }
+        this._handlers["click"].forEach(handler => handler(event));
     }
     _onDoubleClick(event) {
+        if (this._editor && this._editor.editing) {
+            this._editor._onDoubleClick(event);
+            return;
+        }
         if (this._zoom >= 20)
             return;
         const scale = 2;
@@ -1968,27 +2345,28 @@ class Map {
         this.redraw();
     }
     _onMouseDown(event) {
+        if (this._editor && this._editor.editing) {
+            this._editor._onMouseDown(event);
+            return;
+        }
         this._drag.flag = true;
         this._drag.start.x = event.x;
         this._drag.start.y = event.y;
     }
     _onMouseMove(event) {
+        if (this._editor && this._editor.editing) {
+            this._editor._onMouseMove(event);
+            return;
+        }
         if (!this._drag.flag) {
-            //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
-            //const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-            const layers = this._layers.filter(layer => (layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_3__["FeatureLayer"]) && layer.interactive).filter((layer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, this._zoom, "mousemove"));
-            if (layers.length > 0) {
-                _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._canvas, "green-hover");
-                const layer = layers.find((layer) => layer.getTooltip());
-                layer && this._showTooltip(layer.getTooltip(), event.offsetX, event.offsetY);
-            }
-            else {
-                this._hideTooltip();
-                _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].removeClass(this._canvas, "green-hover");
-            }
+            this._handlers["mousemove"].forEach(handler => handler(event));
         }
     }
     _onMouseUp(event) {
+        if (this._editor && this._editor.editing) {
+            this._editor._onMouseUp(event);
+            return;
+        }
         if (this._drag.flag) {
             this._drag.end.x = event.x;
             this._drag.end.y = event.y;
@@ -2032,6 +2410,18 @@ class Map {
         this._ctx.transform(scale, 0, 0, scale, e, f);
         this.redraw();
     }
+    //show tooltip
+    showTooltip(feature, field) {
+        const text = feature.properties[field.name];
+        const center = feature.geometry.getCenter(_geometry_geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Projection, this.projection);
+        const matrix = this._ctx.getTransform();
+        const screenX = (matrix.a * center[0] + matrix.e);
+        const screenY = (matrix.d * center[1] + matrix.f);
+        this._tooltip.show(text, screenX, screenY);
+    }
+    hideTooltip() {
+        this._tooltip.hide();
+    }
     destroy() {
         this._canvas.removeEventListener("click", this._onClick);
         this._canvas.removeEventListener("dblclick", this._onDoubleClick);
@@ -2039,6 +2429,8 @@ class Map {
         this._canvas.removeEventListener("mousemove", this._onMouseMove);
         this._canvas.removeEventListener("mouseup", this._onMouseUp);
         this._canvas.removeEventListener("wheel", this._onWheel);
+        this._viewer = null;
+        this._editor = null;
     }
 }
 
@@ -2462,7 +2854,7 @@ class SimpleRenderer {
 /*!********************************!*\
   !*** ../dist/symbol/symbol.js ***!
   \********************************/
-/*! exports provided: Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, ArrowSymbol, ClusterSymbol */
+/*! exports provided: Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2474,6 +2866,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return SimpleMarkerSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleTextSymbol", function() { return SimpleTextSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ArrowSymbol", function() { return ArrowSymbol; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "VertexSymbol", function() { return VertexSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ClusterSymbol", function() { return ClusterSymbol; });
 /* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/color */ "../dist/util/color.js");
 
@@ -2555,6 +2948,15 @@ class ArrowSymbol extends Symbol {
         this.arrowAngle = Math.PI / 6; //angle 30
     }
 }
+class VertexSymbol extends Symbol {
+    constructor() {
+        super(...arguments);
+        this.size = 10;
+        this.lineWidth = 1;
+        this.strokeStyle = "#ff0000"; //#ff0000
+        this.fillStyle = "#ff000088"; //#ff0000
+    }
+}
 class ClusterSymbol extends Symbol {
     constructor(count) {
         super();
@@ -2613,7 +3015,32 @@ class ClusterSymbol extends Symbol {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Tooltip", function() { return Tooltip; });
+/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/utility */ "../dist/util/utility.js");
+
 class Tooltip {
+    constructor(map) {
+        this._map = map;
+        const container = this._map.container;
+        this._tooltipContainer = document.createElement("div");
+        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipContainer, "green-tooltip");
+        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipContainer, "green-tooltip-placement-top");
+        container.appendChild(this._tooltipContainer);
+        this._tooltipArrow = document.createElement("div");
+        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow");
+        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
+        this._tooltipContainer.appendChild(this._tooltipArrow);
+        this._tooltipText = document.createElement("div");
+        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipText, "green-tooltip-text");
+        this._tooltipContainer.appendChild(this._tooltipText);
+    }
+    show(text, screenX, screenY) {
+        this._tooltipText.innerHTML = text;
+        //this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
+        this._tooltipContainer.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
+    }
+    hide() {
+        this._tooltipContainer.style.cssText = "display: none";
+    }
 }
 
 
@@ -2728,6 +3155,41 @@ class Color {
 
 /***/ }),
 
+/***/ "../dist/util/subject.js":
+/*!*******************************!*\
+  !*** ../dist/util/subject.js ***!
+  \*******************************/
+/*! exports provided: Subject */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Subject", function() { return Subject; });
+class Subject {
+    constructor(events) {
+        this._handlers = {};
+        events.forEach(event => {
+            this._handlers[event] = []; //handlers array
+        });
+    }
+    //地图事件注册监听
+    on(event, handler) {
+        this._handlers[event].push(handler);
+    }
+    off(event, handler) {
+        if (Array.isArray(this._handlers[event])) {
+            const index = this._handlers[event].findIndex(item => item === handler);
+            index != -1 && this._handlers[event].splice(index, 1);
+        }
+    }
+    emit(event, param) {
+        this._handlers[event].forEach(handler => handler(param));
+    }
+}
+
+
+/***/ }),
+
 /***/ "../dist/util/utility.js":
 /*!*******************************!*\
   !*** ../dist/util/utility.js ***!
@@ -2795,17 +3257,129 @@ class Utility {
 
 /***/ }),
 
-/***/ "./basic.js":
-/*!******************!*\
-  !*** ./basic.js ***!
-  \******************/
+/***/ "../dist/viewer.js":
+/*!*************************!*\
+  !*** ../dist/viewer.js ***!
+  \*************************/
+/*! exports provided: Viewer */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Viewer", function() { return Viewer; });
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
+
+class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
+    constructor(map) {
+        super(["mouseover", "mouseout"]); //when mouseover feature
+        this._drag = {
+            flag: false,
+            start: {
+                x: 0,
+                y: 0
+            },
+            end: {
+                x: 0,
+                y: 0
+            }
+        };
+        //图层列表
+        this._layers = [];
+        this._map = map;
+        const container = map.container;
+        //create canvas
+        this._canvas = document.createElement("canvas");
+        this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%;";
+        this._canvas.width = container.clientWidth;
+        this._canvas.height = container.clientHeight;
+        container.appendChild(this._canvas);
+        this._extentChange = this._extentChange.bind(this);
+        this._onClick = this._onClick.bind(this);
+        this._onMouseMove = this._onMouseMove.bind(this);
+        this._ctx = this._canvas.getContext("2d");
+        this._map.on("extent", this._extentChange);
+        this._map.on("click", this._onClick);
+        this._map.on("mousemove", this._onMouseMove);
+    }
+    _extentChange(event) {
+        this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
+        this.redraw();
+    }
+    _onClick(event) {
+        this._layers.filter(layer => layer.interactive && !layer.editing).some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click"));
+    }
+    _onMouseMove(event) {
+        //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
+        //const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
+        const layers = this._layers.filter(layer => layer.interactive && !layer.editing).filter((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove"));
+        if (layers.length > 0) {
+            this.emit("mouseover", event);
+        }
+        else {
+            this.emit("mouseout", event);
+        }
+    }
+    addLayer(layer) {
+        this._layers.push(layer);
+        layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+    }
+    insertLayer(layer, index = -1) {
+        index = index > this._layers.length ? -1 : index;
+        if (index == -1) {
+            this.addLayer(layer);
+        }
+        else {
+            this._layers.splice(index, 0, layer);
+            this.redraw();
+        }
+    }
+    removeLayer(layer) {
+        const index = this._layers.findIndex(item => item === layer);
+        index != -1 && this._layers.splice(index, 1);
+        this.redraw();
+    }
+    clearLayers() {
+        this._layers = [];
+        this.redraw();
+    }
+    redraw() {
+        this._ctx.save();
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
+        this._layers.filter(layer => !layer.editing).forEach(layer => {
+            layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        });
+        this._layers.filter(layer => layer.labeled && !layer.editing).forEach((layer) => {
+            layer.drawLabel(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        });
+    }
+    clear() {
+        this._ctx.save();
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
+    }
+    destroy() {
+        this._map.off("click", this._onClick);
+        this._map.off("mousemove", this._onMouseMove);
+        this._map.off("extent", this._extentChange);
+    }
+}
+
+
+/***/ }),
+
+/***/ "./editor-polygon.js":
+/*!***************************!*\
+  !*** ./editor-polygon.js ***!
+  \***************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
-
 
 
 window.load = () => {
@@ -2830,20 +3404,60 @@ window.load = () => {
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
         amap.setZoomAndCenter(event.zoom, event.center);
+        document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
+        document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
+        document.getElementById("zoom").value = event.zoom;
+        document.getElementById("x1").value = Math.round(event.extent.xmin * 1000)/1000;
+        document.getElementById("y1").value = Math.round(event.extent.ymin * 1000)/1000;
+        document.getElementById("x2").value = Math.round(event.extent.xmax * 1000)/1000;
+        document.getElementById("y2").value = Math.round(event.extent.ymax * 1000)/1000;
+        document.getElementById("a").value = Math.round(event.matrix.a * 1000)/1000;
+        document.getElementById("d").value = Math.round(event.matrix.d * 1000)/1000;
+        document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
+        document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setView([116.397411,39.909186], 12);
-    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
-    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, marker);
-    map.addGraphic(graphic);
+
+    var req = new XMLHttpRequest();
+    req.onload = (event) => {
+        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
+        featureClass.loadGeoJSON(JSON.parse(req.responseText));
+        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
+        featureLayer.featureClass = featureClass;
+        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
+        field.name = "name";
+        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
+        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
+        renderer.generate(featureClass, field);
+        featureLayer.renderer = renderer;
+        featureLayer.zoom = [5, 20];
+        map.addLayer(featureLayer);
+
+        const editor = map.editor;
+        editor.start();
+        editor.setFeatureLayer(featureLayer);
+        document.getElementById("status").value = "editor is started";
+
+        window.start = () => {
+            editor.start();
+            editor.setFeatureLayer(featureLayer);
+            document.getElementById("status").value = "editor is started";
+        };
+
+        window.stop = () => {
+            editor.stop();
+            document.getElementById("status").value = "editor is stopped";
+        };
+
+        map.setView([107.777, 29.809], 7);
+    };
+    req.open("GET", "assets/geojson/chongqing.json", true);
+    req.send(null);
+
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
+
+
 }
 
-//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 

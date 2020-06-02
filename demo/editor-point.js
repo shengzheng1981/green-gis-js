@@ -1,5 +1,5 @@
 import {
-    Map,
+    Map, Editor,
     GCJ02, LatLngType,
     Point,
     Polyline,
@@ -11,7 +11,7 @@ import {
     CategoryRendererItem,
     Field, Label, Tooltip,
     FieldType,
-    Graphic, SimpleMarkerSymbol, Feature, SimpleTextSymbol
+    Graphic, SimpleMarkerSymbol, Feature, SimpleTextSymbol, ArrowSymbol, SimplePointSymbol,
 } from "../dist";
 
 window.load = () => {
@@ -48,7 +48,6 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setProjection(new GCJ02(LatLngType.GCJ02));
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -56,21 +55,36 @@ window.load = () => {
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new FeatureLayer();
         featureLayer.featureClass = featureClass;
-        const field = new Field();
-        field.name = "name";
-        field.type = FieldType.String;
-        const renderer = new CategoryRenderer();
-        renderer.generate(featureClass, field);
+        const renderer = new SimpleRenderer();
+        const symbol = new SimplePointSymbol();
+        symbol.fillStyle = "#008888";
+        renderer.symbol = symbol;
         featureLayer.renderer = renderer;
-        featureLayer.zoom = [5, 20];
-        featureLayer.on("mouseover", (event) => {
-            map.showTooltip(event.feature, field);
-        });
+        featureLayer.zoom = [13, 20];
         map.addLayer(featureLayer);
 
-        map.setView([107.411, 29.89], 7);
+        const editor = map.editor;
+        editor.start();
+        editor.setFeatureLayer(featureLayer);
+        document.getElementById("status").value = "editor is started";
+
+        window.start = () => {
+            editor.start();
+            editor.setFeatureLayer(featureLayer);
+            document.getElementById("status").value = "editor is started";
+        };
+
+        window.stop = () => {
+            editor.stop();
+            document.getElementById("status").value = "editor is stopped";
+        };
+
+        map.setView([109.519, 18.271], 13);
     };
-    req.open("GET", "assets/geojson/chongqing.json", true);
+    req.open("GET", "assets/geojson/junction.json", true);
     req.send(null);
+
+    map.setProjection(new GCJ02(LatLngType.GCJ02));
+
 
 }

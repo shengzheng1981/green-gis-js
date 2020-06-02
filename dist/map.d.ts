@@ -1,7 +1,11 @@
+import { Bound } from "./util/bound";
 import { Projection } from "./projection/projection";
-import { Layer } from "./layer/layer";
 import { Graphic } from "./element/graphic";
-export declare class Map {
+import { FeatureLayer } from "./layer/feature-layer";
+import { Editor } from "./editor/editor";
+import { Viewer } from "./viewer";
+import { Subject } from "./util/subject";
+export declare class Map extends Subject {
     private _container;
     private _canvas;
     private _ctx;
@@ -10,24 +14,24 @@ export declare class Map {
     private _center;
     private _extent;
     private _projection;
-    private _events;
     private _defaultGraphicLayer;
-    private _layers;
+    private _viewer;
+    private _editor;
     private _tooltip;
-    private _tooltipArrow;
-    private _tooltipText;
+    get container(): HTMLDivElement;
+    get viewer(): Viewer;
+    get editor(): Editor;
+    set editor(value: Editor);
+    get center(): number[];
+    get extent(): Bound;
+    get zoom(): number;
     get projection(): Projection;
     constructor(id: string);
-    _showTooltip(text: any, screenX: any, screenY: any): void;
-    _hideTooltip(): void;
     setProjection(projection: any): void;
     setView(center?: number[], zoom?: number): void;
-    on(event: any, handler: any): void;
-    off(event: any, handler: any): void;
-    emit(event: any, param: any): void;
-    addLayer(layer: Layer): void;
-    insertLayer(layer: Layer, index?: number): void;
-    removeLayer(layer: Layer): void;
+    addLayer(layer: FeatureLayer): void;
+    insertLayer(layer: FeatureLayer, index?: number): void;
+    removeLayer(layer: FeatureLayer): void;
     clearLayers(): void;
     addGraphic(graphic: Graphic): void;
     removeGraphic(graphic: Graphic): void;
@@ -41,5 +45,7 @@ export declare class Map {
     _onMouseMove(event: any): void;
     _onMouseUp(event: any): void;
     _onWheel(event: any): void;
+    showTooltip(feature: any, field: any): void;
+    hideTooltip(): void;
     destroy(): void;
 }

@@ -18,10 +18,6 @@ window.load = () => {
     const bmap = new BMap.Map(document.getElementById('bmap'), {
         enableMapClick: false
     });
-    bmap.disableDragging();
-    bmap.disableScrollWheelZoom();
-    bmap.disableDoubleClickZoom();
-    bmap.disableKeyboard();
 
     const map = new Map("foo");
     map.on("extent", (event) => {
@@ -41,34 +37,7 @@ window.load = () => {
 
     map.setProjection(new BD09(LatLngType.GPS));
 
-    var req = new XMLHttpRequest();
-    req.onload = (event) => {
-        const featureClass = new FeatureClass();
-        featureClass.loadGeoJSON(JSON.parse(req.responseText));
-        const featureLayer = new FeatureLayer();
-        featureLayer.featureClass = featureClass;
-        const field = new Field();
-        field.name = "name";
-        field.type = FieldType.String;
-        const renderer = new CategoryRenderer();
-        renderer.generate(featureClass, field);
-        featureLayer.renderer = renderer;
-        featureLayer.zoom = [5, 20];
-        featureLayer.on("click", (event) => {
-            console.log(event.feature.properties["name"], "click");
-        });
-        featureLayer.on("mouseover", (event) => {
-            console.log(event.feature.properties["name"], "mouse over");
-        });
-        featureLayer.on("mouseout", (event) => {
-            console.log(event.feature.properties["name"], "mouse out");
-        });
-        map.addLayer(featureLayer);
-    };
-    //req.open("GET", "assets/geojson/chongqing.json", true);
-    //req.send(null);
-
-    //beijing gugong
+    //五道口 华清嘉园
     const point = new Point(116.327158, 39.990912);
     const feature = new Feature(point, {});
     const featureClass = new FeatureClass();

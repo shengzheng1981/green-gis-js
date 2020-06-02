@@ -1,7 +1,9 @@
 export * from './map';
+export * from './viewer';
 export * from './entity';
 export * from './data/feature-class';
 export * from './data/field';
+export * from './editor/editor';
 export * from './element/graphic';
 export * from './element/feature';
 export * from './geometry/geometry';
@@ -28,3 +30,4 @@ export * from './projection/gcj02';
 export * from './util/utility';
 export * from './util/bound';
 export * from './util/color';
+export * from './util/subject';

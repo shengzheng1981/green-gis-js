@@ -77,6 +77,15 @@ export class ArrowSymbol extends Symbol {
         this.arrowAngle = Math.PI / 6; //angle 30
     }
 }
+export class VertexSymbol extends Symbol {
+    constructor() {
+        super(...arguments);
+        this.size = 10;
+        this.lineWidth = 1;
+        this.strokeStyle = "#ff0000"; //#ff0000
+        this.fillStyle = "#ff000088"; //#ff0000
+    }
+}
 export class ClusterSymbol extends Symbol {
     constructor(count) {
         super();

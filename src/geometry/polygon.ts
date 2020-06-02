@@ -14,6 +14,11 @@ export class Polygon extends Geometry{
     //屏幕坐标
     private _screen: number[][][];
 
+    get lnglats(): number[][][] {
+        return this._lnglats;
+    }
+
+
     constructor(lnglats: number[][][]) {
         super();
         this._lnglats = lnglats;
@@ -33,6 +38,26 @@ export class Polygon extends Geometry{
             })
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+    }
+
+    splice(ctx: CanvasRenderingContext2D, projection: Projection, lnglat: number[], screenX = undefined, screenY = undefined, replaced = true) {
+        if (screenX == undefined && screenY == undefined) {
+            this._lnglats.forEach( ring => {
+                const index = ring.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+                ring.length > 3 && index != -1 && ring.splice(index, 1);
+            });
+        } else {
+            const matrix = (ctx as any).getTransform();
+            const x = (screenX - matrix.e) / matrix.a;
+            const y = (screenY - matrix.f) / matrix.d;
+            this._projection = projection;
+            const [lng, lat] = this._projection.unproject([x, y]);
+            this._lnglats.forEach( ring => {
+                const index = ring.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+                index != -1 && ring.splice(index, replaced ? 1 : 0, [lng, lat]);
+            });
+        }
+        this.project(projection);
     }
 
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimpleFillSymbol()) {

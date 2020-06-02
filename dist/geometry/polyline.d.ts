@@ -8,8 +8,10 @@ export declare class Polyline extends Geometry {
     private _lnglats;
     private _coordinates;
     private _screen;
+    get lnglats(): number[][];
     constructor(lnglats: number[][]);
     project(projection: Projection): void;
+    splice(ctx: CanvasRenderingContext2D, projection: Projection, lnglat: number[], screenX?: any, screenY?: any, replaced?: boolean): void;
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): void;
     _getPointAlongLine(p1: any, p2: any, d: any): number[];
     _getPointAlongLine2(k: any, b: any, p: any, d: any): any[][];

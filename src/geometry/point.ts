@@ -1,7 +1,14 @@
 import {CoordinateType, Geometry} from "./geometry";
 import {Bound} from "../util/bound";
 import {Projection} from "../projection/projection";
-import {ClusterSymbol, SimpleMarkerSymbol, SimplePointSymbol, SimpleTextSymbol, Symbol} from "../symbol/symbol";
+import {
+    ClusterSymbol,
+    SimpleMarkerSymbol,
+    SimplePointSymbol,
+    SimpleTextSymbol,
+    Symbol,
+    VertexSymbol
+} from "../symbol/symbol";
 import {WebMercator} from "../projection/web-mercator";
 
 //点
@@ -48,6 +55,18 @@ export class Point extends Geometry{
         this._projected = true;
     }
 
+    move(ctx: CanvasRenderingContext2D, projection: Projection, screenX: number, screenY: number) {
+        const matrix = (ctx as any).getTransform();
+        this._screenX = screenX;
+        this._screenY = screenY;
+        this._x = (this._screenX - matrix.e) / matrix.a;
+        this._y = (this._screenY - matrix.f) / matrix.d;
+        this._bound = new Bound(this._x, this._y, this._x, this._y);
+        this._projection = projection;
+        [this._lng, this._lat] = this._projection.unproject([this._x, this._y]);
+        this._projected = true;
+    }
+
     async draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
@@ -79,6 +98,19 @@ export class Point extends Geometry{
                 ctx.drawImage(marker.icon, this._screenX + marker.offsetX, this._screenY + marker.offsetY, marker.width, marker.height);
                 ctx.restore();
             }
+        } else if (symbol instanceof VertexSymbol) {
+            ctx.save();
+            ctx.strokeStyle = (symbol as VertexSymbol).strokeStyle;
+            ctx.fillStyle = (symbol as VertexSymbol).fillStyle;
+            ctx.lineWidth = (symbol as VertexSymbol).lineWidth;
+            ctx.beginPath(); //Start path
+            //keep size
+            ctx.setTransform(1,0,0,1,0,0);
+            const size = (symbol as VertexSymbol).size;
+            ctx.rect(this._screenX - size/2, this._screenY - size/2, size, size);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
         } else if (symbol instanceof ClusterSymbol) {
             const cluster: ClusterSymbol = symbol;
             ctx.save();
@@ -111,6 +143,8 @@ export class Point extends Geometry{
             return Math.sqrt((this._screenX - screenX) *  (this._screenX - screenX) +  (this._screenY - screenY) *  (this._screenY - screenY)) <= (this._symbol as SimplePointSymbol).radius;
         } else if (this._symbol instanceof SimpleMarkerSymbol) {
             return screenX >= (this._screenX - this._symbol.offsetX) &&  screenX <= (this._screenX - this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY - this._symbol.offsetY) &&  screenY <= (this._screenY - this._symbol.offsetY + this._symbol.height);
+        } else if (this._symbol instanceof VertexSymbol) {
+            return screenX >= (this._screenX - this._symbol.size / 2) &&  screenX <= (this._screenX + this._symbol.size / 2) && screenY >= (this._screenY - this._symbol.size / 2) &&  screenY <= (this._screenY + this._symbol.size / 2);
         }
     }
 

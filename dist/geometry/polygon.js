@@ -8,6 +8,9 @@ export class Polygon extends Geometry {
         super();
         this._lnglats = lnglats;
     }
+    get lnglats() {
+        return this._lnglats;
+    }
     ;
     project(projection) {
         this._projection = projection;
@@ -22,6 +25,26 @@ export class Polygon extends Geometry {
             });
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+    }
+    splice(ctx, projection, lnglat, screenX = undefined, screenY = undefined, replaced = true) {
+        if (screenX == undefined && screenY == undefined) {
+            this._lnglats.forEach(ring => {
+                const index = ring.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+                ring.length > 3 && index != -1 && ring.splice(index, 1);
+            });
+        }
+        else {
+            const matrix = ctx.getTransform();
+            const x = (screenX - matrix.e) / matrix.a;
+            const y = (screenY - matrix.f) / matrix.d;
+            this._projection = projection;
+            const [lng, lat] = this._projection.unproject([x, y]);
+            this._lnglats.forEach(ring => {
+                const index = ring.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+                index != -1 && ring.splice(index, replaced ? 1 : 0, [lng, lat]);
+            });
+        }
+        this.project(projection);
     }
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleFillSymbol()) {
         if (!this._projected)

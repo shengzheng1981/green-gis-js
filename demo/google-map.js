@@ -36,56 +36,10 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setView([107.411, 29.89], 7);
+    map.setView([116.327158, 39.990912], 16);
 
-    var req = new XMLHttpRequest();
-    req.onload = (event) => {
-        const featureClass = new FeatureClass();
-        featureClass.loadGeoJSON(JSON.parse(req.responseText));
-        const featureLayer = new FeatureLayer();
-        featureLayer.featureClass = featureClass;
-        const field = new Field();
-        field.name = "name";
-        field.type = FieldType.String;
-        const renderer = new CategoryRenderer();
-        renderer.generate(featureClass, field);
-
-        /*renderer.field = field;
-        let item = new CategoryRendererItem();
-        item.value = "WEAR";
-        const symbol1 = new SimpleFillSymbol();
-        symbol1.fillStyle = "#0868ac";
-        symbol1.strokeStyle = "#084081";
-        item.symbol = symbol1;
-        renderer.items.push(item);
-        item = new CategoryRendererItem();
-        item.value = "GAAR";
-        const symbol2 = new SimpleFillSymbol();
-        symbol2.fillStyle = "#1a9850";
-        symbol2.strokeStyle = "#006837";
-        item.symbol = symbol2;
-        renderer.items.push(item);*/
-        /*const renderer = new SimpleRenderer();
-        renderer.symbol = new SimpleFillSymbol();*/
-        featureLayer.renderer = renderer;
-        featureLayer.zoom = [5, 20];
-        featureLayer.on("click", (event) => {
-            console.log(event.feature.properties["name"], "click");
-        });
-        featureLayer.on("mouseover", (event) => {
-            console.log(event.feature.properties["name"], "mouse over");
-        });
-        featureLayer.on("mouseout", (event) => {
-            console.log(event.feature.properties["name"], "mouse out");
-        });
-        map.addLayer(featureLayer);
-    };
-    req.open("GET", "assets/geojson/chongqing.json", true);
-    req.send(null);
-
-
-    //beijing gugong
-    const point = new Point(116.397411,39.909186);
+    //五道口 华清嘉园
+    const point = new Point(116.327158, 39.990912);
     const feature = new Feature(point, {});
     const featureClass = new FeatureClass();
     featureClass.addFeature(feature);

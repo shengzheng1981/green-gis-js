@@ -4,18 +4,13 @@ import {Symbol, SimplePointSymbol, SimpleTextSymbol} from "../symbol/symbol";
 import {Projection} from "../projection/projection";
 import {WebMercator} from "../projection/web-mercator";
 import {Field} from "../data/field";
+import {Subject} from "../util/subject";
 
-export class Feature {
+export class Feature extends Subject{
     private _geometry: Geometry;
     private _properties: any;
 
     private _contained: boolean;
-    //要素事件的handlers
-    private _events: any = {
-        "click": [],
-        "mouseover": [],    //鼠标进入
-        "mouseout": []      //鼠标退出
-    };
 
     public visible: boolean = true;
 
@@ -32,24 +27,9 @@ export class Feature {
     }
 
     constructor(geometry, properties) {
+        super(["click", "dblclick", "mouseover", "mouseout"]);
         this._geometry = geometry;
         this._properties = properties;
-    }
-
-    //地图事件注册监听
-    on(event, handler) {
-        this._events[event].push(handler);
-    }
-
-    off(event, handler) {
-        if (Array.isArray(this._events[event])) {
-            const index = this._events[event].findIndex( item => item === handler );
-            index != -1 && this._events[event].splice(index, 1);
-        }
-    }
-
-    emit(event, param) {
-        this._events[event].forEach(handler => handler(param));
     }
 
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
@@ -69,12 +49,10 @@ export class Feature {
             const flag = this._geometry.contain(screenX, screenY);
             if (event == "mousemove") {
                 if (!this._contained && flag) {
-                    this._events.mouseover.forEach(handler => handler({feature: this, screenX: screenX, screenY: screenY}));
+                    this._handlers["mouseover"].forEach(handler => handler({feature: this, screenX: screenX, screenY: screenY}));
                 } else if(this._contained && !flag) {
-                    this._events.mouseout.forEach(handler => handler({feature: this, screenX: screenX, screenY: screenY}));
+                    this._handlers["mouseout"].forEach(handler => handler({feature: this, screenX: screenX, screenY: screenY}));
                 }
-            } else if (event == "click") {
-                if (flag) this._events.click.forEach(handler => handler({feature: this, screenX: screenX, screenY: screenY}));
             }
             this._contained = flag;
             return flag;

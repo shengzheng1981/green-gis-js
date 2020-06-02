@@ -9,6 +9,9 @@ export class Polyline extends Geometry {
         this._tolerance = 4; //TOLERANCE + symbol.lineWidth
         this._lnglats = lnglats;
     }
+    get lnglats() {
+        return this._lnglats;
+    }
     ;
     project(projection) {
         this._projection = projection;
@@ -21,6 +24,22 @@ export class Polyline extends Geometry {
             ymax = Math.max(ymax, point[1]);
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+    }
+    splice(ctx, projection, lnglat, screenX = undefined, screenY = undefined, replaced = true) {
+        if (screenX == undefined && screenY == undefined) {
+            const index = this._lnglats.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+            this._lnglats.length > 2 && index != -1 && this._lnglats.splice(index, 1);
+        }
+        else {
+            const matrix = ctx.getTransform();
+            const x = (screenX - matrix.e) / matrix.a;
+            const y = (screenY - matrix.f) / matrix.d;
+            this._projection = projection;
+            const [lng, lat] = this._projection.unproject([x, y]);
+            const index = this._lnglats.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+            index != -1 && this._lnglats.splice(index, replaced ? 1 : 0, [lng, lat]);
+        }
+        this.project(projection);
     }
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleLineSymbol()) {
         if (!this._projected)

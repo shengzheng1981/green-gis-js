@@ -1,4 +1,4 @@
-import {Geometry} from "./geometry/geometry";
+import {CoordinateType, Geometry} from "./geometry/geometry";
 import {Bound} from "./util/bound";
 import {Projection} from "./projection/projection";
 import {WebMercator} from "./projection/web-mercator";
@@ -7,8 +7,12 @@ import {Layer} from "./layer/layer";
 import {Graphic} from "./element/graphic";
 import {FeatureLayer} from "./layer/feature-layer";
 import {Utility} from "./util/utility";
+import {Editor} from "./editor/editor";
+import {Viewer} from "./viewer";
+import {Subject} from "./util/subject";
+import {Tooltip} from "./tooltip/tooltip";
 
-export class Map {
+export class Map extends Subject{
     private _container: HTMLDivElement;
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D;
@@ -33,53 +37,79 @@ export class Map {
     //地图投影方式
     private _projection: Projection;
 
-    //地图事件的handlers
-    private _events: any = {
-        "click": [],    //when feature on click, stop propagation
-        "extent": []      //view updated
-    };
-
-    //图层列表
+    //默认图形图层
     private _defaultGraphicLayer: GraphicLayer = new GraphicLayer();
-    private _layers: Layer[] = [];
+    //视图
+    private _viewer: Viewer;
+    //编辑器
+    private _editor: Editor;
 
     //提示框
-    private _tooltip: HTMLDivElement;
-    private _tooltipArrow: HTMLDivElement;
-    private _tooltipText: HTMLDivElement;
+    private _tooltip: Tooltip;
 
+    get container(): HTMLDivElement{
+        return this._container;
+    }
+    get viewer(): Viewer {
+        return this._viewer;
+    }
+    get editor(): Editor {
+        return this._editor;
+    }
+    set editor(value: Editor) {
+        this._editor = value;
+    }
+    get center(): number[]{
+        return this._center;
+    }
+    get extent(): Bound{
+        return this._extent;
+    }
+    get zoom(): number{
+        return this._zoom;
+    }
     get projection(): Projection {
         return this._projection;
     }
 
     constructor(id: string) {
+        super(["extent", "click", "mousemove"]);
         this._container = document.getElementById(id) as HTMLDivElement;
         //create canvas
         this._canvas = document.createElement("canvas");
-        this._canvas.style.cssText = "height: 100%; width: 100%";
+        this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 100";
         this._canvas.width = this._container.clientWidth ;
         this._canvas.height = this._container.clientHeight;
         this._container.appendChild(this._canvas);
-        //create tooltip
-        this._tooltip = document.createElement("div");
-        Utility.addClass(this._tooltip, "green-tooltip");
-        Utility.addClass(this._tooltip, "green-tooltip-placement-top");
-        this._container.appendChild(this._tooltip);
-        this._tooltipArrow = document.createElement("div");
-        Utility.addClass(this._tooltipArrow, "green-tooltip-arrow");
-        Utility.addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
-        this._tooltip.appendChild(this._tooltipArrow);
-        this._tooltipText = document.createElement("div");
-        Utility.addClass(this._tooltipText, "green-tooltip-text");
-        this._tooltip.appendChild(this._tooltipText);
+
+        this._onClick = this._onClick.bind(this);
+        this._onDoubleClick = this._onDoubleClick.bind(this);
+        this._onMouseDown = this._onMouseDown.bind(this);
+        this._onMouseMove = this._onMouseMove.bind(this);
+        this._onMouseUp = this._onMouseUp.bind(this);
+        this._onWheel = this._onWheel.bind(this);
 
         this._ctx = this._canvas.getContext("2d");
-        this._canvas.addEventListener("click", this._onClick.bind(this));
-        this._canvas.addEventListener("dblclick", this._onDoubleClick.bind(this));
-        this._canvas.addEventListener("mousedown", this._onMouseDown.bind(this));
-        this._canvas.addEventListener("mousemove", this._onMouseMove.bind(this));
-        this._canvas.addEventListener("mouseup", this._onMouseUp.bind(this));
-        this._canvas.addEventListener("wheel", this._onWheel.bind(this));
+        this._canvas.addEventListener("click", this._onClick);
+        this._canvas.addEventListener("dblclick", this._onDoubleClick);
+        this._canvas.addEventListener("mousedown", this._onMouseDown);
+        this._canvas.addEventListener("mousemove", this._onMouseMove);
+        this._canvas.addEventListener("mouseup", this._onMouseUp);
+        this._canvas.addEventListener("wheel", this._onWheel);
+
+        //viewer
+        this._viewer = new Viewer(this);
+        this._viewer.on("mouseover", () => { Utility.addClass(this._canvas, "green-hover");});
+        this._viewer.on("mouseout", () => { Utility.removeClass(this._canvas, "green-hover");});
+
+        //editor
+        this._editor = new Editor(this);
+        this._editor.on("mouseover", () => { Utility.addClass(this._canvas, "green-hover");});
+        this._editor.on("mouseout", () => { Utility.removeClass(this._canvas, "green-hover");});
+        this._editor.on("startedit", () => {this._viewer.redraw();});
+        this._editor.on("stopedit", () => {this._viewer.redraw();});
+        //tooltip
+        this._tooltip = new Tooltip(this);
 
         this._projection = new WebMercator();
         this._center = [0, 0];
@@ -89,16 +119,6 @@ export class Map {
         const bound: Bound = this._projection.bound;
         //设置初始矩阵，由于地图切片是256*256，Math.pow(2, this._zoom)代表在一定缩放级别下x与y轴的切片数量
         this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale , 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
-    }
-    //show tooltip
-    _showTooltip(text, screenX, screenY){
-        this._tooltipText.innerHTML = text;
-        //this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
-        this._tooltip.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
-    }
-
-    _hideTooltip() {
-        this._tooltip.style.cssText = "display: none";
     }
 
     //设置投影
@@ -126,46 +146,21 @@ export class Map {
         this.redraw();
     }
 
-    //地图事件注册监听
-    on(event, handler) {
-        this._events[event].push(handler);
+    //viewer
+    addLayer(layer: FeatureLayer) {
+        this._viewer.addLayer(layer);
     }
 
-    off(event, handler) {
-        if (Array.isArray(this._events[event])) {
-            const index = this._events[event].findIndex( item => item === handler );
-            index != -1 && this._events[event].splice(index, 1);
-        }
+    insertLayer(layer: FeatureLayer, index: number = -1){
+        this._viewer.insertLayer(layer, index);
     }
 
-    emit(event, param) {
-        this._events[event].forEach(handler => handler(param));
-    }
-
-    addLayer(layer: Layer) {
-        this._layers.push(layer);
-        layer.draw(this._ctx, this._projection, this._extent);
-    }
-
-    insertLayer(layer: Layer, index: number = -1){
-        index = index > this._layers.length ? -1 : index;
-        if (index == -1) {
-            this.addLayer(layer);
-        } else {
-            this._layers.splice(index, 0, layer);
-            this.redraw();
-        }
-    }
-
-    removeLayer(layer: Layer) {
-        const index = this._layers.findIndex(item => item === layer);
-        index != -1 && this._layers.splice(index, 1);
-        this.redraw();
+    removeLayer(layer: FeatureLayer) {
+        this._viewer.removeLayer(layer);
     }
 
     clearLayers() {
-        this._layers = [];
-        this.redraw();
+        this._viewer.clear();
     }
 
     //shortcut
@@ -176,12 +171,12 @@ export class Map {
 
     removeGraphic(graphic: Graphic) {
         this._defaultGraphicLayer.remove(graphic);
-        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent);
+        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
     }
 
     clearGraphics() {
         this._defaultGraphicLayer.clear();
-        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent);
+        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
     }
 
 
@@ -191,53 +186,40 @@ export class Map {
         const x1 = (0 - matrix.e)/matrix.a, y1 = (0-matrix.f)/matrix.d, x2 = (this._canvas.width - matrix.e)/matrix.a, y2 = (this._canvas.height-matrix.f)/matrix.d;
         this._extent = new Bound(Math.min(x1,x2), Math.min(y1,y2), Math.max(x1,x2), Math.max(y1,y2));
         this._center = this._projection.unproject([(x1+x2)/2, (y1+y2)/2]);
-        this._events.extent.forEach(handler => handler({extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix}));
+        this._handlers["extent"].forEach(handler => handler({extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix}));
     }
 
     redraw() {
         this._ctx.save();
-        this._ctx.setTransform(1,0,0,1,0,0);
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-        /* //start axis
-        this._ctx.strokeStyle = "#0000ff";
-        //x axis
-        this._ctx.lineWidth = 1;
-        this._ctx.beginPath();
-        this._ctx.moveTo(0, this._canvas.height/2);
-        this._ctx.lineTo(this._canvas.width, this._canvas.height/2);
-        this._ctx.stroke();
-        //y axis
-        this._ctx.beginPath();
-        this._ctx.moveTo(this._canvas.width/2, this._canvas.height);
-        this._ctx.lineTo(this._canvas.width/2, 0);
-        this._ctx.stroke();
-        //end axis*/
         this._ctx.restore();
         this.updateExtent();
-
-        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent);
-        this._layers.forEach(layer => {
-            layer.draw(this._ctx, this._projection, this._extent, this._zoom);
-        });
-        this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.labeled).forEach((layer: FeatureLayer) => {
-            layer.drawLabel(this._ctx, this._projection, this._extent, this._zoom);
-        });
+        this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
+        this.hideTooltip();
     }
 
     clear() {
+        this._ctx.save();
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
         this.updateExtent();
     }
 
     _onClick(event) {
-        const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, this._zoom,"click"));
-        if (!flag) {
-            this._events.click.forEach(handler => handler({event: event}));
+        if (this._editor && this._editor.editing) {
+            this._editor._onClick(event);
+            return;
         }
+        this._handlers["click"].forEach(handler => handler(event));
     }
 
     _onDoubleClick(event) {
+        if (this._editor && this._editor.editing) {
+            this._editor._onDoubleClick(event);
+            return;
+        }
         if (this._zoom >= 20) return;
         const scale = 2;
         this._zoom += 1;
@@ -251,28 +233,30 @@ export class Map {
     }
 
     _onMouseDown(event) {
+        if (this._editor && this._editor.editing) {
+            this._editor._onMouseDown(event);
+            return;
+        }
         this._drag.flag = true;
         this._drag.start.x = event.x;
         this._drag.start.y = event.y;
     }
 
     _onMouseMove(event) {
+        if (this._editor && this._editor.editing) {
+            this._editor._onMouseMove(event);
+            return;
+        }
         if (!this._drag.flag) {
-            //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
-            //const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-            const layers = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).filter((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, this._zoom, "mousemove"));
-            if (layers.length > 0) {
-                Utility.addClass(this._canvas, "green-hover");
-                const layer = layers.find((layer: FeatureLayer) => layer.getTooltip());
-                layer && this._showTooltip((layer as FeatureLayer).getTooltip(), event.offsetX, event.offsetY);
-            } else {
-                this._hideTooltip();
-                Utility.removeClass(this._canvas, "green-hover");
-            }
+            this._handlers["mousemove"].forEach(handler => handler(event));
         }
     }
 
     _onMouseUp(event) {
+        if (this._editor && this._editor.editing) {
+            this._editor._onMouseUp(event);
+            return;
+        }
         if (this._drag.flag) {
             this._drag.end.x = event.x;
             this._drag.end.y = event.y;
@@ -318,6 +302,20 @@ export class Map {
         this.redraw();
     }
 
+    //show tooltip
+    showTooltip(feature, field){
+        const text = feature.properties[field.name];
+        const center = feature.geometry.getCenter( CoordinateType.Projection, this.projection );
+        const matrix = (this._ctx as any).getTransform();
+        const screenX = (matrix.a * center[0] + matrix.e);
+        const screenY = (matrix.d * center[1] + matrix.f);
+        this._tooltip.show(text, screenX, screenY)
+    }
+
+    hideTooltip() {
+        this._tooltip.hide();
+    }
+
     destroy() {
         this._canvas.removeEventListener("click", this._onClick);
         this._canvas.removeEventListener("dblclick", this._onDoubleClick);
@@ -325,5 +323,8 @@ export class Map {
         this._canvas.removeEventListener("mousemove", this._onMouseMove);
         this._canvas.removeEventListener("mouseup", this._onMouseUp);
         this._canvas.removeEventListener("wheel", this._onWheel);
+
+        this._viewer = null;
+        this._editor = null;
     }
 }

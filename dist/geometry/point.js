@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
-import { ClusterSymbol, SimpleMarkerSymbol, SimplePointSymbol } from "../symbol/symbol";
+import { ClusterSymbol, SimpleMarkerSymbol, SimplePointSymbol, VertexSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 //点
 export class Point extends Geometry {
@@ -36,6 +36,17 @@ export class Point extends Geometry {
         [this._x, this._y] = this._projection.project([this._lng, this._lat]);
         //TODO: bound tolerance
         this._bound = new Bound(this._x, this._y, this._x, this._y);
+        this._projected = true;
+    }
+    move(ctx, projection, screenX, screenY) {
+        const matrix = ctx.getTransform();
+        this._screenX = screenX;
+        this._screenY = screenY;
+        this._x = (this._screenX - matrix.e) / matrix.a;
+        this._y = (this._screenY - matrix.f) / matrix.d;
+        this._bound = new Bound(this._x, this._y, this._x, this._y);
+        this._projection = projection;
+        [this._lng, this._lat] = this._projection.unproject([this._x, this._y]);
         this._projected = true;
     }
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimplePointSymbol()) {
@@ -74,6 +85,20 @@ export class Point extends Geometry {
                     ctx.restore();
                 }
             }
+            else if (symbol instanceof VertexSymbol) {
+                ctx.save();
+                ctx.strokeStyle = symbol.strokeStyle;
+                ctx.fillStyle = symbol.fillStyle;
+                ctx.lineWidth = symbol.lineWidth;
+                ctx.beginPath(); //Start path
+                //keep size
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                const size = symbol.size;
+                ctx.rect(this._screenX - size / 2, this._screenY - size / 2, size, size);
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
             else if (symbol instanceof ClusterSymbol) {
                 const cluster = symbol;
                 ctx.save();
@@ -108,6 +133,9 @@ export class Point extends Geometry {
         }
         else if (this._symbol instanceof SimpleMarkerSymbol) {
             return screenX >= (this._screenX - this._symbol.offsetX) && screenX <= (this._screenX - this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY - this._symbol.offsetY) && screenY <= (this._screenY - this._symbol.offsetY + this._symbol.height);
+        }
+        else if (this._symbol instanceof VertexSymbol) {
+            return screenX >= (this._screenX - this._symbol.size / 2) && screenX <= (this._screenX + this._symbol.size / 2) && screenY >= (this._screenY - this._symbol.size / 2) && screenY <= (this._screenY + this._symbol.size / 2);
         }
     }
     getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) {

@@ -40,27 +40,22 @@ window.load = () => {
     map.setView([116.397411,39.909186], 12);
 
     //画经线
-    const lngLayer = new GraphicLayer();
     const lngSymbol = new SimpleLineSymbol();
     lngSymbol.strokeStyle = "#0000ff";
     for (let i = -180; i <= 180; i = i + 10){
         const line = new Polyline([[i, -80], [i, 80]]);
         const graphic = new Graphic(line, lngSymbol);
-        lngLayer.add(graphic);
+        map.addGraphic(graphic);
     }
-    map.addLayer(lngLayer);
     //画纬线
-    const latLayer = new GraphicLayer();
     const latSymbol = new SimpleLineSymbol();
     lngSymbol.strokeStyle = "#4d9221";
     for (let j = -80; j <= 80; j = j + 10){
         const line = new Polyline([[-180, j], [180, j]]);
         const graphic = new Graphic(line, latSymbol);
-        latLayer.add(graphic);
+        map.addGraphic(graphic);
     }
-    map.addLayer(latLayer);
     //画经纬线交点
-    const pointLayer = new GraphicLayer();
     const pointSymbol = new SimplePointSymbol();
     pointSymbol.radius = 5;
     pointSymbol.fillStyle = "#de77ae";
@@ -69,10 +64,9 @@ window.load = () => {
         for (let j = -90; j <= 90; j = j + 10){
             const point = new Point(i, j);
             const graphic = new Graphic(point, pointSymbol);
-            pointLayer.add(graphic);
+            map.addGraphic(graphic);
         }
     }
-    map.addLayer(pointLayer);
     //beijing gugong
     const marker = new SimpleMarkerSymbol();
     marker.width = 32;

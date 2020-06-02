@@ -18,6 +18,10 @@ export class Polyline extends Geometry{
     //屏幕坐标
     private _screen: number[][];
 
+    get lnglats(): number[][] {
+        return this._lnglats;
+    }
+
     constructor(lnglats: number[][]) {
         super();
         this._lnglats = lnglats;
@@ -35,6 +39,22 @@ export class Polyline extends Geometry{
             ymax = Math.max(ymax, point[1]);
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+    }
+
+    splice(ctx: CanvasRenderingContext2D, projection: Projection, lnglat: number[], screenX = undefined, screenY = undefined, replaced = true) {
+        if (screenX == undefined && screenY == undefined) {
+            const index = this._lnglats.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+            this._lnglats.length > 2 && index != -1 && this._lnglats.splice(index, 1);
+        } else {
+            const matrix = (ctx as any).getTransform();
+            const x = (screenX - matrix.e) / matrix.a;
+            const y = (screenY - matrix.f) / matrix.d;
+            this._projection = projection;
+            const [lng, lat] = this._projection.unproject([x, y]);
+            const index = this._lnglats.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
+            index != -1 && this._lnglats.splice(index, replaced ? 1 : 0, [lng, lat]);
+        }
+        this.project(projection);
     }
 
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimpleLineSymbol()) {

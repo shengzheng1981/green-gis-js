@@ -12,18 +12,20 @@ import {Label} from "../label/label";
 import {Tooltip} from "../tooltip/tooltip";
 import {GeometryType, CoordinateType} from "../geometry/geometry";
 import {Point} from "../geometry/point";
-import {ClusterSymbol} from "..";
+import {ClusterSymbol} from "../symbol/symbol";
 
 export class FeatureLayer extends Layer{
+    //是否显示标注
     public labeled: boolean = false;
+    //是否聚合
     public cluster: boolean = false;
+    //是否正在编辑
+    public editing: boolean = false;
     private _featureClass: FeatureClass;
     private _renderer: Renderer;
     private _label: Label;
-    private _tooltip: Tooltip;
     private _zoom: number[] = [3, 20];
     private _interactive: boolean = true;
-    private _hoverFeature: Feature;
 
     get interactive(): boolean {
         return this._interactive;
@@ -39,13 +41,6 @@ export class FeatureLayer extends Layer{
 
     set label(value: Label) {
         this._label = value;
-    }
-
-    get tooltip(): Tooltip {
-        return this._tooltip;
-    }
-    set tooltip(value: Tooltip) {
-        this._tooltip = value;
     }
 
     set renderer(value: Renderer) {
@@ -112,6 +107,9 @@ export class FeatureLayer extends Layer{
     drawLabel(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
         if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent));
+            /*features.forEach( feature => {
+                feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
+            });*/
             const cluster = features.reduce( (acc, cur) => {
                 const item: any = acc.find((item: any) => {
                     const distance = cur.geometry.distance(item.feature.geometry, CoordinateType.Screen, ctx, projection);
@@ -138,17 +136,16 @@ export class FeatureLayer extends Layer{
                 return feature.contain(screenX, screenY, event);
             });
             if (features.length > 0) {
-                this._hoverFeature = features[0];
+                if (event == "dblclick") {
+                    features[0].emit("dblclick", {feature: features[0], screenX: screenX, screenY: screenY});
+                } else if (event == "click") {
+                    features[0].emit("click", {feature: features[0], screenX: screenX, screenY: screenY});
+                }
                 return true;
             } else {
-                this._hoverFeature = null;
                 return false;
             }
         }
-    }
-
-    getTooltip() {
-        return (this._hoverFeature && this._tooltip && this._tooltip.field) ? this._hoverFeature.properties[this._tooltip.field.name] : "";
     }
 
     _getSymbol(feature) {

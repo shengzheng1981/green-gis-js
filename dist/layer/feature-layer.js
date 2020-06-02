@@ -5,12 +5,16 @@ import { CategoryRenderer } from "../renderer/category-renderer";
 import { ClassRenderer } from "../renderer/class-renderer";
 import { GeometryType, CoordinateType } from "../geometry/geometry";
 import { Point } from "../geometry/point";
-import { ClusterSymbol } from "..";
+import { ClusterSymbol } from "../symbol/symbol";
 export class FeatureLayer extends Layer {
     constructor() {
         super(...arguments);
+        //是否显示标注
         this.labeled = false;
+        //是否聚合
         this.cluster = false;
+        //是否正在编辑
+        this.editing = false;
         this._zoom = [3, 20];
         this._interactive = true;
     }
@@ -25,12 +29,6 @@ export class FeatureLayer extends Layer {
     }
     set label(value) {
         this._label = value;
-    }
-    get tooltip() {
-        return this._tooltip;
-    }
-    set tooltip(value) {
-        this._tooltip = value;
     }
     set renderer(value) {
         this._renderer = value;
@@ -93,6 +91,9 @@ export class FeatureLayer extends Layer {
     drawLabel(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
         if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
+            /*features.forEach( feature => {
+                feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
+            });*/
             const cluster = features.reduce((acc, cur) => {
                 const item = acc.find((item) => {
                     const distance = cur.geometry.distance(item.feature.geometry, CoordinateType.Screen, ctx, projection);
@@ -119,17 +120,18 @@ export class FeatureLayer extends Layer {
                 return feature.contain(screenX, screenY, event);
             });
             if (features.length > 0) {
-                this._hoverFeature = features[0];
+                if (event == "dblclick") {
+                    features[0].emit("dblclick", { feature: features[0], screenX: screenX, screenY: screenY });
+                }
+                else if (event == "click") {
+                    features[0].emit("click", { feature: features[0], screenX: screenX, screenY: screenY });
+                }
                 return true;
             }
             else {
-                this._hoverFeature = null;
                 return false;
             }
         }
-    }
-    getTooltip() {
-        return (this._hoverFeature && this._tooltip && this._tooltip.field) ? this._hoverFeature.properties[this._tooltip.field.name] : "";
     }
     _getSymbol(feature) {
         if (this._renderer instanceof SimpleRenderer) {

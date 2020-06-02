@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./basic.js",
+    entry: "./editor-polygon.js",
     output: {
         filename: "bundle.js"
     },

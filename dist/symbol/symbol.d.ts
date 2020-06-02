@@ -45,6 +45,12 @@ export declare class ArrowSymbol extends Symbol {
     arrowLength: number;
     arrowAngle: number;
 }
+export declare class VertexSymbol extends Symbol {
+    size: number;
+    lineWidth: number;
+    strokeStyle: string;
+    fillStyle: string;
+}
 export declare class ClusterSymbol extends Symbol {
     private _count;
     radius: number;
