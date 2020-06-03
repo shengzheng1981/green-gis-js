@@ -55,9 +55,6 @@ window.load = () => {
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new FeatureLayer();
         featureLayer.featureClass = featureClass;
-        const field = new Field();
-        field.name = "TYPE";
-        field.type = FieldType.String;
         const field2 = new Field();
         field2.name = "name";
         field2.type = FieldType.String;

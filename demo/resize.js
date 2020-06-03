@@ -61,6 +61,15 @@ window.load = () => {
         featureLayer.zoom = [13, 20];
         map.addLayer(featureLayer);
 
+        /*const featureClass2 = new FeatureClass();
+        featureClass2.loadGeoJSON(JSON.parse(req.responseText));
+        const featureLayer2 = new FeatureLayer();
+        featureLayer2.featureClass = featureClass2;
+        const renderer2 = new SimpleRenderer();
+        featureLayer2.renderer = renderer2;
+        featureLayer2.zoom = [13, 20];
+        map.addLayer(featureLayer2);*/
+
         map.setView([109.519, 18.271], 13);
     };
     req.open("GET", "assets/geojson/junction.json", true);

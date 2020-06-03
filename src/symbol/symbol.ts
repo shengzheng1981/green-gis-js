@@ -64,6 +64,18 @@ export class SimpleTextSymbol extends Symbol {
     public fontWeight: string = "Bold";
 }
 
+export class LetterSymbol extends Symbol {
+    public radius: number = 10;
+    public lineWidth: number = 1;
+    public strokeStyle: string = "#ff0000"; //#ff0000
+    public fillStyle: string = "#ff0000";    //#ff0000
+    public letter: string = "";
+    public fontColor: string = "#ff0000";
+    public fontSize: number = 12;
+    public fontFamily: string = "YaHei";
+    public fontWeight: string = "Bold";
+}
+
 export class ArrowSymbol extends Symbol {
     public lineWidth: number = 2;
     public strokeStyle: string = "#ff0000"; //#ff0000

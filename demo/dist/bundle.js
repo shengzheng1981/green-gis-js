@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./resize.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./tooltip.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -3393,10 +3393,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 
 /***/ }),
 
-/***/ "./resize.js":
-/*!*******************!*\
-  !*** ./resize.js ***!
-  \*******************/
+/***/ "./tooltip.js":
+/*!********************!*\
+  !*** ./tooltip.js ***!
+  \********************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -3439,6 +3439,7 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -3446,18 +3447,22 @@ window.load = () => {
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
         featureLayer.featureClass = featureClass;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
-        featureLayer.cluster = true;
+        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
+        field.name = "name";
+        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
+        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
+        renderer.generate(featureClass, field);
         featureLayer.renderer = renderer;
-        featureLayer.zoom = [13, 20];
+        featureLayer.zoom = [5, 20];
+        featureLayer.on("mouseover", (event) => {
+            map.showTooltip(event.feature, field);
+        });
         map.addLayer(featureLayer);
 
-        map.setView([109.519, 18.271], 13);
+        map.setView([107.411, 29.89], 7);
     };
-    req.open("GET", "assets/geojson/junction.json", true);
+    req.open("GET", "assets/geojson/chongqing.json", true);
     req.send(null);
-
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
 
 }
 
