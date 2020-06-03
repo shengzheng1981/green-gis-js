@@ -16,6 +16,7 @@ export declare class Editor extends Subject {
     start(): void;
     save(): void;
     stop(): void;
+    _onResize(event: any): void;
     _extentChange(event: any): void;
     _switchEditing(event: any): void;
     redraw(): void;

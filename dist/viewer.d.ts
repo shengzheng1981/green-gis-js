@@ -8,6 +8,7 @@ export declare class Viewer extends Subject {
     private _map;
     private _layers;
     constructor(map: Map);
+    _onResize(event: any): void;
     _extentChange(event: any): void;
     _onClick(event: any): void;
     _onMouseMove(event: any): void;

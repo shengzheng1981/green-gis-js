@@ -23,13 +23,19 @@ export class Viewer extends Subject {
         this._canvas.width = container.clientWidth;
         this._canvas.height = container.clientHeight;
         container.appendChild(this._canvas);
+        this._onResize = this._onResize.bind(this);
         this._extentChange = this._extentChange.bind(this);
         this._onClick = this._onClick.bind(this);
         this._onMouseMove = this._onMouseMove.bind(this);
         this._ctx = this._canvas.getContext("2d");
+        this._map.on("resize", this._onResize);
         this._map.on("extent", this._extentChange);
         this._map.on("click", this._onClick);
         this._map.on("mousemove", this._onMouseMove);
+    }
+    _onResize(event) {
+        this._canvas.width = this._map.container.clientWidth;
+        this._canvas.height = this._map.container.clientHeight;
     }
     _extentChange(event) {
         this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
@@ -91,8 +97,9 @@ export class Viewer extends Subject {
         this._ctx.restore();
     }
     destroy() {
+        this._map.off("resize", this._onResize);
+        this._map.off("extent", this._extentChange);
         this._map.off("click", this._onClick);
         this._map.off("mousemove", this._onMouseMove);
-        this._map.off("extent", this._extentChange);
     }
 }

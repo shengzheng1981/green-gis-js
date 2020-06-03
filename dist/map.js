@@ -9,7 +9,7 @@ import { Subject } from "./util/subject";
 import { Tooltip } from "./tooltip/tooltip";
 export class Map extends Subject {
     constructor(id) {
-        super(["extent", "click", "mousemove"]);
+        super(["extent", "click", "mousemove", "resize"]);
         this._drag = {
             flag: false,
             start: {
@@ -67,6 +67,8 @@ export class Map extends Subject {
         const bound = this._projection.bound;
         //设置初始矩阵，由于地图切片是256*256，Math.pow(2, this._zoom)代表在一定缩放级别下x与y轴的切片数量
         this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale, 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        this._onResize = this._onResize.bind(this);
+        window.addEventListener("resize", this._onResize);
     }
     get container() {
         return this._container;
@@ -164,6 +166,12 @@ export class Map extends Subject {
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
         this._ctx.restore();
         this.updateExtent();
+    }
+    _onResize(event) {
+        this._canvas.width = this._container.clientWidth;
+        this._canvas.height = this._container.clientHeight;
+        this._handlers["resize"].forEach(handler => handler(event));
+        this.setView(this._center, this._zoom);
     }
     _onClick(event) {
         if (this._editor && this._editor.editing) {
@@ -268,6 +276,7 @@ export class Map extends Subject {
         this._tooltip.hide();
     }
     destroy() {
+        window.removeEventListener("resize", this._onResize);
         this._canvas.removeEventListener("click", this._onClick);
         this._canvas.removeEventListener("dblclick", this._onDoubleClick);
         this._canvas.removeEventListener("mousedown", this._onMouseDown);

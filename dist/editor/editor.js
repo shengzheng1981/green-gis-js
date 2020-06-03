@@ -29,8 +29,10 @@ export class Editor extends Subject {
         this._canvas.height = container.clientHeight;
         container.appendChild(this._canvas);
         this._ctx = this._canvas.getContext("2d");
+        this._onResize = this._onResize.bind(this);
         this._extentChange = this._extentChange.bind(this);
         this._switchEditing = this._switchEditing.bind(this);
+        this._map.on("resize", this._onResize);
         this._map.on("extent", this._extentChange);
     }
     get editing() {
@@ -67,6 +69,10 @@ export class Editor extends Subject {
             this.clear();
             this._handlers["stopedit"].forEach(handler => handler());
         }
+    }
+    _onResize(event) {
+        this._canvas.width = this._map.container.clientWidth;
+        this._canvas.height = this._map.container.clientHeight;
     }
     _extentChange(event) {
         this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
@@ -233,6 +239,7 @@ export class Editor extends Subject {
     }
     destroy() {
         this._featureLayer = null;
+        this._map.off("resize", this._onResize);
         this._map.off("extent", this._extentChange);
     }
 }

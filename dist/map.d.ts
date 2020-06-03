@@ -39,6 +39,7 @@ export declare class Map extends Subject {
     updateExtent(): void;
     redraw(): void;
     clear(): void;
+    _onResize(event: any): void;
     _onClick(event: any): void;
     _onDoubleClick(event: any): void;
     _onMouseDown(event: any): void;

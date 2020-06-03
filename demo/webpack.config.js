@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./editor-polygon.js",
+    entry: "./resize.js",
     output: {
         filename: "bundle.js"
     },

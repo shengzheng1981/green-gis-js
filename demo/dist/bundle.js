@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./editor-polygon.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./resize.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -259,8 +259,10 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         this._canvas.height = container.clientHeight;
         container.appendChild(this._canvas);
         this._ctx = this._canvas.getContext("2d");
+        this._onResize = this._onResize.bind(this);
         this._extentChange = this._extentChange.bind(this);
         this._switchEditing = this._switchEditing.bind(this);
+        this._map.on("resize", this._onResize);
         this._map.on("extent", this._extentChange);
     }
     get editing() {
@@ -297,6 +299,10 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
             this.clear();
             this._handlers["stopedit"].forEach(handler => handler());
         }
+    }
+    _onResize(event) {
+        this._canvas.width = this._map.container.clientWidth;
+        this._canvas.height = this._map.container.clientHeight;
     }
     _extentChange(event) {
         this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
@@ -463,6 +469,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
     }
     destroy() {
         this._featureLayer = null;
+        this._map.off("resize", this._onResize);
         this._map.off("extent", this._extentChange);
     }
 }
@@ -2164,7 +2171,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
     constructor(id) {
-        super(["extent", "click", "mousemove"]);
+        super(["extent", "click", "mousemove", "resize"]);
         this._drag = {
             flag: false,
             start: {
@@ -2222,6 +2229,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         const bound = this._projection.bound;
         //设置初始矩阵，由于地图切片是256*256，Math.pow(2, this._zoom)代表在一定缩放级别下x与y轴的切片数量
         this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale, 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        this._onResize = this._onResize.bind(this);
+        window.addEventListener("resize", this._onResize);
     }
     get container() {
         return this._container;
@@ -2319,6 +2328,12 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
         this._ctx.restore();
         this.updateExtent();
+    }
+    _onResize(event) {
+        this._canvas.width = this._container.clientWidth;
+        this._canvas.height = this._container.clientHeight;
+        this._handlers["resize"].forEach(handler => handler(event));
+        this.setView(this._center, this._zoom);
     }
     _onClick(event) {
         if (this._editor && this._editor.editing) {
@@ -2423,6 +2438,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._tooltip.hide();
     }
     destroy() {
+        window.removeEventListener("resize", this._onResize);
         this._canvas.removeEventListener("click", this._onClick);
         this._canvas.removeEventListener("dblclick", this._onDoubleClick);
         this._canvas.removeEventListener("mousedown", this._onMouseDown);
@@ -3293,13 +3309,19 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
         this._canvas.width = container.clientWidth;
         this._canvas.height = container.clientHeight;
         container.appendChild(this._canvas);
+        this._onResize = this._onResize.bind(this);
         this._extentChange = this._extentChange.bind(this);
         this._onClick = this._onClick.bind(this);
         this._onMouseMove = this._onMouseMove.bind(this);
         this._ctx = this._canvas.getContext("2d");
+        this._map.on("resize", this._onResize);
         this._map.on("extent", this._extentChange);
         this._map.on("click", this._onClick);
         this._map.on("mousemove", this._onMouseMove);
+    }
+    _onResize(event) {
+        this._canvas.width = this._map.container.clientWidth;
+        this._canvas.height = this._map.container.clientHeight;
     }
     _extentChange(event) {
         this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
@@ -3361,19 +3383,20 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
         this._ctx.restore();
     }
     destroy() {
+        this._map.off("resize", this._onResize);
+        this._map.off("extent", this._extentChange);
         this._map.off("click", this._onClick);
         this._map.off("mousemove", this._onMouseMove);
-        this._map.off("extent", this._extentChange);
     }
 }
 
 
 /***/ }),
 
-/***/ "./editor-polygon.js":
-/*!***************************!*\
-  !*** ./editor-polygon.js ***!
-  \***************************/
+/***/ "./resize.js":
+/*!*******************!*\
+  !*** ./resize.js ***!
+  \*******************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -3423,38 +3446,18 @@ window.load = () => {
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
         featureLayer.featureClass = featureClass;
-        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field.name = "name";
-        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
-        renderer.generate(featureClass, field);
+        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
+        featureLayer.cluster = true;
         featureLayer.renderer = renderer;
-        featureLayer.zoom = [5, 20];
+        featureLayer.zoom = [13, 20];
         map.addLayer(featureLayer);
 
-        const editor = map.editor;
-        editor.start();
-        editor.setFeatureLayer(featureLayer);
-        document.getElementById("status").value = "editor is started";
-
-        window.start = () => {
-            editor.start();
-            editor.setFeatureLayer(featureLayer);
-            document.getElementById("status").value = "editor is started";
-        };
-
-        window.stop = () => {
-            editor.stop();
-            document.getElementById("status").value = "editor is stopped";
-        };
-
-        map.setView([107.777, 29.809], 7);
+        map.setView([109.519, 18.271], 13);
     };
-    req.open("GET", "assets/geojson/chongqing.json", true);
+    req.open("GET", "assets/geojson/junction.json", true);
     req.send(null);
 
     map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-
 
 }
 
