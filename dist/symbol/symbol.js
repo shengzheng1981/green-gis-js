@@ -67,6 +67,20 @@ export class SimpleTextSymbol extends Symbol {
         this.fontWeight = "Bold";
     }
 }
+export class LetterSymbol extends Symbol {
+    constructor() {
+        super(...arguments);
+        this.radius = 10;
+        this.lineWidth = 1;
+        this.strokeStyle = "#ff0000"; //#ff0000
+        this.fillStyle = "#ff0000"; //#ff0000
+        this.letter = "";
+        this.fontColor = "#ff0000";
+        this.fontSize = 12;
+        this.fontFamily = "YaHei";
+        this.fontWeight = "Bold";
+    }
+}
 export class ArrowSymbol extends Symbol {
     constructor() {
         super(...arguments);

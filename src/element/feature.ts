@@ -9,11 +9,17 @@ import {Subject} from "../util/subject";
 export class Feature extends Subject{
     private _geometry: Geometry;
     private _properties: any;
+    private _symbol: Symbol;
 
     private _contained: boolean;
 
+    private _edited: boolean;
+
     public visible: boolean = true;
 
+    get symbol(): Symbol {
+        return this._symbol;
+    }
     get geometry(): Geometry {
         return this._geometry;
     }
@@ -26,14 +32,22 @@ export class Feature extends Subject{
         return this._geometry ? this._geometry.bound: null;
     }
 
-    constructor(geometry, properties) {
+    get edited(): boolean {
+        return this._edited;
+    }
+    set edited(value) {
+        this._edited = value;
+    }
+
+    constructor(geometry, properties, symbol?) {
         super(["click", "dblclick", "mouseover", "mouseout"]);
         this._geometry = geometry;
         this._properties = properties;
+        this._symbol = symbol;
     }
 
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
-        if (this.visible) this._geometry.draw(ctx, projection, extent, symbol);
+        if (this.visible) this._geometry.draw(ctx, projection, extent, this._symbol || symbol);
     }
 
     label(field:Field, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: SimpleTextSymbol = new SimpleTextSymbol()) {

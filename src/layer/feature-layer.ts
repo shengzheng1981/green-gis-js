@@ -35,6 +35,9 @@ export class FeatureLayer extends Layer{
         this._interactive = value;
     }
 
+    get featureClass(): FeatureClass {
+        return this._featureClass;
+    }
     set featureClass(value: FeatureClass) {
         this._featureClass = value;
     }

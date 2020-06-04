@@ -1,6 +1,12 @@
+import { Feature } from "../element/feature";
 import { FeatureLayer } from "../layer/feature-layer";
 import { Map } from "../map";
 import { Subject } from "../util/subject";
+export declare enum EditorActionType {
+    Select = 0,
+    Create = 1,
+    Edit = 2
+}
 export declare class Editor extends Subject {
     private _canvas;
     private _ctx;
@@ -10,12 +16,17 @@ export declare class Editor extends Subject {
     private _editingFeature;
     private _vertexLayer;
     private _drag;
+    private _action;
     get editing(): boolean;
+    get action(): EditorActionType;
+    set action(value: EditorActionType);
     constructor(map: Map);
     setFeatureLayer(layer: FeatureLayer): void;
     start(): void;
     save(): void;
     stop(): void;
+    addFeature(feature: Feature): void;
+    removeFeature(feature: Feature): void;
     _onResize(event: any): void;
     _extentChange(event: any): void;
     _switchEditing(event: any): void;

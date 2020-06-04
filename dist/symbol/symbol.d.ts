@@ -38,6 +38,17 @@ export declare class SimpleTextSymbol extends Symbol {
     fontFamily: string;
     fontWeight: string;
 }
+export declare class LetterSymbol extends Symbol {
+    radius: number;
+    lineWidth: number;
+    strokeStyle: string;
+    fillStyle: string;
+    letter: string;
+    fontColor: string;
+    fontSize: number;
+    fontFamily: string;
+    fontWeight: string;
+}
 export declare class ArrowSymbol extends Symbol {
     lineWidth: number;
     strokeStyle: string;

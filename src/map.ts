@@ -53,6 +53,9 @@ export class Map extends Subject{
     get viewer(): Viewer {
         return this._viewer;
     }
+    get tooltip(): Tooltip {
+        return this._tooltip;
+    }
     get editor(): Editor {
         return this._editor;
     }
@@ -72,9 +75,9 @@ export class Map extends Subject{
         return this._projection;
     }
 
-    constructor(id: string) {
-        super(["extent", "click", "mousemove", "resize"]);
-        this._container = document.getElementById(id) as HTMLDivElement;
+    constructor(id: string | HTMLDivElement) {
+        super(["extent", "click", "mousemove", "resize", "beforeclick"]);
+        this._container = id instanceof HTMLDivElement ? id : document.getElementById(id) as HTMLDivElement;
         //create canvas
         this._canvas = document.createElement("canvas");
         this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 100";
@@ -218,6 +221,11 @@ export class Map extends Subject{
     }
 
     _onClick(event) {
+        const matrix = (this._ctx as any).getTransform();
+        const x = (event.offsetX - matrix.e) / matrix.a;
+        const y = (event.offsetY - matrix.f) / matrix.d;
+        [event.lng, event.lat] = this._projection.unproject([x, y]);
+        this._handlers["beforeclick"].forEach(handler => handler(event));
         if (this._editor && this._editor.editing) {
             this._editor._onClick(event);
             return;

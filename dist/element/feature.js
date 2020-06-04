@@ -2,11 +2,15 @@ import { SimplePointSymbol, SimpleTextSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 import { Subject } from "../util/subject";
 export class Feature extends Subject {
-    constructor(geometry, properties) {
+    constructor(geometry, properties, symbol) {
         super(["click", "dblclick", "mouseover", "mouseout"]);
         this.visible = true;
         this._geometry = geometry;
         this._properties = properties;
+        this._symbol = symbol;
+    }
+    get symbol() {
+        return this._symbol;
     }
     get geometry() {
         return this._geometry;
@@ -17,9 +21,15 @@ export class Feature extends Subject {
     get bound() {
         return this._geometry ? this._geometry.bound : null;
     }
+    get edited() {
+        return this._edited;
+    }
+    set edited(value) {
+        this._edited = value;
+    }
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimplePointSymbol()) {
         if (this.visible)
-            this._geometry.draw(ctx, projection, extent, symbol);
+            this._geometry.draw(ctx, projection, extent, this._symbol || symbol);
     }
     label(field, ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleTextSymbol()) {
         if (this.visible)

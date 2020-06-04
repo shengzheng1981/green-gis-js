@@ -27,7 +27,7 @@ export class Map extends Subject {
         this._center = [0, 0];
         //默认图形图层
         this._defaultGraphicLayer = new GraphicLayer();
-        this._container = document.getElementById(id);
+        this._container = id instanceof HTMLDivElement ? id : document.getElementById(id);
         //create canvas
         this._canvas = document.createElement("canvas");
         this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 100";
@@ -75,6 +75,9 @@ export class Map extends Subject {
     }
     get viewer() {
         return this._viewer;
+    }
+    get tooltip() {
+        return this._tooltip;
     }
     get editor() {
         return this._editor;
@@ -174,6 +177,10 @@ export class Map extends Subject {
         this.setView(this._center, this._zoom);
     }
     _onClick(event) {
+        const matrix = this._ctx.getTransform();
+        const x = (event.offsetX - matrix.e) / matrix.a;
+        const y = (event.offsetY - matrix.f) / matrix.d;
+        [event.lng, event.lat] = this._projection.unproject([x, y]);
         if (this._editor && this._editor.editing) {
             this._editor._onClick(event);
             return;

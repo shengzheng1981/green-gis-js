@@ -5,6 +5,7 @@ import { FeatureLayer } from "./layer/feature-layer";
 import { Editor } from "./editor/editor";
 import { Viewer } from "./viewer";
 import { Subject } from "./util/subject";
+import { Tooltip } from "./tooltip/tooltip";
 export declare class Map extends Subject {
     private _container;
     private _canvas;
@@ -20,13 +21,14 @@ export declare class Map extends Subject {
     private _tooltip;
     get container(): HTMLDivElement;
     get viewer(): Viewer;
+    get tooltip(): Tooltip;
     get editor(): Editor;
     set editor(value: Editor);
     get center(): number[];
     get extent(): Bound;
     get zoom(): number;
     get projection(): Projection;
-    constructor(id: string);
+    constructor(id: string | HTMLDivElement);
     setProjection(projection: any): void;
     setView(center?: number[], zoom?: number): void;
     addLayer(layer: FeatureLayer): void;

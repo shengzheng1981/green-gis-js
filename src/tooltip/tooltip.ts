@@ -26,8 +26,16 @@ export class Tooltip {
         this._tooltipContainer.appendChild(this._tooltipText);
     }
 
-    show(text, screenX, screenY){
-        this._tooltipText.innerHTML = text;
+    show(text: string | HTMLElement, screenX, screenY){
+        if (typeof text === 'string') {
+            this._tooltipText.innerHTML = text;
+        } else {
+            const node = this._tooltipText;
+            while (node.hasChildNodes()) {
+                node.removeChild(node.firstChild);
+            }
+            node.appendChild(text);
+        }
         //this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
         this._tooltipContainer.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
     }

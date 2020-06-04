@@ -15,6 +15,7 @@ export declare class FeatureLayer extends Layer {
     private _interactive;
     get interactive(): boolean;
     set interactive(value: boolean);
+    get featureClass(): FeatureClass;
     set featureClass(value: FeatureClass);
     set label(value: Label);
     set renderer(value: Renderer);

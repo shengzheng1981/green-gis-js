@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
-import { ClusterSymbol, SimpleMarkerSymbol, SimplePointSymbol, VertexSymbol } from "../symbol/symbol";
+import { ClusterSymbol, LetterSymbol, SimpleMarkerSymbol, SimplePointSymbol, VertexSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 //点
 export class Point extends Geometry {
@@ -85,6 +85,25 @@ export class Point extends Geometry {
                     ctx.restore();
                 }
             }
+            else if (symbol instanceof LetterSymbol) {
+                const letter = symbol;
+                ctx.save();
+                ctx.strokeStyle = letter.strokeStyle;
+                ctx.fillStyle = letter.fillStyle;
+                ctx.lineWidth = letter.lineWidth;
+                ctx.beginPath(); //Start path
+                //keep size
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.arc(this._screenX, this._screenY, letter.radius, 0, Math.PI * 2, true);
+                ctx.fill();
+                ctx.stroke();
+                ctx.textBaseline = "middle";
+                ctx.textAlign = "center";
+                ctx.fillStyle = letter.fontColor;
+                ctx.font = letter.fontSize + "px/1 " + letter.fontFamily + " " + letter.fontWeight;
+                ctx.fillText(letter.letter, this._screenX, this._screenY);
+                ctx.restore();
+            }
             else if (symbol instanceof VertexSymbol) {
                 ctx.save();
                 ctx.strokeStyle = symbol.strokeStyle;
@@ -133,6 +152,9 @@ export class Point extends Geometry {
         }
         else if (this._symbol instanceof SimpleMarkerSymbol) {
             return screenX >= (this._screenX - this._symbol.offsetX) && screenX <= (this._screenX - this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY - this._symbol.offsetY) && screenY <= (this._screenY - this._symbol.offsetY + this._symbol.height);
+        }
+        else if (this._symbol instanceof LetterSymbol) {
+            return Math.sqrt((this._screenX - screenX) * (this._screenX - screenX) + (this._screenY - screenY) * (this._screenY - screenY)) <= this._symbol.radius;
         }
         else if (this._symbol instanceof VertexSymbol) {
             return screenX >= (this._screenX - this._symbol.size / 2) && screenX <= (this._screenX + this._symbol.size / 2) && screenY >= (this._screenY - this._symbol.size / 2) && screenY <= (this._screenY + this._symbol.size / 2);

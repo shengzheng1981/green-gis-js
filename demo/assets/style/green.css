@@ -21,7 +21,7 @@
     list-style: none;
     position: absolute;
     display: none;
-    max-width: 250px;
+    z-index: 110;
 }
 .green-tooltip-placement-top{
     padding-bottom: 8px;
@@ -30,11 +30,11 @@
 .green-tooltip-text {
     min-width: 30px;
     padding: 6px 8px;
-    color: #fff;
+    color: rgba(0,0,0,.65);
     text-align: left;
     text-decoration: none;
     word-wrap: break-word;
-    background-color: rgba(0,0,0,.75);
+    background-color: #fff;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,.15);
 }
@@ -62,7 +62,7 @@
     width: 5px;
     height: 5px;
     margin: auto;
-    background-color: rgba(0,0,0,.75);
+    background-color: #fff;
     content: "";
     pointer-events: auto;
 }

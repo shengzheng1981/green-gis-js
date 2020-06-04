@@ -14,6 +14,12 @@ import {Subject} from "../util/subject";
 import {Polyline} from "../geometry/polyline";
 import {Polygon} from "../geometry/polygon";
 
+export enum EditorActionType {
+    Select = 0,
+    Create = 1,
+    Edit = 2
+}
+
 export class Editor extends Subject{
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D;
@@ -37,13 +43,20 @@ export class Editor extends Subject{
             y: 0
         }
     };
+    private _action: EditorActionType = EditorActionType.Select;
 
     get editing(): boolean {
         return this._editing;
     }
+    get action(): EditorActionType {
+        return this._action;
+    }
+    set action(value) {
+        this._action = value;
+    }
 
     constructor(map: Map) {
-        super(["mouseover", "mouseout", "startedit", "stopedit"]); //when mouseover feature or vertex
+        super(["mouseover", "mouseout", "startedit", "stopedit", "click"]); //when mouseover feature or vertex
         this._map = map;
         const container = map.container;
         //create canvas
@@ -69,6 +82,7 @@ export class Editor extends Subject{
             this._featureLayer = layer;
             this._featureLayer.editing = true;
             this._featureLayer.on("dblclick", this._switchEditing);
+            this._map.redraw();
             //layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         } else {
             throw new Error("please start editing!");
@@ -79,6 +93,7 @@ export class Editor extends Subject{
         if (!this._editing) {
             this._editing = true;
             this._vertexLayer = new GraphicLayer();
+            this._action = EditorActionType.Select;
             this._handlers["startedit"].forEach(handler => handler());
         }
         //TODO: edit stack for undo/redo
@@ -95,9 +110,22 @@ export class Editor extends Subject{
             this._featureLayer.off("dblclick", this._switchEditing);
             this._featureLayer = null;
             this._vertexLayer = null;
+            this._action = EditorActionType.Select;
             this.clear();
             this._handlers["stopedit"].forEach(handler => handler());
         }
+    }
+
+    addFeature(feature: Feature) {
+        this._featureLayer.featureClass.addFeature(feature);
+        feature.on("dblclick", this._switchEditing);
+        this.redraw();
+    }
+
+    removeFeature(feature: Feature) {
+        this._featureLayer.featureClass.removeFeature(feature);
+        feature.off("dblclick", this._switchEditing);
+        this.redraw();
     }
 
     _onResize(event) {
@@ -111,7 +139,8 @@ export class Editor extends Subject{
     }
 
     _switchEditing(event) {
-        if (!this._editingFeature) {
+        if (!this._editingFeature && this._action === EditorActionType.Select) {
+            this._action = EditorActionType.Edit;
             this._editingFeature = event.feature;
             if (this._editingFeature.geometry instanceof Point) {
                 const point: Point = this._editingFeature.geometry;
@@ -153,7 +182,8 @@ export class Editor extends Subject{
                 });
                 this.redraw();
             }
-        } else if (this._editingFeature === event.feature) {
+        } else if (this._editingFeature === event.feature && this._action === EditorActionType.Edit) {
+            this._action = EditorActionType.Select;
             this._editingFeature = null;
             this._vertexLayer.clear();
             this.redraw();
@@ -178,10 +208,12 @@ export class Editor extends Subject{
     }
 
     _onClick(event) {
-
+        if (this._action !== EditorActionType.Create) return;
+        this._handlers["click"].forEach(handler => handler(event));
     }
 
     _onDoubleClick(event) {
+        if (this._action === EditorActionType.Create) return;
         if (this._editingFeature && !(this._editingFeature.geometry instanceof Point)) {
             const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");
             if (flag) return;
@@ -190,6 +222,7 @@ export class Editor extends Subject{
     }
 
     _onMouseDown(event) {
+        if (this._action === EditorActionType.Create) return;
         if (this._editingFeature) {
             this._drag.flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dragstart");
             this._drag.start.x = event.x;
@@ -198,6 +231,7 @@ export class Editor extends Subject{
     }
 
     _onMouseMove(event) {
+        if (this._action === EditorActionType.Create) return;
         if (!this._drag.flag) {
             const flag1 = this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");
             const flag2 = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");
@@ -210,6 +244,7 @@ export class Editor extends Subject{
     }
 
     _onMouseUp(event) {
+        if (this._action === EditorActionType.Create) return;
         if (this._drag.flag) {
             this._drag.end.x = event.x;
             this._drag.end.y = event.y;
