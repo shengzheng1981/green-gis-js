@@ -27,6 +27,13 @@ export class Polyline extends Geometry{
         this._lnglats = lnglats;
     };
 
+    toGeoJSON() {
+        return {
+            "type": "LineString",
+            "coordinates": this._lnglats
+        }
+    }
+
     project(projection: Projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map( (point: any) => this._projection.project(point));

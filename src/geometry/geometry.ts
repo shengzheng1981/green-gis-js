@@ -28,6 +28,8 @@ export class Geometry {
         return this._bound;
     }
 
+    toGeoJSON() {}
+
     project(projection: Projection) {};
 
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {};

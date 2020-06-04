@@ -47,6 +47,13 @@ export class Point extends Geometry{
         this._lat = lat;
     };
 
+    toGeoJSON() {
+        return {
+            "type": "Point",
+            "coordinates": [this._lng, this._lat]
+        }
+    }
+
     project(projection: Projection) {
         this._projection = projection;
         [this._x, this._y] = this._projection.project([this._lng, this._lat]);

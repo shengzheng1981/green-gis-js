@@ -18,11 +18,17 @@ export class Polygon extends Geometry{
         return this._lnglats;
     }
 
-
     constructor(lnglats: number[][][]) {
         super();
         this._lnglats = lnglats;
     };
+
+    toGeoJSON() {
+        return {
+            "type": "Polygon",
+            "coordinates": this._lnglats
+        }
+    }
 
     project(projection: Projection) {
         this._projection = projection;
