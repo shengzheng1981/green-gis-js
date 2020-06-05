@@ -16,6 +16,7 @@ export class Geometry {
     get bound() {
         return this._bound;
     }
+    toGeoJSON() { }
     project(projection) { }
     ;
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimplePointSymbol()) { }

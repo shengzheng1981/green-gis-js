@@ -12,6 +12,12 @@ export class Polygon extends Geometry {
         return this._lnglats;
     }
     ;
+    toGeoJSON() {
+        return {
+            "type": "Polygon",
+            "coordinates": this._lnglats
+        };
+    }
     project(projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((ring) => ring.map((point) => this._projection.project(point)));

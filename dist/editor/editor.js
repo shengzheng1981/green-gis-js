@@ -13,7 +13,7 @@ export var EditorActionType;
 })(EditorActionType || (EditorActionType = {}));
 export class Editor extends Subject {
     constructor(map) {
-        super(["mouseover", "mouseout", "startedit", "stopedit", "click"]); //when mouseover feature or vertex
+        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit"]); //when mouseover feature or vertex
         this._drag = {
             flag: false,
             vertex: null,
@@ -125,6 +125,7 @@ export class Editor extends Subject {
                     });
                     vertex.on("dblclick", (event) => {
                         this._vertexLayer.remove(vertex);
+                        this._editingFeature.edited = true;
                         polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
                         this.redraw();
                     });
@@ -143,6 +144,7 @@ export class Editor extends Subject {
                         });
                         vertex.on("dblclick", (event) => {
                             this._vertexLayer.remove(vertex);
+                            this._editingFeature.edited = true;
                             polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
                             this.redraw();
                         });
@@ -153,6 +155,10 @@ export class Editor extends Subject {
         }
         else if (this._editingFeature === event.feature && this._action === EditorActionType.Edit) {
             this._action = EditorActionType.Select;
+            if (this._editingFeature.edited) {
+                this._handlers["commit"].forEach(handler => handler({ feature: this._editingFeature }));
+                this._editingFeature.edited = false;
+            }
             this._editingFeature = null;
             this._vertexLayer.clear();
             this.redraw();
@@ -173,11 +179,8 @@ export class Editor extends Subject {
         this._ctx.restore();
     }
     _onClick(event) {
-        if (this._action === EditorActionType.Edit)
+        if (this._action !== EditorActionType.Create)
             return;
-        if (this._action === EditorActionType.Select) {
-            this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click");
-        }
         this._handlers["click"].forEach(handler => handler(event));
     }
     _onDoubleClick(event) {
@@ -220,6 +223,7 @@ export class Editor extends Subject {
             this._drag.end.x = event.x;
             this._drag.end.y = event.y;
             this._drag.flag = false;
+            this._editingFeature.edited = true;
             if (this._editingFeature.geometry instanceof Point) {
                 const point = this._editingFeature.geometry;
                 point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
@@ -240,6 +244,7 @@ export class Editor extends Subject {
                         });
                         vertex.on("dblclick", (event) => {
                             this._vertexLayer.remove(vertex);
+                            this._editingFeature.edited = true;
                             polyline.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
                             this.redraw();
                         });
@@ -266,6 +271,7 @@ export class Editor extends Subject {
                         });
                         vertex.on("dblclick", (event) => {
                             this._vertexLayer.remove(vertex);
+                            this._editingFeature.edited = true;
                             polygon.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
                             this.redraw();
                         });

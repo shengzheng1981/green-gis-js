@@ -7,6 +7,10 @@ export declare class MultiplePolygon extends Geometry {
     private _coordinates;
     private _screen;
     constructor(lnglats: number[][][][]);
+    toGeoJSON(): {
+        type: string;
+        coordinates: number[][][][];
+    };
     project(projection: Projection): void;
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): void;
     contain(screenX: number, screenY: number): boolean;

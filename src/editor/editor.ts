@@ -48,6 +48,9 @@ export class Editor extends Subject{
     get editing(): boolean {
         return this._editing;
     }
+    get editingFeature(): Feature {
+        return this._editingFeature;
+    }
     get action(): EditorActionType {
         return this._action;
     }
@@ -56,7 +59,7 @@ export class Editor extends Subject{
     }
 
     constructor(map: Map) {
-        super(["mouseover", "mouseout", "startedit", "stopedit", "click"]); //when mouseover feature or vertex
+        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit"]); //when mouseover feature or vertex
         this._map = map;
         const container = map.container;
         //create canvas
@@ -158,6 +161,7 @@ export class Editor extends Subject{
                     });
                     vertex.on("dblclick", (event) => {
                         this._vertexLayer.remove(vertex);
+                        this._editingFeature.edited = true;
                         polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
                         this.redraw();
                     });
@@ -175,6 +179,7 @@ export class Editor extends Subject{
                         });
                         vertex.on("dblclick", (event) => {
                             this._vertexLayer.remove(vertex);
+                            this._editingFeature.edited = true;
                             polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
                             this.redraw();
                         });
@@ -184,6 +189,10 @@ export class Editor extends Subject{
             }
         } else if (this._editingFeature === event.feature && this._action === EditorActionType.Edit) {
             this._action = EditorActionType.Select;
+            if (this._editingFeature.edited) {
+                this._handlers["commit"].forEach(handler => handler({feature: this._editingFeature}));
+                this._editingFeature.edited = false;
+            }
             this._editingFeature = null;
             this._vertexLayer.clear();
             this.redraw();
@@ -208,11 +217,17 @@ export class Editor extends Subject{
     }
 
     _onClick(event) {
-        if (this._action !== EditorActionType.Create) return;
-        this._handlers["click"].forEach(handler => handler(event));
+        if (this._action === EditorActionType.Create) {
+            this._handlers["click"].forEach(handler => handler(event));
+        } else {
+            /*if (!this._editingFeature) {
+                this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click");
+            }*/
+        }
     }
 
     _onDoubleClick(event) {
+        if (!this._editing) return;
         if (this._action === EditorActionType.Create) return;
         if (this._editingFeature && !(this._editingFeature.geometry instanceof Point)) {
             const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");
@@ -249,6 +264,7 @@ export class Editor extends Subject{
             this._drag.end.x = event.x;
             this._drag.end.y = event.y;
             this._drag.flag = false;
+            this._editingFeature.edited = true;
             if (this._editingFeature.geometry instanceof Point) {
                 const point: Point = this._editingFeature.geometry;
                 point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
@@ -268,6 +284,7 @@ export class Editor extends Subject{
                         });
                         vertex.on("dblclick", (event) => {
                             this._vertexLayer.remove(vertex);
+                            this._editingFeature.edited = true;
                             polyline.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
                             this.redraw();
                         });
@@ -292,6 +309,7 @@ export class Editor extends Subject{
                         });
                         vertex.on("dblclick", (event) => {
                             this._vertexLayer.remove(vertex);
+                            this._editingFeature.edited = true;
                             polygon.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
                             this.redraw();
                         });

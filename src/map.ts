@@ -234,7 +234,7 @@ export class Map extends Subject{
     }
 
     _onDoubleClick(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing) {
             this._editor._onDoubleClick(event);
             return;
         }
@@ -251,7 +251,7 @@ export class Map extends Subject{
     }
 
     _onMouseDown(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseDown(event);
             return;
         }
@@ -261,7 +261,7 @@ export class Map extends Subject{
     }
 
     _onMouseMove(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing) {
             this._editor._onMouseMove(event);
             return;
         }
@@ -271,7 +271,7 @@ export class Map extends Subject{
     }
 
     _onMouseUp(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseUp(event);
             return;
         }

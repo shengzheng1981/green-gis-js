@@ -16,6 +16,10 @@ export declare class Point extends Geometry {
     get x(): number;
     get y(): number;
     constructor(lng: number, lat: number);
+    toGeoJSON(): {
+        type: string;
+        coordinates: number[];
+    };
     project(projection: Projection): void;
     move(ctx: CanvasRenderingContext2D, projection: Projection, screenX: number, screenY: number): void;
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): Promise<void>;

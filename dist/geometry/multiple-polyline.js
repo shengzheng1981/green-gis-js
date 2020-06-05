@@ -10,6 +10,12 @@ export class MultiplePolyline extends Geometry {
         this._lnglats = lnglats;
     }
     ;
+    toGeoJSON() {
+        return {
+            "type": "MultiPolyline",
+            "coordinates": this._lnglats
+        };
+    }
     project(projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((polyline) => polyline.map((point) => this._projection.project(point)));

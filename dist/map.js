@@ -9,7 +9,7 @@ import { Subject } from "./util/subject";
 import { Tooltip } from "./tooltip/tooltip";
 export class Map extends Subject {
     constructor(id) {
-        super(["extent", "click", "mousemove", "resize"]);
+        super(["extent", "click", "mousemove", "resize", "beforeclick"]);
         this._drag = {
             flag: false,
             start: {
@@ -181,6 +181,7 @@ export class Map extends Subject {
         const x = (event.offsetX - matrix.e) / matrix.a;
         const y = (event.offsetY - matrix.f) / matrix.d;
         [event.lng, event.lat] = this._projection.unproject([x, y]);
+        this._handlers["beforeclick"].forEach(handler => handler(event));
         if (this._editor && this._editor.editing) {
             this._editor._onClick(event);
             return;

@@ -9,6 +9,12 @@ export class MultiplePolygon extends Geometry {
         this._lnglats = lnglats;
     }
     ;
+    toGeoJSON() {
+        return {
+            "type": "MultiPolygon",
+            "coordinates": this._lnglats
+        };
+    }
     project(projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((polygon) => polygon.map((ring) => ring.map((point) => this._projection.project(point))));

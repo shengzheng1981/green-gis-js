@@ -8,6 +8,10 @@ export declare class Polygon extends Geometry {
     private _screen;
     get lnglats(): number[][][];
     constructor(lnglats: number[][][]);
+    toGeoJSON(): {
+        type: string;
+        coordinates: number[][][];
+    };
     project(projection: Projection): void;
     splice(ctx: CanvasRenderingContext2D, projection: Projection, lnglat: number[], screenX?: any, screenY?: any, replaced?: boolean): void;
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): void;
