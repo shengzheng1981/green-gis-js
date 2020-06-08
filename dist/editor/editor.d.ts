@@ -18,6 +18,7 @@ export declare class Editor extends Subject {
     private _drag;
     private _action;
     get editing(): boolean;
+    get editingFeature(): Feature;
     get action(): EditorActionType;
     set action(value: EditorActionType);
     constructor(map: Map);

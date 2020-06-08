@@ -8,8 +8,11 @@ import { Viewer } from "./viewer";
 import { Subject } from "./util/subject";
 import { Tooltip } from "./tooltip/tooltip";
 export class Map extends Subject {
-    constructor(id) {
-        super(["extent", "click", "mousemove", "resize", "beforeclick"]);
+    constructor(id, option) {
+        super(["extent", "click", "dblclick", "mousemove", "resize"]);
+        this._option = {
+            disableDoubleClick: false
+        };
         this._drag = {
             flag: false,
             start: {
@@ -181,7 +184,6 @@ export class Map extends Subject {
         const x = (event.offsetX - matrix.e) / matrix.a;
         const y = (event.offsetY - matrix.f) / matrix.d;
         [event.lng, event.lat] = this._projection.unproject([x, y]);
-        this._handlers["beforeclick"].forEach(handler => handler(event));
         if (this._editor && this._editor.editing) {
             this._editor._onClick(event);
             return;
@@ -189,24 +191,27 @@ export class Map extends Subject {
         this._handlers["click"].forEach(handler => handler(event));
     }
     _onDoubleClick(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing) {
             this._editor._onDoubleClick(event);
             return;
         }
-        if (this._zoom >= 20)
-            return;
-        const scale = 2;
-        this._zoom += 1;
-        const matrix = this._ctx.getTransform();
-        const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
-        const e = (x2 - scale * (x1 - e1) - e1) / a1;
-        const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
-        const f = (y2 - scale * (y1 - f1) - f1) / d1;
-        this._ctx.transform(scale, 0, 0, scale, e, f);
-        this.redraw();
+        if (!this._option.disableDoubleClick) {
+            if (this._zoom >= 20)
+                return;
+            const scale = 2;
+            this._zoom += 1;
+            const matrix = this._ctx.getTransform();
+            const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
+            const e = (x2 - scale * (x1 - e1) - e1) / a1;
+            const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
+            const f = (y2 - scale * (y1 - f1) - f1) / d1;
+            this._ctx.transform(scale, 0, 0, scale, e, f);
+            this.redraw();
+        }
+        this._handlers["dblclick"].forEach(handler => handler(event));
     }
     _onMouseDown(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseDown(event);
             return;
         }
@@ -215,7 +220,7 @@ export class Map extends Subject {
         this._drag.start.y = event.y;
     }
     _onMouseMove(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing) {
             this._editor._onMouseMove(event);
             return;
         }
@@ -224,7 +229,7 @@ export class Map extends Subject {
         }
     }
     _onMouseUp(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseUp(event);
             return;
         }
@@ -238,6 +243,7 @@ export class Map extends Subject {
         this._drag.flag = false;
     }
     _onWheel(event) {
+        event.preventDefault();
         let scale = 1;
         const sensitivity = 100;
         const delta = event.deltaY / sensitivity;
@@ -264,9 +270,9 @@ export class Map extends Subject {
         //4.另矩阵变换 a1 * e + e1 = e2
         //5.联立3和4  求得 e = (x2 - scale * (x1 - e1) - e1) / a1
         const matrix = this._ctx.getTransform();
-        const a1 = matrix.a, e1 = matrix.e, x1 = event.x, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
+        const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
         const e = (x2 - scale * (x1 - e1) - e1) / a1;
-        const d1 = matrix.d, f1 = matrix.f, y1 = event.y, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
+        const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
         const f = (y2 - scale * (y1 - f1) - f1) / d1;
         this._ctx.transform(scale, 0, 0, scale, e, f);
         this.redraw();

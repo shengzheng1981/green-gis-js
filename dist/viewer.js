@@ -26,11 +26,13 @@ export class Viewer extends Subject {
         this._onResize = this._onResize.bind(this);
         this._extentChange = this._extentChange.bind(this);
         this._onClick = this._onClick.bind(this);
+        this._onDoubleClick = this._onDoubleClick.bind(this);
         this._onMouseMove = this._onMouseMove.bind(this);
         this._ctx = this._canvas.getContext("2d");
         this._map.on("resize", this._onResize);
         this._map.on("extent", this._extentChange);
         this._map.on("click", this._onClick);
+        this._map.on("dblclick", this._onDoubleClick);
         this._map.on("mousemove", this._onMouseMove);
     }
     _onResize(event) {
@@ -43,6 +45,9 @@ export class Viewer extends Subject {
     }
     _onClick(event) {
         this._layers.filter(layer => layer.interactive && !layer.editing).some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click"));
+    }
+    _onDoubleClick(event) {
+        this._layers.filter(layer => layer.interactive && !layer.editing).some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick"));
     }
     _onMouseMove(event) {
         //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
@@ -100,6 +105,7 @@ export class Viewer extends Subject {
         this._map.off("resize", this._onResize);
         this._map.off("extent", this._extentChange);
         this._map.off("click", this._onClick);
+        this._map.off("dblclick", this._onDoubleClick);
         this._map.off("mousemove", this._onMouseMove);
     }
 }

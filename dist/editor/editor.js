@@ -45,6 +45,9 @@ export class Editor extends Subject {
     get editing() {
         return this._editing;
     }
+    get editingFeature() {
+        return this._editingFeature;
+    }
     get action() {
         return this._action;
     }
@@ -179,11 +182,18 @@ export class Editor extends Subject {
         this._ctx.restore();
     }
     _onClick(event) {
-        if (this._action !== EditorActionType.Create)
-            return;
-        this._handlers["click"].forEach(handler => handler(event));
+        if (this._action === EditorActionType.Create) {
+            this._handlers["click"].forEach(handler => handler(event));
+        }
+        else {
+            /*if (!this._editingFeature) {
+                this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click");
+            }*/
+        }
     }
     _onDoubleClick(event) {
+        if (!this._editing)
+            return;
         if (this._action === EditorActionType.Create)
             return;
         if (this._editingFeature && !(this._editingFeature.geometry instanceof Point)) {

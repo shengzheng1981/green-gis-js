@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./tooltip.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./label.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -215,11 +215,12 @@ class Field {
 /*!********************************!*\
   !*** ../dist/editor/editor.js ***!
   \********************************/
-/*! exports provided: Editor */
+/*! exports provided: EditorActionType, Editor */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "EditorActionType", function() { return EditorActionType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Editor", function() { return Editor; });
 /* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../layer/graphic-layer */ "../dist/layer/graphic-layer.js");
 /* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../element/graphic */ "../dist/element/graphic.js");
@@ -235,9 +236,15 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+var EditorActionType;
+(function (EditorActionType) {
+    EditorActionType[EditorActionType["Select"] = 0] = "Select";
+    EditorActionType[EditorActionType["Create"] = 1] = "Create";
+    EditorActionType[EditorActionType["Edit"] = 2] = "Edit";
+})(EditorActionType || (EditorActionType = {}));
 class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
     constructor(map) {
-        super(["mouseover", "mouseout", "startedit", "stopedit"]); //when mouseover feature or vertex
+        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit"]); //when mouseover feature or vertex
         this._drag = {
             flag: false,
             vertex: null,
@@ -250,6 +257,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
                 y: 0
             }
         };
+        this._action = EditorActionType.Select;
         this._map = map;
         const container = map.container;
         //create canvas
@@ -268,11 +276,18 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
     get editing() {
         return this._editing;
     }
+    get action() {
+        return this._action;
+    }
+    set action(value) {
+        this._action = value;
+    }
     setFeatureLayer(layer) {
         if (this._editing) {
             this._featureLayer = layer;
             this._featureLayer.editing = true;
             this._featureLayer.on("dblclick", this._switchEditing);
+            this._map.redraw();
             //layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         }
         else {
@@ -283,6 +298,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         if (!this._editing) {
             this._editing = true;
             this._vertexLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+            this._action = EditorActionType.Select;
             this._handlers["startedit"].forEach(handler => handler());
         }
         //TODO: edit stack for undo/redo
@@ -296,9 +312,20 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
             this._featureLayer.off("dblclick", this._switchEditing);
             this._featureLayer = null;
             this._vertexLayer = null;
+            this._action = EditorActionType.Select;
             this.clear();
             this._handlers["stopedit"].forEach(handler => handler());
         }
+    }
+    addFeature(feature) {
+        this._featureLayer.featureClass.addFeature(feature);
+        feature.on("dblclick", this._switchEditing);
+        this.redraw();
+    }
+    removeFeature(feature) {
+        this._featureLayer.featureClass.removeFeature(feature);
+        feature.off("dblclick", this._switchEditing);
+        this.redraw();
     }
     _onResize(event) {
         this._canvas.width = this._map.container.clientWidth;
@@ -309,7 +336,8 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         this.redraw();
     }
     _switchEditing(event) {
-        if (!this._editingFeature) {
+        if (!this._editingFeature && this._action === EditorActionType.Select) {
+            this._action = EditorActionType.Edit;
             this._editingFeature = event.feature;
             if (this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"]) {
                 const point = this._editingFeature.geometry;
@@ -328,6 +356,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
                     });
                     vertex.on("dblclick", (event) => {
                         this._vertexLayer.remove(vertex);
+                        this._editingFeature.edited = true;
                         polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
                         this.redraw();
                     });
@@ -346,6 +375,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
                         });
                         vertex.on("dblclick", (event) => {
                             this._vertexLayer.remove(vertex);
+                            this._editingFeature.edited = true;
                             polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
                             this.redraw();
                         });
@@ -354,7 +384,12 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
                 this.redraw();
             }
         }
-        else if (this._editingFeature === event.feature) {
+        else if (this._editingFeature === event.feature && this._action === EditorActionType.Edit) {
+            this._action = EditorActionType.Select;
+            if (this._editingFeature.edited) {
+                this._handlers["commit"].forEach(handler => handler({ feature: this._editingFeature }));
+                this._editingFeature.edited = false;
+            }
             this._editingFeature = null;
             this._vertexLayer.clear();
             this.redraw();
@@ -375,8 +410,13 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         this._ctx.restore();
     }
     _onClick(event) {
+        if (this._action !== EditorActionType.Create)
+            return;
+        this._handlers["click"].forEach(handler => handler(event));
     }
     _onDoubleClick(event) {
+        if (this._action === EditorActionType.Create)
+            return;
         if (this._editingFeature && !(this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"])) {
             const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");
             if (flag)
@@ -385,6 +425,8 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");
     }
     _onMouseDown(event) {
+        if (this._action === EditorActionType.Create)
+            return;
         if (this._editingFeature) {
             this._drag.flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dragstart");
             this._drag.start.x = event.x;
@@ -392,6 +434,8 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         }
     }
     _onMouseMove(event) {
+        if (this._action === EditorActionType.Create)
+            return;
         if (!this._drag.flag) {
             const flag1 = this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");
             const flag2 = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");
@@ -404,10 +448,13 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         }
     }
     _onMouseUp(event) {
+        if (this._action === EditorActionType.Create)
+            return;
         if (this._drag.flag) {
             this._drag.end.x = event.x;
             this._drag.end.y = event.y;
             this._drag.flag = false;
+            this._editingFeature.edited = true;
             if (this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"]) {
                 const point = this._editingFeature.geometry;
                 point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
@@ -428,6 +475,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
                         });
                         vertex.on("dblclick", (event) => {
                             this._vertexLayer.remove(vertex);
+                            this._editingFeature.edited = true;
                             polyline.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
                             this.redraw();
                         });
@@ -454,6 +502,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
                         });
                         vertex.on("dblclick", (event) => {
                             this._vertexLayer.remove(vertex);
+                            this._editingFeature.edited = true;
                             polygon.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
                             this.redraw();
                         });
@@ -494,11 +543,15 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class Feature extends _util_subject__WEBPACK_IMPORTED_MODULE_2__["Subject"] {
-    constructor(geometry, properties) {
+    constructor(geometry, properties, symbol) {
         super(["click", "dblclick", "mouseover", "mouseout"]);
         this.visible = true;
         this._geometry = geometry;
         this._properties = properties;
+        this._symbol = symbol;
+    }
+    get symbol() {
+        return this._symbol;
     }
     get geometry() {
         return this._geometry;
@@ -509,9 +562,15 @@ class Feature extends _util_subject__WEBPACK_IMPORTED_MODULE_2__["Subject"] {
     get bound() {
         return this._geometry ? this._geometry.bound : null;
     }
+    get edited() {
+        return this._edited;
+    }
+    set edited(value) {
+        this._edited = value;
+    }
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]()) {
         if (this.visible)
-            this._geometry.draw(ctx, projection, extent, symbol);
+            this._geometry.draw(ctx, projection, extent, this._symbol || symbol);
     }
     label(field, ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimpleTextSymbol"]()) {
         if (this.visible)
@@ -669,6 +728,7 @@ class Geometry {
     get bound() {
         return this._bound;
     }
+    toGeoJSON() { }
     project(projection) { }
     ;
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]()) { }
@@ -760,6 +820,12 @@ class MultiplePoint extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         this._lnglats = lnglats;
     }
     ;
+    toGeoJSON() {
+        return {
+            "type": "MultiPoint",
+            "coordinates": this._lnglats
+        };
+    }
     project(projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((point) => this._projection.project(point));
@@ -871,6 +937,12 @@ class MultiplePolygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"]
         this._lnglats = lnglats;
     }
     ;
+    toGeoJSON() {
+        return {
+            "type": "MultiPolygon",
+            "coordinates": this._lnglats
+        };
+    }
     project(projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((polygon) => polygon.map((ring) => ring.map((point) => this._projection.project(point))));
@@ -1011,6 +1083,12 @@ class MultiplePolyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"
         this._lnglats = lnglats;
     }
     ;
+    toGeoJSON() {
+        return {
+            "type": "MultiPolyline",
+            "coordinates": this._lnglats
+        };
+    }
     project(projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((polyline) => polyline.map((point) => this._projection.project(point)));
@@ -1186,6 +1264,12 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         return this._y;
     }
     ;
+    toGeoJSON() {
+        return {
+            "type": "Point",
+            "coordinates": [this._lng, this._lat]
+        };
+    }
     project(projection) {
         this._projection = projection;
         [this._x, this._y] = this._projection.project([this._lng, this._lat]);
@@ -1240,6 +1324,25 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
                     ctx.restore();
                 }
             }
+            else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["LetterSymbol"]) {
+                const letter = symbol;
+                ctx.save();
+                ctx.strokeStyle = letter.strokeStyle;
+                ctx.fillStyle = letter.fillStyle;
+                ctx.lineWidth = letter.lineWidth;
+                ctx.beginPath(); //Start path
+                //keep size
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.arc(this._screenX, this._screenY, letter.radius, 0, Math.PI * 2, true);
+                ctx.fill();
+                ctx.stroke();
+                ctx.textBaseline = "middle";
+                ctx.textAlign = "center";
+                ctx.fillStyle = letter.fontColor;
+                ctx.font = letter.fontSize + "px/1 " + letter.fontFamily + " " + letter.fontWeight;
+                ctx.fillText(letter.letter, this._screenX, this._screenY);
+                ctx.restore();
+            }
             else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["VertexSymbol"]) {
                 ctx.save();
                 ctx.strokeStyle = symbol.strokeStyle;
@@ -1288,6 +1391,9 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         }
         else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
             return screenX >= (this._screenX - this._symbol.offsetX) && screenX <= (this._screenX - this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY - this._symbol.offsetY) && screenY <= (this._screenY - this._symbol.offsetY + this._symbol.height);
+        }
+        else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["LetterSymbol"]) {
+            return Math.sqrt((this._screenX - screenX) * (this._screenX - screenX) + (this._screenY - screenY) * (this._screenY - screenY)) <= this._symbol.radius;
         }
         else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["VertexSymbol"]) {
             return screenX >= (this._screenX - this._symbol.size / 2) && screenX <= (this._screenX + this._symbol.size / 2) && screenY >= (this._screenY - this._symbol.size / 2) && screenY <= (this._screenY + this._symbol.size / 2);
@@ -1338,6 +1444,12 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         return this._lnglats;
     }
     ;
+    toGeoJSON() {
+        return {
+            "type": "Polygon",
+            "coordinates": this._lnglats
+        };
+    }
     project(projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((ring) => ring.map((point) => this._projection.project(point)));
@@ -1496,6 +1608,12 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         return this._lnglats;
     }
     ;
+    toGeoJSON() {
+        return {
+            "type": "LineString",
+            "coordinates": this._lnglats
+        };
+    }
     project(projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((point) => this._projection.project(point));
@@ -1675,7 +1793,7 @@ Polyline.TOLERANCE = 4; //screen pixel
 /*!************************!*\
   !*** ../dist/index.js ***!
   \************************/
-/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Tooltip, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject */
+/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Tooltip, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, LetterSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1698,6 +1816,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Field", function() { return _data_field__WEBPACK_IMPORTED_MODULE_4__["Field"]; });
 
 /* harmony import */ var _editor_editor__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./editor/editor */ "../dist/editor/editor.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "EditorActionType", function() { return _editor_editor__WEBPACK_IMPORTED_MODULE_5__["EditorActionType"]; });
+
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Editor", function() { return _editor_editor__WEBPACK_IMPORTED_MODULE_5__["Editor"]; });
 
 /* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./element/graphic */ "../dist/element/graphic.js");
@@ -1758,6 +1878,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["SimpleMarkerSymbol"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleTextSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["SimpleTextSymbol"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "LetterSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["LetterSymbol"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ArrowSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["ArrowSymbol"]; });
 
@@ -1903,6 +2025,9 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
     }
     set interactive(value) {
         this._interactive = value;
+    }
+    get featureClass() {
+        return this._featureClass;
     }
     set featureClass(value) {
         this._featureClass = value;
@@ -2171,7 +2296,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
     constructor(id) {
-        super(["extent", "click", "mousemove", "resize"]);
+        super(["extent", "click", "mousemove", "resize", "beforeclick"]);
         this._drag = {
             flag: false,
             start: {
@@ -2189,7 +2314,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._center = [0, 0];
         //默认图形图层
         this._defaultGraphicLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_3__["GraphicLayer"]();
-        this._container = document.getElementById(id);
+        this._container = id instanceof HTMLDivElement ? id : document.getElementById(id);
         //create canvas
         this._canvas = document.createElement("canvas");
         this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 100";
@@ -2237,6 +2362,9 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
     }
     get viewer() {
         return this._viewer;
+    }
+    get tooltip() {
+        return this._tooltip;
     }
     get editor() {
         return this._editor;
@@ -2336,6 +2464,11 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this.setView(this._center, this._zoom);
     }
     _onClick(event) {
+        const matrix = this._ctx.getTransform();
+        const x = (event.offsetX - matrix.e) / matrix.a;
+        const y = (event.offsetY - matrix.f) / matrix.d;
+        [event.lng, event.lat] = this._projection.unproject([x, y]);
+        this._handlers["beforeclick"].forEach(handler => handler(event));
         if (this._editor && this._editor.editing) {
             this._editor._onClick(event);
             return;
@@ -2870,7 +3003,7 @@ class SimpleRenderer {
 /*!********************************!*\
   !*** ../dist/symbol/symbol.js ***!
   \********************************/
-/*! exports provided: Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol */
+/*! exports provided: Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, LetterSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2881,6 +3014,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleFillSymbol", function() { return SimpleFillSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return SimpleMarkerSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleTextSymbol", function() { return SimpleTextSymbol; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LetterSymbol", function() { return LetterSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ArrowSymbol", function() { return ArrowSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "VertexSymbol", function() { return VertexSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ClusterSymbol", function() { return ClusterSymbol; });
@@ -2948,6 +3082,20 @@ class SimpleTextSymbol extends Symbol {
         this.offsetX = 0;
         this.offsetY = 1;
         this.padding = 5;
+        this.fontColor = "#ff0000";
+        this.fontSize = 12;
+        this.fontFamily = "YaHei";
+        this.fontWeight = "Bold";
+    }
+}
+class LetterSymbol extends Symbol {
+    constructor() {
+        super(...arguments);
+        this.radius = 10;
+        this.lineWidth = 1;
+        this.strokeStyle = "#ff0000"; //#ff0000
+        this.fillStyle = "#ff0000"; //#ff0000
+        this.letter = "";
         this.fontColor = "#ff0000";
         this.fontSize = 12;
         this.fontFamily = "YaHei";
@@ -3050,7 +3198,16 @@ class Tooltip {
         this._tooltipContainer.appendChild(this._tooltipText);
     }
     show(text, screenX, screenY) {
-        this._tooltipText.innerHTML = text;
+        if (typeof text === 'string') {
+            this._tooltipText.innerHTML = text;
+        }
+        else {
+            const node = this._tooltipText;
+            while (node.hasChildNodes()) {
+                node.removeChild(node.firstChild);
+            }
+            node.appendChild(text);
+        }
         //this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
         this._tooltipContainer.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
     }
@@ -3393,10 +3550,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 
 /***/ }),
 
-/***/ "./tooltip.js":
-/*!********************!*\
-  !*** ./tooltip.js ***!
-  \********************/
+/***/ "./label.js":
+/*!******************!*\
+  !*** ./label.js ***!
+  \******************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -3439,7 +3596,6 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -3447,22 +3603,44 @@ window.load = () => {
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
         featureLayer.featureClass = featureClass;
-        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field.name = "name";
-        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
+        const field2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
+        field2.name = "name";
+        field2.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
         const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
-        renderer.generate(featureClass, field);
+        renderer.generate(featureClass, field2);
         featureLayer.renderer = renderer;
+        const label = new _dist__WEBPACK_IMPORTED_MODULE_0__["Label"]();
+        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleTextSymbol"]();
+        label.field = field2;
+        label.symbol = symbol;
+        featureLayer.label = label;
+        featureLayer.labeled = true;
         featureLayer.zoom = [5, 20];
-        featureLayer.on("mouseover", (event) => {
-            map.showTooltip(event.feature, field);
-        });
         map.addLayer(featureLayer);
 
-        map.setView([107.411, 29.89], 7);
+        map.setView([107.777, 29.809], 7);
     };
     req.open("GET", "assets/geojson/chongqing.json", true);
     req.send(null);
+
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
+    //beijing gugong
+    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
+    const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {});
+    const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
+    featureClass.addFeature(feature);
+    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
+    marker.width = 32;
+    marker.height = 32;
+    marker.offsetX = -16;
+    marker.offsetY = -32;
+    marker.url = "assets/img/marker.svg";
+    const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
+    featureLayer.featureClass = featureClass;
+    const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
+    renderer.symbol = marker;
+    featureLayer.renderer = renderer;
+    map.addLayer(featureLayer);
 
 }
 

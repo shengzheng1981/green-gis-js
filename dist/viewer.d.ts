@@ -11,6 +11,7 @@ export declare class Viewer extends Subject {
     _onResize(event: any): void;
     _extentChange(event: any): void;
     _onClick(event: any): void;
+    _onDoubleClick(event: any): void;
     _onMouseMove(event: any): void;
     addLayer(layer: FeatureLayer): void;
     insertLayer(layer: FeatureLayer, index?: number): void;

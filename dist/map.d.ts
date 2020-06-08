@@ -10,6 +10,7 @@ export declare class Map extends Subject {
     private _container;
     private _canvas;
     private _ctx;
+    private _option;
     private _drag;
     private _zoom;
     private _center;
@@ -28,7 +29,7 @@ export declare class Map extends Subject {
     get extent(): Bound;
     get zoom(): number;
     get projection(): Projection;
-    constructor(id: string | HTMLDivElement);
+    constructor(id: string | HTMLDivElement, option: any);
     setProjection(projection: any): void;
     setView(center?: number[], zoom?: number): void;
     addLayer(layer: FeatureLayer): void;
