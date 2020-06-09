@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./label.js",
+    entry: "./editor-polygon-create.js",
     output: {
         filename: "bundle.js"
     },

@@ -1,6 +1,7 @@
 import { Feature } from "../element/feature";
 import { FeatureLayer } from "../layer/feature-layer";
 import { Map } from "../map";
+import { SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol } from "../symbol/symbol";
 import { Subject } from "../util/subject";
 export declare enum EditorActionType {
     Select = 0,
@@ -15,15 +16,24 @@ export declare class Editor extends Subject {
     private _editing;
     private _editingFeature;
     private _vertexLayer;
+    private _createLayer;
     private _drag;
+    private _create;
     private _action;
+    private _defaultPointSymbol;
+    private _defaultLineSymbol;
+    private _defaultPolygonSymbol;
     get editing(): boolean;
     get editingFeature(): Feature;
     get action(): EditorActionType;
     set action(value: EditorActionType);
+    get defaultPointSymbol(): SimplePointSymbol;
+    get defaultLineSymbol(): SimpleLineSymbol;
+    get defaultPolygonSymbol(): SimpleFillSymbol;
     constructor(map: Map);
     setFeatureLayer(layer: FeatureLayer): void;
     start(): void;
+    create(): void;
     save(): void;
     stop(): void;
     addFeature(feature: Feature): void;

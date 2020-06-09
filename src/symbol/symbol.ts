@@ -6,10 +6,10 @@ export class Symbol {
 
 export class SimplePointSymbol extends Symbol {
     //circle
-    public radius: number = 10;
+    public radius: number = 6;
     public lineWidth: number = 1;
     public strokeStyle: string = "#ff0000"; //#ff0000
-    public fillStyle: string = "#ff0000";    //#ff0000
+    public fillStyle: string = "#ff000088";    //#ff0000
 }
 
 export class SimpleLineSymbol extends Symbol {
@@ -20,7 +20,7 @@ export class SimpleLineSymbol extends Symbol {
 export class SimpleFillSymbol extends Symbol {
     public lineWidth: number = 2;
     public strokeStyle: string = "#ff0000"; //#ff0000
-    public fillStyle: string = "#ff0000";    //#ff0000
+    public fillStyle: string = "#ff000088";    //#ff0000
 }
 
 export class SimpleMarkerSymbol extends Symbol {

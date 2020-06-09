@@ -77,8 +77,11 @@ export class Map extends Subject{
         return this._projection;
     }
 
-    constructor(id: string | HTMLDivElement, option: any) {
+    constructor(id: string | HTMLDivElement, option?: any) {
         super(["extent", "click", "dblclick", "mousemove", "resize"]);
+        //option
+        this._option.disableDoubleClick = option && option.hasOwnProperty('disableDoubleClick') ? option.disableDoubleClick : false;
+
         this._container = id instanceof HTMLDivElement ? id : document.getElementById(id) as HTMLDivElement;
         //create canvas
         this._canvas = document.createElement("canvas");
@@ -127,6 +130,14 @@ export class Map extends Subject{
 
         this._onResize = this._onResize.bind(this);
         window.addEventListener("resize", this._onResize);
+    }
+
+    //设置option
+    disableDoubleClick() {
+        this._option.disableDoubleClick = true;
+    }
+    enableDoubleClick() {
+        this._option.disableDoubleClick = false;
     }
 
     //设置投影
@@ -266,6 +277,10 @@ export class Map extends Subject{
 
     _onMouseMove(event) {
         if (this._editor.editing) {
+            const matrix = (this._ctx as any).getTransform();
+            const x = (event.offsetX - matrix.e) / matrix.a;
+            const y = (event.offsetY - matrix.f) / matrix.d;
+            [event.lng, event.lat] = this._projection.unproject([x, y]);
             this._editor._onMouseMove(event);
             return;
         }

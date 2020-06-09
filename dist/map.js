@@ -30,6 +30,8 @@ export class Map extends Subject {
         this._center = [0, 0];
         //默认图形图层
         this._defaultGraphicLayer = new GraphicLayer();
+        //option
+        this._option.disableDoubleClick = option && option.hasOwnProperty('disableDoubleClick') ? option.disableDoubleClick : false;
         this._container = id instanceof HTMLDivElement ? id : document.getElementById(id);
         //create canvas
         this._canvas = document.createElement("canvas");
@@ -99,6 +101,13 @@ export class Map extends Subject {
     }
     get projection() {
         return this._projection;
+    }
+    //设置option
+    disableDoubleClick() {
+        this._option.disableDoubleClick = true;
+    }
+    enableDoubleClick() {
+        this._option.disableDoubleClick = false;
     }
     //设置投影
     setProjection(projection) {
@@ -221,6 +230,10 @@ export class Map extends Subject {
     }
     _onMouseMove(event) {
         if (this._editor.editing) {
+            const matrix = this._ctx.getTransform();
+            const x = (event.offsetX - matrix.e) / matrix.a;
+            const y = (event.offsetY - matrix.f) / matrix.d;
+            [event.lng, event.lat] = this._projection.unproject([x, y]);
             this._editor._onMouseMove(event);
             return;
         }

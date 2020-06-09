@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./label.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./editor-polygon-create.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -222,13 +222,17 @@ class Field {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "EditorActionType", function() { return EditorActionType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Editor", function() { return Editor; });
-/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../layer/graphic-layer */ "../dist/layer/graphic-layer.js");
-/* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../element/graphic */ "../dist/element/graphic.js");
-/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../geometry/point */ "../dist/geometry/point.js");
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
-/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/subject */ "../dist/util/subject.js");
-/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../geometry/polyline */ "../dist/geometry/polyline.js");
-/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../geometry/polygon */ "../dist/geometry/polygon.js");
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../layer/graphic-layer */ "../dist/layer/graphic-layer.js");
+/* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../element/graphic */ "../dist/element/graphic.js");
+/* harmony import */ var _element_feature__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../element/feature */ "../dist/element/feature.js");
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../geometry/point */ "../dist/geometry/point.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../util/subject */ "../dist/util/subject.js");
+/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../geometry/polyline */ "../dist/geometry/polyline.js");
+/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../geometry/polygon */ "../dist/geometry/polygon.js");
+
+
 
 
 
@@ -242,7 +246,7 @@ var EditorActionType;
     EditorActionType[EditorActionType["Create"] = 1] = "Create";
     EditorActionType[EditorActionType["Edit"] = 2] = "Edit";
 })(EditorActionType || (EditorActionType = {}));
-class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
+class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__["Subject"] {
     constructor(map) {
         super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit"]); //when mouseover feature or vertex
         this._drag = {
@@ -257,7 +261,15 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
                 y: 0
             }
         };
+        this._create = {
+            click: 0,
+            graphic: null,
+            lnglats: []
+        };
         this._action = EditorActionType.Select;
+        this._defaultPointSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__["SimplePointSymbol"]();
+        this._defaultLineSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__["SimpleLineSymbol"]();
+        this._defaultPolygonSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__["SimpleFillSymbol"]();
         this._map = map;
         const container = map.container;
         //create canvas
@@ -276,11 +288,23 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
     get editing() {
         return this._editing;
     }
+    get editingFeature() {
+        return this._editingFeature;
+    }
     get action() {
         return this._action;
     }
     set action(value) {
         this._action = value;
+    }
+    get defaultPointSymbol() {
+        return this._defaultPointSymbol;
+    }
+    get defaultLineSymbol() {
+        return this._defaultLineSymbol;
+    }
+    get defaultPolygonSymbol() {
+        return this._defaultPolygonSymbol;
     }
     setFeatureLayer(layer) {
         if (this._editing) {
@@ -297,22 +321,47 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
     start() {
         if (!this._editing) {
             this._editing = true;
-            this._vertexLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+            this._vertexLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__["GraphicLayer"]();
             this._action = EditorActionType.Select;
+            this._createLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__["GraphicLayer"]();
             this._handlers["startedit"].forEach(handler => handler());
         }
         //TODO: edit stack for undo/redo
+    }
+    create() {
+        this._action = EditorActionType.Create;
+        this._vertexLayer.clear();
+        this._editingFeature = null;
+        this.redraw();
     }
     save() {
     }
     stop() {
         if (this._editing) {
             this._editing = false;
+            this._editingFeature = null;
             this._featureLayer.editing = false;
             this._featureLayer.off("dblclick", this._switchEditing);
             this._featureLayer = null;
             this._vertexLayer = null;
             this._action = EditorActionType.Select;
+            this._create = {
+                click: 0,
+                graphic: null,
+                lnglats: []
+            };
+            this._drag = {
+                flag: false,
+                vertex: null,
+                start: {
+                    x: 0,
+                    y: 0
+                },
+                end: {
+                    x: 0,
+                    y: 0
+                }
+            };
             this.clear();
             this._handlers["stopedit"].forEach(handler => handler());
         }
@@ -339,17 +388,17 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         if (!this._editingFeature && this._action === EditorActionType.Select) {
             this._action = EditorActionType.Edit;
             this._editingFeature = event.feature;
-            if (this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"]) {
+            if (this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"]) {
                 const point = this._editingFeature.geometry;
-                const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__["VertexSymbol"]());
                 this._vertexLayer.add(vertex);
                 this.redraw();
             }
-            else if (this._editingFeature.geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_5__["Polyline"]) {
+            else if (this._editingFeature.geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__["Polyline"]) {
                 const polyline = this._editingFeature.geometry;
                 polyline.lnglats.forEach(lnglat => {
-                    const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"](lnglat[0], lnglat[1]);
-                    const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                    const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](lnglat[0], lnglat[1]);
+                    const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__["VertexSymbol"]());
                     this._vertexLayer.add(vertex);
                     vertex.on("dragstart", (event) => {
                         this._drag.vertex = vertex;
@@ -363,12 +412,12 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
                 });
                 this.redraw();
             }
-            else if (this._editingFeature.geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_6__["Polygon"]) {
+            else if (this._editingFeature.geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_8__["Polygon"]) {
                 const polygon = this._editingFeature.geometry;
                 polygon.lnglats.forEach(ring => {
                     ring.forEach(lnglat => {
-                        const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"](lnglat[0], lnglat[1]);
-                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                        const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](lnglat[0], lnglat[1]);
+                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__["VertexSymbol"]());
                         this._vertexLayer.add(vertex);
                         vertex.on("dragstart", (event) => {
                             this._drag.vertex = vertex;
@@ -402,6 +451,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         this._ctx.restore();
         this._featureLayer && this._featureLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         this._vertexLayer && this._vertexLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this._createLayer && this._createLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
     }
     clear() {
         this._ctx.save();
@@ -410,14 +460,118 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         this._ctx.restore();
     }
     _onClick(event) {
-        if (this._action !== EditorActionType.Create)
+        if (event.detail > 1)
             return;
-        this._handlers["click"].forEach(handler => handler(event));
+        if (this._action === EditorActionType.Create) {
+            if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Point) {
+                const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](event.lng, event.lat);
+                const feature = new _element_feature__WEBPACK_IMPORTED_MODULE_3__["Feature"](point, {}, this._defaultPointSymbol);
+                this.addFeature(feature);
+                this._action = EditorActionType.Select;
+            }
+            else if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Polygon) {
+                if (this._create.click == 0) {
+                    this._createLayer.clear();
+                    const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](event.lng, event.lat);
+                    const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, this._defaultPointSymbol);
+                    this._createLayer.add(graphic);
+                    this._create.click += 1;
+                    this._create.lnglats.push([event.lng, event.lat]);
+                }
+                else if (this._create.click == 1) {
+                    const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](event.lng, event.lat);
+                    const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](second, this._defaultPointSymbol);
+                    this._createLayer.add(graphic1);
+                    if (this._create.graphic)
+                        this._createLayer.remove(this._create.graphic);
+                    this._create.lnglats.push([event.lng, event.lat]);
+                    const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__["Polyline"](this._create.lnglats);
+                    this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
+                    this._createLayer.add(this._create.graphic);
+                    this._create.click += 1;
+                }
+                else {
+                    const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](event.lng, event.lat);
+                    const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](second, this._defaultPointSymbol);
+                    this._createLayer.add(graphic1);
+                    if (this._create.graphic)
+                        this._createLayer.remove(this._create.graphic);
+                    this._create.lnglats.push([event.lng, event.lat]);
+                    const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_8__["Polygon"]([this._create.lnglats]);
+                    this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](polygon, this._defaultPolygonSymbol);
+                    this._createLayer.add(this._create.graphic);
+                    this._create.click += 1;
+                }
+            }
+            else if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Polyline) {
+                if (this._create.click == 0) {
+                    this._createLayer.clear();
+                    const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](event.lng, event.lat);
+                    const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, this._defaultPointSymbol);
+                    this._createLayer.add(graphic);
+                    this._create.click += 1;
+                    this._create.lnglats.push([event.lng, event.lat]);
+                }
+                else {
+                    const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](event.lng, event.lat);
+                    const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](second, this._defaultPointSymbol);
+                    this._createLayer.add(graphic1);
+                    if (this._create.graphic)
+                        this._createLayer.remove(this._create.graphic);
+                    this._create.lnglats.push([event.lng, event.lat]);
+                    const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__["Polyline"](this._create.lnglats);
+                    this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
+                    this._createLayer.add(this._create.graphic);
+                    this._create.click += 1;
+                }
+            }
+            this._handlers["click"].forEach(handler => handler(event));
+        }
+        else {
+            /*if (!this._editingFeature) {
+                this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click");
+            }*/
+        }
     }
     _onDoubleClick(event) {
-        if (this._action === EditorActionType.Create)
+        if (!this._editing)
             return;
-        if (this._editingFeature && !(this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"])) {
+        if (this._action === EditorActionType.Create) {
+            if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Polygon) {
+                if (this._create.click > 1) {
+                    if (this._create.graphic)
+                        this._createLayer.remove(this._create.graphic);
+                    const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_8__["Polygon"]([this._create.lnglats]);
+                    const feature = new _element_feature__WEBPACK_IMPORTED_MODULE_3__["Feature"](polygon, {}, this._defaultPolygonSymbol);
+                    this._create = {
+                        click: 0,
+                        graphic: null,
+                        lnglats: []
+                    };
+                    this._createLayer.clear();
+                    this.addFeature(feature);
+                    this._action = EditorActionType.Select;
+                }
+            }
+            else if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Polyline) {
+                if (this._create.click > 0) {
+                    if (this._create.graphic)
+                        this._createLayer.remove(this._create.graphic);
+                    const polyline = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__["Polyline"](this._create.lnglats);
+                    const feature = new _element_feature__WEBPACK_IMPORTED_MODULE_3__["Feature"](polyline, {}, this._defaultLineSymbol);
+                    this._create = {
+                        click: 0,
+                        graphic: null,
+                        lnglats: []
+                    };
+                    this._createLayer.clear();
+                    this.addFeature(feature);
+                    this._action = EditorActionType.Select;
+                }
+            }
+            return;
+        }
+        if (this._editingFeature && !(this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"])) {
             const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");
             if (flag)
                 return;
@@ -434,8 +588,41 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
         }
     }
     _onMouseMove(event) {
-        if (this._action === EditorActionType.Create)
+        if (this._action === EditorActionType.Create) {
+            if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Polygon) {
+                if (this._create.click == 1) {
+                    if (this._create.graphic)
+                        this._createLayer.remove(this._create.graphic);
+                    const lnglats = [...this._create.lnglats];
+                    lnglats.push([event.lng, event.lat]);
+                    const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__["Polyline"](lnglats);
+                    this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
+                    this._createLayer.add(this._create.graphic);
+                }
+                else if (this._create.click > 1) {
+                    if (this._create.graphic)
+                        this._createLayer.remove(this._create.graphic);
+                    const lnglats = [...this._create.lnglats];
+                    lnglats.push([event.lng, event.lat]);
+                    const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_8__["Polygon"]([lnglats]);
+                    this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](polygon, this._defaultPolygonSymbol);
+                    this._createLayer.add(this._create.graphic);
+                }
+            }
+            else if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Polyline) {
+                if (this._create.click > 0) {
+                    if (this._create.graphic)
+                        this._createLayer.remove(this._create.graphic);
+                    const lnglats = [...this._create.lnglats];
+                    lnglats.push([event.lng, event.lat]);
+                    const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__["Polyline"](lnglats);
+                    this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
+                    this._createLayer.add(this._create.graphic);
+                }
+            }
+            this.redraw();
             return;
+        }
         if (!this._drag.flag) {
             const flag1 = this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");
             const flag2 = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");
@@ -455,20 +642,20 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
             this._drag.end.y = event.y;
             this._drag.flag = false;
             this._editingFeature.edited = true;
-            if (this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"]) {
+            if (this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"]) {
                 const point = this._editingFeature.geometry;
                 point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
                 this.redraw();
             }
-            else if (this._editingFeature.geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_5__["Polyline"]) {
+            else if (this._editingFeature.geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__["Polyline"]) {
                 if (this._drag.vertex) {
                     const polyline = this._editingFeature.geometry;
                     const point = this._drag.vertex.geometry;
                     polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat], event.offsetX, event.offsetY, !event.shiftKey);
                     if (event.shiftKey) {
-                        const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"](point.lng, point.lat);
+                        const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](point.lng, point.lat);
                         shift.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
-                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](shift, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](shift, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__["VertexSymbol"]());
                         this._vertexLayer.add(vertex);
                         vertex.on("dragstart", (event) => {
                             this._drag.vertex = vertex;
@@ -487,15 +674,15 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_4__["Subject"] {
                     this.redraw();
                 }
             }
-            else if (this._editingFeature.geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_6__["Polygon"]) {
+            else if (this._editingFeature.geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_8__["Polygon"]) {
                 if (this._drag.vertex) {
                     const polygon = this._editingFeature.geometry;
                     const point = this._drag.vertex.geometry;
                     polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat], event.offsetX, event.offsetY, !event.shiftKey);
                     if (event.shiftKey) {
-                        const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__["Point"](point.lng, point.lat);
+                        const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](point.lng, point.lat);
                         shift.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
-                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_1__["Graphic"](shift, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__["VertexSymbol"]());
+                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](shift, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__["VertexSymbol"]());
                         this._vertexLayer.add(vertex);
                         vertex.on("dragstart", (event) => {
                             this._drag.vertex = vertex;
@@ -2295,8 +2482,11 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
-    constructor(id) {
-        super(["extent", "click", "mousemove", "resize", "beforeclick"]);
+    constructor(id, option) {
+        super(["extent", "click", "dblclick", "mousemove", "resize"]);
+        this._option = {
+            disableDoubleClick: false
+        };
         this._drag = {
             flag: false,
             start: {
@@ -2314,6 +2504,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._center = [0, 0];
         //默认图形图层
         this._defaultGraphicLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_3__["GraphicLayer"]();
+        //option
+        this._option.disableDoubleClick = option && option.hasOwnProperty('disableDoubleClick') ? option.disableDoubleClick : false;
         this._container = id instanceof HTMLDivElement ? id : document.getElementById(id);
         //create canvas
         this._canvas = document.createElement("canvas");
@@ -2383,6 +2575,13 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
     }
     get projection() {
         return this._projection;
+    }
+    //设置option
+    disableDoubleClick() {
+        this._option.disableDoubleClick = true;
+    }
+    enableDoubleClick() {
+        this._option.disableDoubleClick = false;
     }
     //设置投影
     setProjection(projection) {
@@ -2468,7 +2667,6 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         const x = (event.offsetX - matrix.e) / matrix.a;
         const y = (event.offsetY - matrix.f) / matrix.d;
         [event.lng, event.lat] = this._projection.unproject([x, y]);
-        this._handlers["beforeclick"].forEach(handler => handler(event));
         if (this._editor && this._editor.editing) {
             this._editor._onClick(event);
             return;
@@ -2476,24 +2674,27 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._handlers["click"].forEach(handler => handler(event));
     }
     _onDoubleClick(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing) {
             this._editor._onDoubleClick(event);
             return;
         }
-        if (this._zoom >= 20)
-            return;
-        const scale = 2;
-        this._zoom += 1;
-        const matrix = this._ctx.getTransform();
-        const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
-        const e = (x2 - scale * (x1 - e1) - e1) / a1;
-        const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
-        const f = (y2 - scale * (y1 - f1) - f1) / d1;
-        this._ctx.transform(scale, 0, 0, scale, e, f);
-        this.redraw();
+        if (!this._option.disableDoubleClick) {
+            if (this._zoom >= 20)
+                return;
+            const scale = 2;
+            this._zoom += 1;
+            const matrix = this._ctx.getTransform();
+            const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
+            const e = (x2 - scale * (x1 - e1) - e1) / a1;
+            const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
+            const f = (y2 - scale * (y1 - f1) - f1) / d1;
+            this._ctx.transform(scale, 0, 0, scale, e, f);
+            this.redraw();
+        }
+        this._handlers["dblclick"].forEach(handler => handler(event));
     }
     _onMouseDown(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseDown(event);
             return;
         }
@@ -2502,7 +2703,11 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._drag.start.y = event.y;
     }
     _onMouseMove(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing) {
+            const matrix = this._ctx.getTransform();
+            const x = (event.offsetX - matrix.e) / matrix.a;
+            const y = (event.offsetY - matrix.f) / matrix.d;
+            [event.lng, event.lat] = this._projection.unproject([x, y]);
             this._editor._onMouseMove(event);
             return;
         }
@@ -2511,7 +2716,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         }
     }
     _onMouseUp(event) {
-        if (this._editor && this._editor.editing) {
+        if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseUp(event);
             return;
         }
@@ -2525,6 +2730,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._drag.flag = false;
     }
     _onWheel(event) {
+        event.preventDefault();
         let scale = 1;
         const sensitivity = 100;
         const delta = event.deltaY / sensitivity;
@@ -2551,9 +2757,9 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         //4.另矩阵变换 a1 * e + e1 = e2
         //5.联立3和4  求得 e = (x2 - scale * (x1 - e1) - e1) / a1
         const matrix = this._ctx.getTransform();
-        const a1 = matrix.a, e1 = matrix.e, x1 = event.x, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
+        const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
         const e = (x2 - scale * (x1 - e1) - e1) / a1;
-        const d1 = matrix.d, f1 = matrix.f, y1 = event.y, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
+        const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
         const f = (y2 - scale * (y1 - f1) - f1) / d1;
         this._ctx.transform(scale, 0, 0, scale, e, f);
         this.redraw();
@@ -3026,10 +3232,10 @@ class SimplePointSymbol extends Symbol {
     constructor() {
         super(...arguments);
         //circle
-        this.radius = 10;
+        this.radius = 6;
         this.lineWidth = 1;
         this.strokeStyle = "#ff0000"; //#ff0000
-        this.fillStyle = "#ff0000"; //#ff0000
+        this.fillStyle = "#ff000088"; //#ff0000
     }
 }
 class SimpleLineSymbol extends Symbol {
@@ -3044,7 +3250,7 @@ class SimpleFillSymbol extends Symbol {
         super(...arguments);
         this.lineWidth = 2;
         this.strokeStyle = "#ff0000"; //#ff0000
-        this.fillStyle = "#ff0000"; //#ff0000
+        this.fillStyle = "#ff000088"; //#ff0000
     }
 }
 class SimpleMarkerSymbol extends Symbol {
@@ -3469,11 +3675,13 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
         this._onResize = this._onResize.bind(this);
         this._extentChange = this._extentChange.bind(this);
         this._onClick = this._onClick.bind(this);
+        this._onDoubleClick = this._onDoubleClick.bind(this);
         this._onMouseMove = this._onMouseMove.bind(this);
         this._ctx = this._canvas.getContext("2d");
         this._map.on("resize", this._onResize);
         this._map.on("extent", this._extentChange);
         this._map.on("click", this._onClick);
+        this._map.on("dblclick", this._onDoubleClick);
         this._map.on("mousemove", this._onMouseMove);
     }
     _onResize(event) {
@@ -3486,6 +3694,9 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
     }
     _onClick(event) {
         this._layers.filter(layer => layer.interactive && !layer.editing).some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click"));
+    }
+    _onDoubleClick(event) {
+        this._layers.filter(layer => layer.interactive && !layer.editing).some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick"));
     }
     _onMouseMove(event) {
         //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
@@ -3543,6 +3754,7 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
         this._map.off("resize", this._onResize);
         this._map.off("extent", this._extentChange);
         this._map.off("click", this._onClick);
+        this._map.off("dblclick", this._onDoubleClick);
         this._map.off("mousemove", this._onMouseMove);
     }
 }
@@ -3550,10 +3762,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 
 /***/ }),
 
-/***/ "./label.js":
-/*!******************!*\
-  !*** ./label.js ***!
-  \******************/
+/***/ "./editor-polygon-create.js":
+/*!**********************************!*\
+  !*** ./editor-polygon-create.js ***!
+  \**********************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -3603,20 +3815,34 @@ window.load = () => {
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
         featureLayer.featureClass = featureClass;
-        const field2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field2.name = "name";
-        field2.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
+        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
+        field.name = "name";
+        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
         const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
-        renderer.generate(featureClass, field2);
+        renderer.generate(featureClass, field);
         featureLayer.renderer = renderer;
-        const label = new _dist__WEBPACK_IMPORTED_MODULE_0__["Label"]();
-        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleTextSymbol"]();
-        label.field = field2;
-        label.symbol = symbol;
-        featureLayer.label = label;
-        featureLayer.labeled = true;
         featureLayer.zoom = [5, 20];
         map.addLayer(featureLayer);
+
+        const editor = map.editor;
+        editor.start();
+        editor.setFeatureLayer(featureLayer);
+        document.getElementById("status").value = "editor is started";
+
+        window.start = () => {
+            editor.start();
+            editor.setFeatureLayer(featureLayer);
+            document.getElementById("status").value = "editor is started";
+        };
+
+        window.stop = () => {
+            editor.stop();
+            document.getElementById("status").value = "editor is stopped";
+        };
+
+        window.create = () => {
+            editor.create();
+        };
 
         map.setView([107.777, 29.809], 7);
     };
@@ -3624,23 +3850,7 @@ window.load = () => {
     req.send(null);
 
     map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-    //beijing gugong
-    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
-    const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {});
-    const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
-    featureClass.addFeature(feature);
-    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-    featureLayer.featureClass = featureClass;
-    const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
-    renderer.symbol = marker;
-    featureLayer.renderer = renderer;
-    map.addLayer(featureLayer);
+
 
 }
 

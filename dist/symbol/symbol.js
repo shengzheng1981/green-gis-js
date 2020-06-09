@@ -5,10 +5,10 @@ export class SimplePointSymbol extends Symbol {
     constructor() {
         super(...arguments);
         //circle
-        this.radius = 10;
+        this.radius = 6;
         this.lineWidth = 1;
         this.strokeStyle = "#ff0000"; //#ff0000
-        this.fillStyle = "#ff0000"; //#ff0000
+        this.fillStyle = "#ff000088"; //#ff0000
     }
 }
 export class SimpleLineSymbol extends Symbol {
@@ -23,7 +23,7 @@ export class SimpleFillSymbol extends Symbol {
         super(...arguments);
         this.lineWidth = 2;
         this.strokeStyle = "#ff0000"; //#ff0000
-        this.fillStyle = "#ff0000"; //#ff0000
+        this.fillStyle = "#ff000088"; //#ff0000
     }
 }
 export class SimpleMarkerSymbol extends Symbol {

@@ -1,4 +1,4 @@
-import {Geometry} from "../geometry/geometry";
+import {Geometry, GeometryType} from "../geometry/geometry";
 import {Bound} from "../util/bound";
 import {Projection} from "../projection/projection";
 import {GraphicLayer} from "../layer/graphic-layer";
@@ -9,7 +9,7 @@ import {FeatureLayer} from "../layer/feature-layer";
 import {Utility} from "../util/utility";
 import {Map} from "../map";
 import {Point} from "../geometry/point";
-import {VertexSymbol} from "../symbol/symbol";
+import {SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol, VertexSymbol} from "../symbol/symbol";
 import {Subject} from "../util/subject";
 import {Polyline} from "../geometry/polyline";
 import {Polygon} from "../geometry/polygon";
@@ -30,6 +30,7 @@ export class Editor extends Subject{
     private _editing: boolean;
     private _editingFeature: Feature;
     private _vertexLayer: GraphicLayer;
+    private _createLayer: GraphicLayer;
 
     private _drag: any = {
         flag: false,
@@ -43,7 +44,16 @@ export class Editor extends Subject{
             y: 0
         }
     };
+    private _create: any = {
+        click: 0,
+        graphic: null,
+        lnglats: []
+    };
     private _action: EditorActionType = EditorActionType.Select;
+
+    private _defaultPointSymbol: SimplePointSymbol = new SimplePointSymbol();
+    private _defaultLineSymbol: SimpleLineSymbol = new SimpleLineSymbol();
+    private _defaultPolygonSymbol: SimpleFillSymbol = new SimpleFillSymbol();
 
     get editing(): boolean {
         return this._editing;
@@ -56,6 +66,15 @@ export class Editor extends Subject{
     }
     set action(value) {
         this._action = value;
+    }
+    get defaultPointSymbol(): SimplePointSymbol {
+        return this._defaultPointSymbol;
+    }
+    get defaultLineSymbol(): SimpleLineSymbol {
+        return this._defaultLineSymbol;
+    }
+    get defaultPolygonSymbol(): SimpleFillSymbol {
+        return this._defaultPolygonSymbol;
     }
 
     constructor(map: Map) {
@@ -97,9 +116,17 @@ export class Editor extends Subject{
             this._editing = true;
             this._vertexLayer = new GraphicLayer();
             this._action = EditorActionType.Select;
+            this._createLayer = new GraphicLayer();
             this._handlers["startedit"].forEach(handler => handler());
         }
         //TODO: edit stack for undo/redo
+    }
+
+    create() {
+        this._action = EditorActionType.Create;
+        this._vertexLayer.clear();
+        this._editingFeature = null;
+        this.redraw();
     }
 
     save() {
@@ -109,11 +136,29 @@ export class Editor extends Subject{
     stop() {
         if (this._editing) {
             this._editing = false;
+            this._editingFeature = null;
             this._featureLayer.editing = false;
             this._featureLayer.off("dblclick", this._switchEditing);
             this._featureLayer = null;
             this._vertexLayer = null;
             this._action = EditorActionType.Select;
+            this._create = {
+                click: 0,
+                graphic: null,
+                lnglats: []
+            };
+            this._drag = {
+                flag: false,
+                vertex: null,
+                start: {
+                    x: 0,
+                    y: 0
+                },
+                end: {
+                    x: 0,
+                    y: 0
+                }
+            };
             this.clear();
             this._handlers["stopedit"].forEach(handler => handler());
         }
@@ -207,6 +252,7 @@ export class Editor extends Subject{
 
         this._featureLayer && this._featureLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         this._vertexLayer  && this._vertexLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this._createLayer  && this._createLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
     }
 
     clear() {
@@ -217,8 +263,65 @@ export class Editor extends Subject{
     }
 
     _onClick(event) {
+        if (event.detail > 1) return;
         if (this._action === EditorActionType.Create) {
+            if (this._featureLayer.featureClass.type == GeometryType.Point) {
+                const point: Point = new Point(event.lng, event.lat);
+                const feature = new Feature(point, {}, this._defaultPointSymbol);
+                this.addFeature(feature);
+                this._action = EditorActionType.Select;
+            } else if (this._featureLayer.featureClass.type == GeometryType.Polygon) {
+                if (this._create.click == 0) {
+                    this._createLayer.clear();
+                    const point = new Point(event.lng, event.lat);
+                    const graphic = new Graphic(point, this._defaultPointSymbol);
+                    this._createLayer.add(graphic);
+                    this._create.click += 1;
+                    this._create.lnglats.push([event.lng, event.lat]);
+                } else if (this._create.click == 1) {
+                    const second = new Point(event.lng, event.lat);
+                    const graphic1 = new Graphic(second, this._defaultPointSymbol);
+                    this._createLayer.add(graphic1);
+                    if (this._create.graphic) this._createLayer.remove(this._create.graphic);
+                    this._create.lnglats.push([event.lng, event.lat]);
+                    const line = new Polyline(this._create.lnglats);
+                    this._create.graphic = new Graphic(line, this._defaultLineSymbol);
+                    this._createLayer.add(this._create.graphic);
+                    this._create.click += 1;
+                } else {
+                    const second = new Point(event.lng, event.lat);
+                    const graphic1 = new Graphic(second, this._defaultPointSymbol);
+                    this._createLayer.add(graphic1);
+                    if (this._create.graphic) this._createLayer.remove(this._create.graphic);
+                    this._create.lnglats.push([event.lng, event.lat]);
+                    const polygon = new Polygon([this._create.lnglats]);
+                    this._create.graphic = new Graphic(polygon, this._defaultPolygonSymbol);
+                    this._createLayer.add(this._create.graphic);
+                    this._create.click += 1;
+                }
+            } else if (this._featureLayer.featureClass.type == GeometryType.Polyline) {
+                if (this._create.click == 0) {
+                    this._createLayer.clear();
+                    const point = new Point(event.lng, event.lat);
+                    const graphic = new Graphic(point, this._defaultPointSymbol);
+                    this._createLayer.add(graphic);
+                    this._create.click += 1;
+                    this._create.lnglats.push([event.lng, event.lat]);
+                } else {
+                    const second = new Point(event.lng, event.lat);
+                    const graphic1 = new Graphic(second, this._defaultPointSymbol);
+                    this._createLayer.add(graphic1);
+                    if (this._create.graphic) this._createLayer.remove(this._create.graphic);
+                    this._create.lnglats.push([event.lng, event.lat]);
+                    const line = new Polyline(this._create.lnglats);
+                    this._create.graphic = new Graphic(line, this._defaultLineSymbol);
+                    this._createLayer.add(this._create.graphic);
+                    this._create.click += 1;
+                }
+            }
             this._handlers["click"].forEach(handler => handler(event));
+
+
         } else {
             /*if (!this._editingFeature) {
                 this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click");
@@ -228,7 +331,38 @@ export class Editor extends Subject{
 
     _onDoubleClick(event) {
         if (!this._editing) return;
-        if (this._action === EditorActionType.Create) return;
+        if (this._action === EditorActionType.Create) {
+            if (this._featureLayer.featureClass.type == GeometryType.Polygon) {
+                if (this._create.click > 1){
+                    if (this._create.graphic) this._createLayer.remove(this._create.graphic);
+                    const polygon = new Polygon([this._create.lnglats]);
+                    const feature = new Feature(polygon, {}, this._defaultPolygonSymbol);
+                    this._create = {
+                        click: 0,
+                        graphic: null,
+                        lnglats: []
+                    };
+                    this._createLayer.clear();
+                    this.addFeature(feature);
+                    this._action = EditorActionType.Select;
+                }
+            } else if (this._featureLayer.featureClass.type == GeometryType.Polyline) {
+                if (this._create.click > 0){
+                    if (this._create.graphic) this._createLayer.remove(this._create.graphic);
+                    const polyline = new Polyline(this._create.lnglats);
+                    const feature = new Feature(polyline, {}, this._defaultLineSymbol);
+                    this._create = {
+                        click: 0,
+                        graphic: null,
+                        lnglats: []
+                    };
+                    this._createLayer.clear();
+                    this.addFeature(feature);
+                    this._action = EditorActionType.Select;
+                }
+            }
+            return;
+        }
         if (this._editingFeature && !(this._editingFeature.geometry instanceof Point)) {
             const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");
             if (flag) return;
@@ -246,7 +380,36 @@ export class Editor extends Subject{
     }
 
     _onMouseMove(event) {
-        if (this._action === EditorActionType.Create) return;
+        if (this._action === EditorActionType.Create) {
+            if (this._featureLayer.featureClass.type == GeometryType.Polygon) {
+                if (this._create.click == 1) {
+                    if (this._create.graphic) this._createLayer.remove(this._create.graphic);
+                    const lnglats: any = [...this._create.lnglats];
+                    lnglats.push([event.lng, event.lat]);
+                    const line = new Polyline(lnglats);
+                    this._create.graphic = new Graphic(line, this._defaultLineSymbol);
+                    this._createLayer.add(this._create.graphic);
+                } else if (this._create.click > 1){
+                    if (this._create.graphic) this._createLayer.remove(this._create.graphic);
+                    const lnglats: any = [...this._create.lnglats];
+                    lnglats.push([event.lng, event.lat]);
+                    const polygon = new Polygon([lnglats]);
+                    this._create.graphic = new Graphic(polygon, this._defaultPolygonSymbol);
+                    this._createLayer.add(this._create.graphic);
+                }
+            } else if (this._featureLayer.featureClass.type == GeometryType.Polyline) {
+                if (this._create.click > 0) {
+                    if (this._create.graphic) this._createLayer.remove(this._create.graphic);
+                    const lnglats: any = [...this._create.lnglats];
+                    lnglats.push([event.lng, event.lat]);
+                    const line = new Polyline(lnglats);
+                    this._create.graphic = new Graphic(line, this._defaultLineSymbol);
+                    this._createLayer.add(this._create.graphic);
+                }
+            }
+            this.redraw();
+            return;
+        }
         if (!this._drag.flag) {
             const flag1 = this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");
             const flag2 = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove");

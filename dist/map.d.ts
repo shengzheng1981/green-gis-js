@@ -29,7 +29,9 @@ export declare class Map extends Subject {
     get extent(): Bound;
     get zoom(): number;
     get projection(): Projection;
-    constructor(id: string | HTMLDivElement, option: any);
+    constructor(id: string | HTMLDivElement, option?: any);
+    disableDoubleClick(): void;
+    enableDoubleClick(): void;
     setProjection(projection: any): void;
     setView(center?: number[], zoom?: number): void;
     addLayer(layer: FeatureLayer): void;
