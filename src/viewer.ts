@@ -65,11 +65,13 @@ export class Viewer extends Subject{
     }
 
     _onClick(event) {
-        this._layers.filter(layer => layer.interactive && !layer.editing).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom,"click"));
+        const layers = [...this._layers];
+        layers.filter(layer => layer.interactive && !layer.editing).reverse().some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom,"click"));
     }
 
     _onDoubleClick(event) {
-        this._layers.filter(layer => layer.interactive && !layer.editing).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom,"dblclick"));
+        const layers = [...this._layers];
+        layers.filter(layer => layer.interactive && !layer.editing).reverse().some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom,"dblclick"));
     }
 
     _onMouseMove(event) {
