@@ -20,6 +20,9 @@ export class Feature extends Subject{
     get symbol(): Symbol {
         return this._symbol;
     }
+    set symbol(value: Symbol) {
+        this._symbol = value;
+    }
     get geometry(): Geometry {
         return this._geometry;
     }

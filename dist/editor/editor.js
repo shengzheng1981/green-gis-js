@@ -15,7 +15,7 @@ export var EditorActionType;
 })(EditorActionType || (EditorActionType = {}));
 export class Editor extends Subject {
     constructor(map) {
-        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit"]); //when mouseover feature or vertex
+        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit", "create", "delete"]); //when mouseover feature or vertex
         this._drag = {
             flag: false,
             vertex: null,
@@ -67,11 +67,20 @@ export class Editor extends Subject {
     get defaultPointSymbol() {
         return this._defaultPointSymbol;
     }
+    set defaultPointSymbol(value) {
+        this._defaultPointSymbol = value;
+    }
     get defaultLineSymbol() {
         return this._defaultLineSymbol;
     }
+    set defaultLineSymbol(value) {
+        this._defaultLineSymbol = value;
+    }
     get defaultPolygonSymbol() {
         return this._defaultPolygonSymbol;
+    }
+    set defaultPolygonSymbol(value) {
+        this._defaultPolygonSymbol = value;
     }
     setFeatureLayer(layer) {
         if (this._editing) {
@@ -136,11 +145,13 @@ export class Editor extends Subject {
     addFeature(feature) {
         this._featureLayer.featureClass.addFeature(feature);
         feature.on("dblclick", this._switchEditing);
+        this._handlers["create"].forEach(handler => handler({ feature: feature }));
         this.redraw();
     }
     removeFeature(feature) {
         this._featureLayer.featureClass.removeFeature(feature);
         feature.off("dblclick", this._switchEditing);
+        this._handlers["delete"].forEach(handler => handler({ feature: feature }));
         this.redraw();
     }
     _onResize(event) {
@@ -203,7 +214,7 @@ export class Editor extends Subject {
         else if (this._editingFeature === event.feature && this._action === EditorActionType.Edit) {
             this._action = EditorActionType.Select;
             if (this._editingFeature.edited) {
-                this._handlers["commit"].forEach(handler => handler({ feature: this._editingFeature }));
+                this._handlers["update"].forEach(handler => handler({ feature: this._editingFeature }));
                 this._editingFeature.edited = false;
             }
             this._editingFeature = null;

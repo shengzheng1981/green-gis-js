@@ -1,8 +1,8 @@
 import { Bound } from "../util/bound";
 export declare enum LatLngType {
-    GPS = 0,
-    GCJ02 = 1,
-    BD09 = 2
+    GPS = 1,
+    GCJ02 = 2,
+    BD09 = 3
 }
 export declare class Projection {
     project([lng, lat]: [any, any]): number[];

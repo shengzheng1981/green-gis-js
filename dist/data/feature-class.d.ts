@@ -11,6 +11,7 @@ export declare class FeatureClass {
     get type(): GeometryType;
     get features(): Feature[];
     get fields(): Field[];
+    constructor(type: GeometryType);
     addFeature(feature: Feature): void;
     removeFeature(feature: Feature): void;
     clearFeatures(): void;

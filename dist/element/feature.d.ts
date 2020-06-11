@@ -12,6 +12,7 @@ export declare class Feature extends Subject {
     private _edited;
     visible: boolean;
     get symbol(): Symbol;
+    set symbol(value: Symbol);
     get geometry(): Geometry;
     get properties(): any;
     get bound(): Bound;

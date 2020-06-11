@@ -2,15 +2,15 @@ import { SimplePointSymbol, SimpleTextSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 export var CoordinateType;
 (function (CoordinateType) {
-    CoordinateType[CoordinateType["Latlng"] = 0] = "Latlng";
-    CoordinateType[CoordinateType["Projection"] = 1] = "Projection";
-    CoordinateType[CoordinateType["Screen"] = 2] = "Screen";
+    CoordinateType[CoordinateType["Latlng"] = 1] = "Latlng";
+    CoordinateType[CoordinateType["Projection"] = 2] = "Projection";
+    CoordinateType[CoordinateType["Screen"] = 3] = "Screen";
 })(CoordinateType || (CoordinateType = {}));
 export var GeometryType;
 (function (GeometryType) {
-    GeometryType[GeometryType["Point"] = 0] = "Point";
-    GeometryType[GeometryType["Polyline"] = 1] = "Polyline";
-    GeometryType[GeometryType["Polygon"] = 2] = "Polygon";
+    GeometryType[GeometryType["Point"] = 1] = "Point";
+    GeometryType[GeometryType["Polyline"] = 2] = "Polyline";
+    GeometryType[GeometryType["Polygon"] = 3] = "Polygon";
 })(GeometryType || (GeometryType = {}));
 export class Geometry {
     get bound() {

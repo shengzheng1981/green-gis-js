@@ -5,16 +5,16 @@ import {WebMercator} from "../projection/web-mercator";
 import {Point} from "./point";
 
 export enum CoordinateType {
-    Latlng = 0,
-    Projection = 1,
-    Screen = 2
+    Latlng = 1,
+    Projection = 2,
+    Screen = 3
 }
 
 
 export enum GeometryType {
-    Point = 0,
-    Polyline = 1,
-    Polygon = 2
+    Point = 1,
+    Polyline = 2,
+    Polygon = 3
 }
 
 

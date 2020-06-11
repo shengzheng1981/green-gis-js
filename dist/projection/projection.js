@@ -1,8 +1,8 @@
 export var LatLngType;
 (function (LatLngType) {
-    LatLngType[LatLngType["GPS"] = 0] = "GPS";
-    LatLngType[LatLngType["GCJ02"] = 1] = "GCJ02";
-    LatLngType[LatLngType["BD09"] = 2] = "BD09"; //Just For China, BaiduMap
+    LatLngType[LatLngType["GPS"] = 1] = "GPS";
+    LatLngType[LatLngType["GCJ02"] = 2] = "GCJ02";
+    LatLngType[LatLngType["BD09"] = 3] = "BD09"; //Just For China, BaiduMap
 })(LatLngType || (LatLngType = {}));
 //TODO: only support web mecator
 export class Projection {

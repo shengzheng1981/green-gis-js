@@ -157,7 +157,7 @@ export class Point extends Geometry {
             return Math.sqrt((this._screenX - screenX) * (this._screenX - screenX) + (this._screenY - screenY) * (this._screenY - screenY)) <= this._symbol.radius;
         }
         else if (this._symbol instanceof SimpleMarkerSymbol) {
-            return screenX >= (this._screenX - this._symbol.offsetX) && screenX <= (this._screenX - this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY - this._symbol.offsetY) && screenY <= (this._screenY - this._symbol.offsetY + this._symbol.height);
+            return screenX >= (this._screenX + this._symbol.offsetX) && screenX <= (this._screenX + this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY + this._symbol.offsetY) && screenY <= (this._screenY + this._symbol.offsetY + this._symbol.height);
         }
         else if (this._symbol instanceof LetterSymbol) {
             return Math.sqrt((this._screenX - screenX) * (this._screenX - screenX) + (this._screenY - screenY) * (this._screenY - screenY)) <= this._symbol.radius;
@@ -169,7 +169,7 @@ export class Point extends Geometry {
     getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) {
         if (!this._projected)
             this.project(projection);
-        if (type = CoordinateType.Latlng) {
+        if (type === CoordinateType.Latlng) {
             return [this._lng, this._lat];
         }
         else {

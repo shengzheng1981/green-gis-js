@@ -2,14 +2,14 @@ import { Bound } from "../util/bound";
 import { SimpleTextSymbol, Symbol } from "../symbol/symbol";
 import { Projection } from "../projection/projection";
 export declare enum CoordinateType {
-    Latlng = 0,
-    Projection = 1,
-    Screen = 2
+    Latlng = 1,
+    Projection = 2,
+    Screen = 3
 }
 export declare enum GeometryType {
-    Point = 0,
-    Polyline = 1,
-    Polygon = 2
+    Point = 1,
+    Polyline = 2,
+    Polygon = 3
 }
 export declare class Geometry {
     protected _projected: boolean;

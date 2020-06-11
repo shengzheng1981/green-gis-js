@@ -209,7 +209,7 @@ export class Polyline extends Geometry{
             }
         }
 
-        if (type = CoordinateType.Latlng) {
+        if (type === CoordinateType.Latlng) {
             return projection.unproject(center);
         } else {
             return center;

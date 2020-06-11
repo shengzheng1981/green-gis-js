@@ -1,7 +1,7 @@
 
 export enum FieldType {
-    String = 0,
-    Number = 1,
+    String = 1,
+    Number = 2,
 }
 
 export class Field {

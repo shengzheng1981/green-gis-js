@@ -167,7 +167,7 @@ export class Point extends Geometry{
         if (this._symbol instanceof SimplePointSymbol) {
             return Math.sqrt((this._screenX - screenX) *  (this._screenX - screenX) +  (this._screenY - screenY) *  (this._screenY - screenY)) <= (this._symbol as SimplePointSymbol).radius;
         } else if (this._symbol instanceof SimpleMarkerSymbol) {
-            return screenX >= (this._screenX - this._symbol.offsetX) &&  screenX <= (this._screenX - this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY - this._symbol.offsetY) &&  screenY <= (this._screenY - this._symbol.offsetY + this._symbol.height);
+            return screenX >= (this._screenX + this._symbol.offsetX) &&  screenX <= (this._screenX + this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY + this._symbol.offsetY) &&  screenY <= (this._screenY + this._symbol.offsetY + this._symbol.height);
         } else if (this._symbol instanceof LetterSymbol) {
             return Math.sqrt((this._screenX - screenX) *  (this._screenX - screenX) +  (this._screenY - screenY) *  (this._screenY - screenY)) <= (this._symbol as LetterSymbol).radius;
         } else if (this._symbol instanceof VertexSymbol) {
@@ -177,7 +177,7 @@ export class Point extends Geometry{
 
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {
         if (!this._projected) this.project(projection);
-        if (type = CoordinateType.Latlng) {
+        if (type === CoordinateType.Latlng) {
             return [this._lng, this._lat];
         } else {
             return [this._x, this._y];

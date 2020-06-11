@@ -156,7 +156,7 @@ export class Polygon extends Geometry{
             center = [x / area, y / area];
         }
 
-        if (type = CoordinateType.Latlng) {
+        if (type === CoordinateType.Latlng) {
             return projection.unproject(center);
         } else {
             return center;

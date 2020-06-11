@@ -7,9 +7,10 @@ import { MultiplePolygon } from "../geometry/multiple-polygon";
 import { MultiplePolyline } from "../geometry/multiple-polyline";
 import { MultiplePoint } from "../geometry/multiple-point";
 export class FeatureClass {
-    constructor() {
+    constructor(type) {
         this._fields = [];
         this._features = [];
+        this._type = type;
     }
     get type() {
         return this._type;

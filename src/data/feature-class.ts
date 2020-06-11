@@ -28,6 +28,10 @@ export class FeatureClass {
         return this._fields;
     }
 
+    constructor(type: GeometryType) {
+        this._type = type;
+    }
+
     addFeature(feature: Feature) {
         this._features.push(feature);
     }

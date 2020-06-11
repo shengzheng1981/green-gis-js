@@ -9,7 +9,7 @@ import {FeatureLayer} from "../layer/feature-layer";
 import {Utility} from "../util/utility";
 import {Map} from "../map";
 import {Point} from "../geometry/point";
-import {SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol, VertexSymbol} from "../symbol/symbol";
+import {Symbol, SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol, VertexSymbol} from "../symbol/symbol";
 import {Subject} from "../util/subject";
 import {Polyline} from "../geometry/polyline";
 import {Polygon} from "../geometry/polygon";
@@ -51,9 +51,9 @@ export class Editor extends Subject{
     };
     private _action: EditorActionType = EditorActionType.Select;
 
-    private _defaultPointSymbol: SimplePointSymbol = new SimplePointSymbol();
-    private _defaultLineSymbol: SimpleLineSymbol = new SimpleLineSymbol();
-    private _defaultPolygonSymbol: SimpleFillSymbol = new SimpleFillSymbol();
+    private _defaultPointSymbol: Symbol = new SimplePointSymbol();
+    private _defaultLineSymbol: Symbol = new SimpleLineSymbol();
+    private _defaultPolygonSymbol: Symbol = new SimpleFillSymbol();
 
     get editing(): boolean {
         return this._editing;
@@ -67,18 +67,27 @@ export class Editor extends Subject{
     set action(value) {
         this._action = value;
     }
-    get defaultPointSymbol(): SimplePointSymbol {
+    get defaultPointSymbol(): Symbol {
         return this._defaultPointSymbol;
     }
-    get defaultLineSymbol(): SimpleLineSymbol {
+    set defaultPointSymbol(value: Symbol) {
+        this._defaultPointSymbol = value;
+    }
+    get defaultLineSymbol(): Symbol {
         return this._defaultLineSymbol;
     }
-    get defaultPolygonSymbol(): SimpleFillSymbol {
+    set defaultLineSymbol(value: Symbol) {
+        this._defaultLineSymbol = value;
+    }
+    get defaultPolygonSymbol(): Symbol {
         return this._defaultPolygonSymbol;
+    }
+    set defaultPolygonSymbol(value: Symbol) {
+        this._defaultPolygonSymbol = value;
     }
 
     constructor(map: Map) {
-        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit"]); //when mouseover feature or vertex
+        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit", "create", "delete"]); //when mouseover feature or vertex
         this._map = map;
         const container = map.container;
         //create canvas
@@ -167,12 +176,14 @@ export class Editor extends Subject{
     addFeature(feature: Feature) {
         this._featureLayer.featureClass.addFeature(feature);
         feature.on("dblclick", this._switchEditing);
+        this._handlers["create"].forEach(handler => handler({feature: feature}));
         this.redraw();
     }
 
     removeFeature(feature: Feature) {
         this._featureLayer.featureClass.removeFeature(feature);
         feature.off("dblclick", this._switchEditing);
+        this._handlers["delete"].forEach(handler => handler({feature: feature}));
         this.redraw();
     }
 
@@ -235,7 +246,7 @@ export class Editor extends Subject{
         } else if (this._editingFeature === event.feature && this._action === EditorActionType.Edit) {
             this._action = EditorActionType.Select;
             if (this._editingFeature.edited) {
-                this._handlers["commit"].forEach(handler => handler({feature: this._editingFeature}));
+                this._handlers["update"].forEach(handler => handler({feature: this._editingFeature}));
                 this._editingFeature.edited = false;
             }
             this._editingFeature = null;
@@ -320,7 +331,6 @@ export class Editor extends Subject{
                 }
             }
             this._handlers["click"].forEach(handler => handler(event));
-
 
         } else {
             /*if (!this._editingFeature) {
