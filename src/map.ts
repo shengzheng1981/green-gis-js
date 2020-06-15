@@ -179,7 +179,7 @@ export class Map extends Subject{
     }
 
     clearLayers() {
-        this._viewer.clear();
+        this._viewer.clearLayers();
     }
 
     //shortcut

@@ -13,6 +13,7 @@ export declare class FeatureLayer extends Layer {
     private _label;
     private _zoom;
     private _interactive;
+    private _index;
     get interactive(): boolean;
     set interactive(value: boolean);
     get featureClass(): FeatureClass;
@@ -20,6 +21,8 @@ export declare class FeatureLayer extends Layer {
     set label(value: Label);
     set renderer(value: Renderer);
     set zoom(value: number[]);
+    get index(): number;
+    set index(value: number);
     on(event: any, handler: any): void;
     off(event: any, handler: any): void;
     emit(event: any, param: any): void;

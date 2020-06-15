@@ -143,7 +143,7 @@ export class Map extends Subject {
         this._viewer.removeLayer(layer);
     }
     clearLayers() {
-        this._viewer.clear();
+        this._viewer.clearLayers();
     }
     //shortcut
     addGraphic(graphic) {

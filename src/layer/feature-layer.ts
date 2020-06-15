@@ -26,6 +26,7 @@ export class FeatureLayer extends Layer{
     private _label: Label;
     private _zoom: number[] = [3, 20];
     private _interactive: boolean = true;
+    private _index: number = 0; //z-index
 
     get interactive(): boolean {
         return this._interactive;
@@ -52,6 +53,13 @@ export class FeatureLayer extends Layer{
 
     set zoom(value: number[]) {
         this._zoom = value;
+    }
+
+    get index(): number {
+        return this._index;
+    }
+    set index(value: number) {
+        this._index = value;
     }
 
     //地图事件注册监听

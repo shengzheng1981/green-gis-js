@@ -1,4 +1,4 @@
-import { SimplePointSymbol, SimpleTextSymbol } from "../symbol/symbol";
+import { SimplePointSymbol, SimpleTextSymbol, ClusterSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 import { Subject } from "../util/subject";
 export class Feature extends Subject {
@@ -32,7 +32,7 @@ export class Feature extends Subject {
     }
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimplePointSymbol()) {
         if (this.visible)
-            this._geometry.draw(ctx, projection, extent, this._symbol || symbol);
+            this._geometry.draw(ctx, projection, extent, symbol instanceof ClusterSymbol ? symbol : (this._symbol || symbol));
     }
     label(field, ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleTextSymbol()) {
         if (this.visible)

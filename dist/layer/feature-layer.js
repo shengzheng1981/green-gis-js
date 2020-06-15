@@ -17,6 +17,7 @@ export class FeatureLayer extends Layer {
         this.editing = false;
         this._zoom = [3, 20];
         this._interactive = true;
+        this._index = 0; //z-index
     }
     get interactive() {
         return this._interactive;
@@ -38,6 +39,12 @@ export class FeatureLayer extends Layer {
     }
     set zoom(value) {
         this._zoom = value;
+    }
+    get index() {
+        return this._index;
+    }
+    set index(value) {
+        this._index = value;
     }
     //地图事件注册监听
     on(event, handler) {

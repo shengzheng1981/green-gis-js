@@ -44,10 +44,12 @@ export class Viewer extends Subject {
         this.redraw();
     }
     _onClick(event) {
-        this._layers.filter(layer => layer.interactive && !layer.editing).some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click"));
+        const layers = [...this._layers];
+        layers.filter(layer => layer.interactive && !layer.editing).reverse().some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click"));
     }
     _onDoubleClick(event) {
-        this._layers.filter(layer => layer.interactive && !layer.editing).some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick"));
+        const layers = [...this._layers];
+        layers.filter(layer => layer.interactive && !layer.editing).reverse().some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick"));
     }
     _onMouseMove(event) {
         //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
@@ -88,7 +90,7 @@ export class Viewer extends Subject {
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
         this._ctx.restore();
-        this._layers.filter(layer => !layer.editing).forEach(layer => {
+        this._layers.sort((a, b) => b.index - a.index).filter(layer => !layer.editing).forEach(layer => {
             layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         });
         this._layers.filter(layer => layer.labeled && !layer.editing).forEach((layer) => {

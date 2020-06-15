@@ -117,7 +117,7 @@ export class Viewer extends Subject{
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
         this._ctx.restore();
 
-        this._layers.filter(layer => !layer.editing).forEach(layer => {
+        this._layers.sort((a, b) => b.index - a.index).filter(layer => !layer.editing).forEach(layer => {
             layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         });
         this._layers.filter(layer => layer.labeled && !layer.editing).forEach((layer: FeatureLayer) => {

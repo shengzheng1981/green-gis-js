@@ -1,6 +1,6 @@
 import {Bound} from "../util/bound";
 import {Geometry} from "../geometry/geometry";
-import {Symbol, SimplePointSymbol, SimpleTextSymbol} from "../symbol/symbol";
+import {Symbol, SimplePointSymbol, SimpleTextSymbol, ClusterSymbol} from "../symbol/symbol";
 import {Projection} from "../projection/projection";
 import {WebMercator} from "../projection/web-mercator";
 import {Field} from "../data/field";
@@ -50,7 +50,7 @@ export class Feature extends Subject{
     }
 
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
-        if (this.visible) this._geometry.draw(ctx, projection, extent, this._symbol || symbol);
+        if (this.visible) this._geometry.draw(ctx, projection, extent, symbol instanceof ClusterSymbol ? symbol : (this._symbol || symbol));
     }
 
     label(field:Field, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: SimpleTextSymbol = new SimpleTextSymbol()) {
