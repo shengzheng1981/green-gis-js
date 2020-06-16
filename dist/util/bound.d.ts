@@ -11,6 +11,8 @@ export declare class Bound {
     get ymax(): number;
     get xscale(): number;
     get yscale(): number;
+    getCenter(): number[];
     constructor(xmin: any, ymin: any, xmax: any, ymax: any);
     intersect(bound: Bound): boolean;
+    scale(s: number): void;
 }

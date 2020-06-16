@@ -34,6 +34,7 @@ export declare class Map extends Subject {
     enableDoubleClick(): void;
     setProjection(projection: any): void;
     setView(center?: number[], zoom?: number): void;
+    fitBound(bound: Bound): void;
     addLayer(layer: FeatureLayer): void;
     insertLayer(layer: FeatureLayer, index?: number): void;
     removeLayer(layer: FeatureLayer): void;

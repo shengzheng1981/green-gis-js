@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./editor-polygon-create.js",
+    entry: "./fit-bound.js",
     output: {
         filename: "bundle.js"
     },

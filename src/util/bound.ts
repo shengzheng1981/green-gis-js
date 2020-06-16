@@ -28,6 +28,10 @@ export class Bound {
         return this._yscale;
     }
 
+    getCenter(): number[] {
+        return [(this._xmin + this._xmax)/2, (this._ymin + this._ymax)/2];
+    }
+
     constructor(xmin, ymin, xmax, ymax) {
         this._xmin = Math.min(xmin, xmax);
         this._ymin = Math.min(ymin, ymax);
@@ -40,5 +44,12 @@ export class Bound {
     //是否交叉叠盖
     intersect(bound: Bound) {
         return (bound.xmax >= this._xmin) && (bound.xmin <= this._xmax) && (bound.ymax >= this._ymin) && (bound.ymin <= this._ymax);
+    }
+
+    scale(s: number) {
+        this._xmin = this._xmin - (s - 1) * (this._xmax - this._xmin)/2;
+        this._xmax = this._xmax + (s - 1) * (this._xmax - this._xmin)/2;
+        this._ymin = this._ymin - (s - 1) * (this._ymax - this._ymin)/2;
+        this._ymax = this._ymax + (s - 1) * (this._ymax - this._ymin)/2;
     }
 }

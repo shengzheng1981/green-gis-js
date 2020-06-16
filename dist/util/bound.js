@@ -29,8 +29,17 @@ export class Bound {
     get yscale() {
         return this._yscale;
     }
+    getCenter() {
+        return [(this._xmin + this._xmax) / 2, (this._ymin + this._ymax) / 2];
+    }
     //是否交叉叠盖
     intersect(bound) {
         return (bound.xmax >= this._xmin) && (bound.xmin <= this._xmax) && (bound.ymax >= this._ymin) && (bound.ymin <= this._ymax);
+    }
+    scale(s) {
+        this._xmin = this._xmin - (s - 1) * (this._xmax - this._xmin) / 2;
+        this._xmax = this._xmax + (s - 1) * (this._xmax - this._xmin) / 2;
+        this._ymin = this._ymin - (s - 1) * (this._ymax - this._ymin) / 2;
+        this._ymax = this._ymax + (s - 1) * (this._ymax - this._ymin) / 2;
     }
 }

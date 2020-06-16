@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./editor-polygon-create.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./fit-bound.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -113,9 +113,10 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class FeatureClass {
-    constructor() {
+    constructor(type) {
         this._fields = [];
         this._features = [];
+        this._type = type;
     }
     get type() {
         return this._type;
@@ -202,8 +203,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Field", function() { return Field; });
 var FieldType;
 (function (FieldType) {
-    FieldType[FieldType["String"] = 0] = "String";
-    FieldType[FieldType["Number"] = 1] = "Number";
+    FieldType[FieldType["String"] = 1] = "String";
+    FieldType[FieldType["Number"] = 2] = "Number";
 })(FieldType || (FieldType = {}));
 class Field {
 }
@@ -248,7 +249,7 @@ var EditorActionType;
 })(EditorActionType || (EditorActionType = {}));
 class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__["Subject"] {
     constructor(map) {
-        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit"]); //when mouseover feature or vertex
+        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit", "create", "delete"]); //when mouseover feature or vertex
         this._drag = {
             flag: false,
             vertex: null,
@@ -300,11 +301,20 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__["Subject"] {
     get defaultPointSymbol() {
         return this._defaultPointSymbol;
     }
+    set defaultPointSymbol(value) {
+        this._defaultPointSymbol = value;
+    }
     get defaultLineSymbol() {
         return this._defaultLineSymbol;
     }
+    set defaultLineSymbol(value) {
+        this._defaultLineSymbol = value;
+    }
     get defaultPolygonSymbol() {
         return this._defaultPolygonSymbol;
+    }
+    set defaultPolygonSymbol(value) {
+        this._defaultPolygonSymbol = value;
     }
     setFeatureLayer(layer) {
         if (this._editing) {
@@ -369,11 +379,13 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__["Subject"] {
     addFeature(feature) {
         this._featureLayer.featureClass.addFeature(feature);
         feature.on("dblclick", this._switchEditing);
+        this._handlers["create"].forEach(handler => handler({ feature: feature }));
         this.redraw();
     }
     removeFeature(feature) {
         this._featureLayer.featureClass.removeFeature(feature);
         feature.off("dblclick", this._switchEditing);
+        this._handlers["delete"].forEach(handler => handler({ feature: feature }));
         this.redraw();
     }
     _onResize(event) {
@@ -436,7 +448,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__["Subject"] {
         else if (this._editingFeature === event.feature && this._action === EditorActionType.Edit) {
             this._action = EditorActionType.Select;
             if (this._editingFeature.edited) {
-                this._handlers["commit"].forEach(handler => handler({ feature: this._editingFeature }));
+                this._handlers["update"].forEach(handler => handler({ feature: this._editingFeature }));
                 this._editingFeature.edited = false;
             }
             this._editingFeature = null;
@@ -740,6 +752,9 @@ class Feature extends _util_subject__WEBPACK_IMPORTED_MODULE_2__["Subject"] {
     get symbol() {
         return this._symbol;
     }
+    set symbol(value) {
+        this._symbol = value;
+    }
     get geometry() {
         return this._geometry;
     }
@@ -757,7 +772,7 @@ class Feature extends _util_subject__WEBPACK_IMPORTED_MODULE_2__["Subject"] {
     }
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]()) {
         if (this.visible)
-            this._geometry.draw(ctx, projection, extent, this._symbol || symbol);
+            this._geometry.draw(ctx, projection, extent, symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["ClusterSymbol"] ? symbol : (this._symbol || symbol));
     }
     label(field, ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"](), extent = projection.bound, symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimpleTextSymbol"]()) {
         if (this.visible)
@@ -901,15 +916,15 @@ __webpack_require__.r(__webpack_exports__);
 
 var CoordinateType;
 (function (CoordinateType) {
-    CoordinateType[CoordinateType["Latlng"] = 0] = "Latlng";
-    CoordinateType[CoordinateType["Projection"] = 1] = "Projection";
-    CoordinateType[CoordinateType["Screen"] = 2] = "Screen";
+    CoordinateType[CoordinateType["Latlng"] = 1] = "Latlng";
+    CoordinateType[CoordinateType["Projection"] = 2] = "Projection";
+    CoordinateType[CoordinateType["Screen"] = 3] = "Screen";
 })(CoordinateType || (CoordinateType = {}));
 var GeometryType;
 (function (GeometryType) {
-    GeometryType[GeometryType["Point"] = 0] = "Point";
-    GeometryType[GeometryType["Polyline"] = 1] = "Polyline";
-    GeometryType[GeometryType["Polygon"] = 2] = "Polygon";
+    GeometryType[GeometryType["Point"] = 1] = "Point";
+    GeometryType[GeometryType["Polyline"] = 2] = "Polyline";
+    GeometryType[GeometryType["Polygon"] = 3] = "Polygon";
 })(GeometryType || (GeometryType = {}));
 class Geometry {
     get bound() {
@@ -1577,7 +1592,7 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             return Math.sqrt((this._screenX - screenX) * (this._screenX - screenX) + (this._screenY - screenY) * (this._screenY - screenY)) <= this._symbol.radius;
         }
         else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
-            return screenX >= (this._screenX - this._symbol.offsetX) && screenX <= (this._screenX - this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY - this._symbol.offsetY) && screenY <= (this._screenY - this._symbol.offsetY + this._symbol.height);
+            return screenX >= (this._screenX + this._symbol.offsetX) && screenX <= (this._screenX + this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY + this._symbol.offsetY) && screenY <= (this._screenY + this._symbol.offsetY + this._symbol.height);
         }
         else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["LetterSymbol"]) {
             return Math.sqrt((this._screenX - screenX) * (this._screenX - screenX) + (this._screenY - screenY) * (this._screenY - screenY)) <= this._symbol.radius;
@@ -1589,7 +1604,7 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
     getCenter(type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"]()) {
         if (!this._projected)
             this.project(projection);
-        if (type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
+        if (type === _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
             return [this._lng, this._lat];
         }
         else {
@@ -1754,7 +1769,7 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         else {
             center = [x / area, y / area];
         }
-        if (type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
+        if (type === _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
             return projection.unproject(center);
         }
         else {
@@ -1960,7 +1975,7 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
                 ];
             }
         }
-        if (type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
+        if (type === _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
             return projection.unproject(center);
         }
         else {
@@ -2206,6 +2221,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
         this.editing = false;
         this._zoom = [3, 20];
         this._interactive = true;
+        this._index = 0; //z-index
     }
     get interactive() {
         return this._interactive;
@@ -2227,6 +2243,12 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
     }
     set zoom(value) {
         this._zoom = value;
+    }
+    get index() {
+        return this._index;
+    }
+    set index(value) {
+        this._index = value;
     }
     //地图事件注册监听
     on(event, handler) {
@@ -2606,6 +2628,20 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._ctx.setTransform(a, 0, 0, d, e, f);
         this.redraw();
     }
+    //设置缩放到某一范围. 默认该范围2倍. 用于缩放到某一要素对应的bound
+    fitBound(bound) {
+        const origin = bound.getCenter();
+        const center = this._projection.unproject(origin);
+        bound.scale(2);
+        const x_mpp = (bound.xmax - bound.xmin) / this._canvas.width; //x  meter per pixel
+        const y_mpp = (bound.ymax - bound.ymin) / this._canvas.height; //y  meter per pixel
+        //反算 zoom : x_mpp = (bound.xmax - bound.xmin) / (256 * Math.pow(2, this._zoom))
+        const full_bound = this._projection.bound;
+        const x_zoom = Math.log2((full_bound.xmax - full_bound.xmin) / x_mpp / 256);
+        const y_zoom = Math.log2((full_bound.ymax - full_bound.ymin) / y_mpp / 256);
+        const zoom = Math.floor(Math.min(x_zoom, y_zoom, 20));
+        this.setView(center, zoom);
+    }
     //viewer
     addLayer(layer) {
         this._viewer.addLayer(layer);
@@ -2617,7 +2653,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._viewer.removeLayer(layer);
     }
     clearLayers() {
-        this._viewer.clear();
+        this._viewer.clearLayers();
     }
     //shortcut
     addGraphic(graphic) {
@@ -3009,9 +3045,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Projection", function() { return Projection; });
 var LatLngType;
 (function (LatLngType) {
-    LatLngType[LatLngType["GPS"] = 0] = "GPS";
-    LatLngType[LatLngType["GCJ02"] = 1] = "GCJ02";
-    LatLngType[LatLngType["BD09"] = 2] = "BD09"; //Just For China, BaiduMap
+    LatLngType[LatLngType["GPS"] = 1] = "GPS";
+    LatLngType[LatLngType["GCJ02"] = 2] = "GCJ02";
+    LatLngType[LatLngType["BD09"] = 3] = "BD09"; //Just For China, BaiduMap
 })(LatLngType || (LatLngType = {}));
 //TODO: only support web mecator
 class Projection {
@@ -3466,9 +3502,18 @@ class Bound {
     get yscale() {
         return this._yscale;
     }
+    getCenter() {
+        return [(this._xmin + this._xmax) / 2, (this._ymin + this._ymax) / 2];
+    }
     //是否交叉叠盖
     intersect(bound) {
         return (bound.xmax >= this._xmin) && (bound.xmin <= this._xmax) && (bound.ymax >= this._ymin) && (bound.ymin <= this._ymax);
+    }
+    scale(s) {
+        this._xmin = this._xmin - (s - 1) * (this._xmax - this._xmin) / 2;
+        this._xmax = this._xmax + (s - 1) * (this._xmax - this._xmin) / 2;
+        this._ymin = this._ymin - (s - 1) * (this._ymax - this._ymin) / 2;
+        this._ymax = this._ymax + (s - 1) * (this._ymax - this._ymin) / 2;
     }
 }
 
@@ -3693,10 +3738,12 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
         this.redraw();
     }
     _onClick(event) {
-        this._layers.filter(layer => layer.interactive && !layer.editing).some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click"));
+        const layers = [...this._layers];
+        layers.filter(layer => layer.interactive && !layer.editing).reverse().some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click"));
     }
     _onDoubleClick(event) {
-        this._layers.filter(layer => layer.interactive && !layer.editing).some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick"));
+        const layers = [...this._layers];
+        layers.filter(layer => layer.interactive && !layer.editing).reverse().some((layer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick"));
     }
     _onMouseMove(event) {
         //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
@@ -3737,7 +3784,7 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
         this._ctx.restore();
-        this._layers.filter(layer => !layer.editing).forEach(layer => {
+        this._layers.sort((a, b) => a.index - b.index).filter(layer => !layer.editing).forEach(layer => {
             layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         });
         this._layers.filter(layer => layer.labeled && !layer.editing).forEach((layer) => {
@@ -3762,10 +3809,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 
 /***/ }),
 
-/***/ "./editor-polygon-create.js":
-/*!**********************************!*\
-  !*** ./editor-polygon-create.js ***!
-  \**********************************/
+/***/ "./fit-bound.js":
+/*!**********************!*\
+  !*** ./fit-bound.js ***!
+  \**********************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -3774,7 +3821,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
+var AMap = window.AMap;
+
 window.load = () => {
+
     const amap = new AMap.Map("amap", {
         fadeOnZoom: false,
         navigationMode: 'classic',
@@ -3809,48 +3859,12 @@ window.load = () => {
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
 
-    var req = new XMLHttpRequest();
-    req.onload = (event) => {
-        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
-        featureClass.loadGeoJSON(JSON.parse(req.responseText));
-        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-        featureLayer.featureClass = featureClass;
-        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field.name = "name";
-        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
-        renderer.generate(featureClass, field);
-        featureLayer.renderer = renderer;
-        featureLayer.zoom = [5, 20];
-        map.addLayer(featureLayer);
+    const polygon = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polygon"]([[[116.397411,39.909186], [116.397311,39.909186], [116.397211,39.909086], [116.397291,39.908586], [116.397351,39.908786]]]);
+    const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleFillSymbol"]();
+    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](polygon, symbol);
+    map.addGraphic(graphic);
 
-        const editor = map.editor;
-        editor.start();
-        editor.setFeatureLayer(featureLayer);
-        document.getElementById("status").value = "editor is started";
-
-        window.start = () => {
-            editor.start();
-            editor.setFeatureLayer(featureLayer);
-            document.getElementById("status").value = "editor is started";
-        };
-
-        window.stop = () => {
-            editor.stop();
-            document.getElementById("status").value = "editor is stopped";
-        };
-
-        window.create = () => {
-            editor.create();
-        };
-
-        map.setView([107.777, 29.809], 7);
-    };
-    req.open("GET", "assets/geojson/chongqing.json", true);
-    req.send(null);
-
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-
+    map.fitBound(polygon.bound);
 
 }
 

@@ -165,6 +165,21 @@ export class Map extends Subject{
         this.redraw();
     }
 
+    //设置缩放到某一范围. 默认该范围2倍. 用于缩放到某一要素对应的bound
+    fitBound(bound: Bound) {
+        const origin = bound.getCenter();
+        const center = this._projection.unproject(origin as any);
+        bound.scale(2);
+        const x_mpp = (bound.xmax - bound.xmin) / this._canvas.width; //x  meter per pixel
+        const y_mpp = (bound.ymax - bound.ymin) / this._canvas.height; //y  meter per pixel
+        //反算 zoom : x_mpp = (bound.xmax - bound.xmin) / (256 * Math.pow(2, this._zoom))
+        const full_bound: Bound = this._projection.bound;
+        const x_zoom = Math.log2((full_bound.xmax - full_bound.xmin) / x_mpp / 256);
+        const y_zoom = Math.log2((full_bound.ymax - full_bound.ymin) / y_mpp / 256);
+        const zoom = Math.floor(Math.min(x_zoom, y_zoom, 20));
+        this.setView(center, zoom);
+    }
+
     //viewer
     addLayer(layer: FeatureLayer) {
         this._viewer.addLayer(layer);
