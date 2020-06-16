@@ -3,7 +3,8 @@ import { Bound } from "../util/bound";
 import { Projection } from "../projection/projection";
 import { Symbol } from "../symbol/symbol";
 export declare class Point extends Geometry {
-    static TOLERANCE: number;
+    static BOUND_TOLERANCE: number;
+    static INTERACTION_TOLERANCE: number;
     private _symbol;
     private _lng;
     private _lat;

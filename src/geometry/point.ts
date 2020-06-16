@@ -14,8 +14,11 @@ import {WebMercator} from "../projection/web-mercator";
 //点
 export class Point extends Geometry{
 
+    //bound
+    static BOUND_TOLERANCE: number = 10;    //meter
+
     //interaction: hover && identify
-    static TOLERANCE: number = 0; //screen pixel
+    static INTERACTION_TOLERANCE: number = 0; //screen pixel
     private _symbol: Symbol; //TOLERANCE + symbol.radius
 
     //经纬度
@@ -183,5 +186,4 @@ export class Point extends Geometry{
             return [this._x, this._y];
         }
     }
-
 }

@@ -23,5 +23,6 @@ export declare class Geometry {
     intersect(projection?: Projection, extent?: Bound): boolean;
     label(text: string, ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: SimpleTextSymbol): void;
     getCenter(type?: CoordinateType, projection?: Projection): void;
+    getBound(projection?: Projection): Bound;
     distance(geometry: Geometry, type: CoordinateType, ctx: CanvasRenderingContext2D, projection?: Projection): number;
 }

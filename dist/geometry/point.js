@@ -177,5 +177,7 @@ export class Point extends Geometry {
         }
     }
 }
+//bound
+Point.BOUND_TOLERANCE = 10; //meter
 //interaction: hover && identify
-Point.TOLERANCE = 0; //screen pixel
+Point.INTERACTION_TOLERANCE = 0; //screen pixel

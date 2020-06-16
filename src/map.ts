@@ -173,11 +173,15 @@ export class Map extends Subject{
         const x_mpp = (bound.xmax - bound.xmin) / this._canvas.width; //x  meter per pixel
         const y_mpp = (bound.ymax - bound.ymin) / this._canvas.height; //y  meter per pixel
         //反算 zoom : x_mpp = (bound.xmax - bound.xmin) / (256 * Math.pow(2, this._zoom))
-        const full_bound: Bound = this._projection.bound;
-        const x_zoom = Math.log2((full_bound.xmax - full_bound.xmin) / x_mpp / 256);
-        const y_zoom = Math.log2((full_bound.ymax - full_bound.ymin) / y_mpp / 256);
-        const zoom = Math.floor(Math.min(x_zoom, y_zoom, 20));
-        this.setView(center, zoom);
+        if (x_mpp == 0 || y_mpp == 0) {
+            this.setView(center, 20);
+        } else {
+            const full_bound: Bound = this._projection.bound;
+            const x_zoom = Math.log2((full_bound.xmax - full_bound.xmin) / x_mpp / 256);
+            const y_zoom = Math.log2((full_bound.ymax - full_bound.ymin) / y_mpp / 256);
+            const zoom = Math.floor(Math.min(x_zoom, y_zoom, 20));
+            this.setView(center, zoom);
+        }
     }
 
     //viewer

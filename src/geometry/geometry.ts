@@ -68,6 +68,11 @@ export class Geometry {
 
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {};
 
+    getBound(projection: Projection = new WebMercator()) {
+        if (!this._projected) this.project(projection);
+        return this._bound;
+    };
+
     distance(geometry: Geometry, type: CoordinateType, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator()) {
         const center = this.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
         const point = geometry.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);

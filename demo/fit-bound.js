@@ -1,4 +1,4 @@
-import {Map, Point, Polyline, Polygon, Graphic, SimpleLineSymbol, SimplePointSymbol, SimpleMarkerSymbol, SimpleFillSymbol, GraphicLayer} from "../dist";
+import {Map, Point, Polyline, Polygon, Graphic, SimpleLineSymbol, SimplePointSymbol, SimpleMarkerSymbol, SimpleFillSymbol, GraphicLayer, GeometryType} from "../dist";
 
 var AMap = window.AMap;
 

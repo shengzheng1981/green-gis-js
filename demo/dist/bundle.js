@@ -970,6 +970,12 @@ class Geometry {
     ;
     getCenter(type = CoordinateType.Latlng, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"]()) { }
     ;
+    getBound(projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"]()) {
+        if (!this._projected)
+            this.project(projection);
+        return this._bound;
+    }
+    ;
     distance(geometry, type, ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__["WebMercator"]()) {
         const center = this.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
         const point = geometry.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
@@ -1612,8 +1618,10 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         }
     }
 }
+//bound
+Point.BOUND_TOLERANCE = 10; //meter
 //interaction: hover && identify
-Point.TOLERANCE = 0; //screen pixel
+Point.INTERACTION_TOLERANCE = 0; //screen pixel
 
 
 /***/ }),
@@ -2636,11 +2644,16 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         const x_mpp = (bound.xmax - bound.xmin) / this._canvas.width; //x  meter per pixel
         const y_mpp = (bound.ymax - bound.ymin) / this._canvas.height; //y  meter per pixel
         //反算 zoom : x_mpp = (bound.xmax - bound.xmin) / (256 * Math.pow(2, this._zoom))
-        const full_bound = this._projection.bound;
-        const x_zoom = Math.log2((full_bound.xmax - full_bound.xmin) / x_mpp / 256);
-        const y_zoom = Math.log2((full_bound.ymax - full_bound.ymin) / y_mpp / 256);
-        const zoom = Math.floor(Math.min(x_zoom, y_zoom, 20));
-        this.setView(center, zoom);
+        if (x_mpp == 0 || y_mpp == 0) {
+            this.setView(center, 20);
+        }
+        else {
+            const full_bound = this._projection.bound;
+            const x_zoom = Math.log2((full_bound.xmax - full_bound.xmin) / x_mpp / 256);
+            const y_zoom = Math.log2((full_bound.ymax - full_bound.ymin) / y_mpp / 256);
+            const zoom = Math.floor(Math.min(x_zoom, y_zoom, 20));
+            this.setView(center, zoom);
+        }
     }
     //viewer
     addLayer(layer) {
