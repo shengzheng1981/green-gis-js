@@ -10,6 +10,7 @@ export class Feature extends Subject{
     private _geometry: Geometry;
     private _properties: any;
     private _symbol: Symbol;
+    private _text: SimpleTextSymbol;
 
     private _contained: boolean;
 
@@ -42,6 +43,13 @@ export class Feature extends Subject{
         this._edited = value;
     }
 
+    get text(): SimpleTextSymbol {
+        return this._text;
+    }
+    set text(value: SimpleTextSymbol) {
+        this._text = value;
+    }
+
     constructor(geometry, properties, symbol?) {
         super(["click", "dblclick", "mouseover", "mouseout"]);
         this._geometry = geometry;
@@ -54,7 +62,7 @@ export class Feature extends Subject{
     }
 
     label(field:Field, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: SimpleTextSymbol = new SimpleTextSymbol()) {
-        if (this.visible) this._geometry.label(this._properties[field.name], ctx, projection, extent, symbol);
+        if (this.visible) this._geometry.label(this._properties[field.name], ctx, projection, extent, this._text || symbol);
     }
 
     intersect(projection: Projection = new WebMercator(), extent: Bound = projection.bound): boolean {
