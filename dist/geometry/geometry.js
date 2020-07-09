@@ -42,15 +42,19 @@ export class Geometry {
         const matrix = ctx.getTransform();
         //keep pixel
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        const width = ctx.measureText(text).width + symbol.padding * 2;
-        const height = symbol.fontSize + symbol.padding * 2;
+        const array = text.split("/r/n");
+        let widths = array.map(str => ctx.measureText(str).width + symbol.padding * 2);
+        let width = Math.max(...widths);
+        let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);
         const screenX = (matrix.a * center[0] + matrix.e);
         const screenY = (matrix.d * center[1] + matrix.f);
         ctx.strokeRect(screenX + symbol.offsetX - symbol.padding, screenY + symbol.offsetY - symbol.padding, width, height);
         ctx.fillRect(screenX + symbol.offsetX - symbol.padding, screenY + symbol.offsetY - symbol.padding, width, height);
         ctx.textBaseline = "top";
         ctx.fillStyle = symbol.fontColor;
-        ctx.fillText(text, screenX + symbol.offsetX, screenY + symbol.offsetY);
+        array.forEach((str, index) => {
+            ctx.fillText(str, screenX + symbol.offsetX + (width - widths[index]) / 2, screenY + symbol.offsetY + index * (symbol.fontSize + symbol.padding));
+        });
         ctx.restore();
     }
     ;

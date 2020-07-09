@@ -40,9 +40,9 @@ export class Viewer extends Subject {
         this._canvas.height = this._map.container.clientHeight;
     }
     _extentChange(event) {
-        const matrix = DOMMatrix.fromFloat64Array(new Float64Array([event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f]));
-        this._ctx.setTransform(matrix);
-        //this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
+        //const matrix = DOMMatrix.fromFloat64Array( new Float64Array([event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f] ) );
+        //this._ctx.setTransform(matrix);
+        this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
         this.redraw();
     }
     _onClick(event) {
