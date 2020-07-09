@@ -11,7 +11,7 @@ import {
     CategoryRendererItem,
     Field, Label, Tooltip,
     FieldType,
-    Graphic, SimpleMarkerSymbol, Feature, SimpleTextSymbol, ArrowSymbol
+    Graphic, SimpleMarkerSymbol, Feature, SimpleTextSymbol, ArrowSymbol, SimplePointSymbol
 } from "../dist";
 
 window.load = () => {
@@ -56,11 +56,20 @@ window.load = () => {
         const featureLayer = new FeatureLayer();
         featureLayer.featureClass = featureClass;
         const renderer = new SimpleRenderer();
-        featureLayer.cluster = true;
+        //featureLayer.cluster = true;
         featureLayer.renderer = renderer;
         featureLayer.zoom = [13, 20];
         map.addLayer(featureLayer);
 
+        const featureLayer2 = new FeatureLayer();
+        featureLayer2.featureClass = featureClass;
+        const renderer2 = new SimpleRenderer();
+        const symbol = new SimplePointSymbol();
+        symbol.fillStyle = "#00ffff";
+        renderer2.symbol = symbol;
+        featureLayer2.renderer = renderer2;
+        featureLayer2.zoom = [13, 20];
+        map.addLayer(featureLayer2);
         /*const featureClass2 = new FeatureClass();
         featureClass2.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer2 = new FeatureLayer();

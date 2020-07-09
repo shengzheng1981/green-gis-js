@@ -1,6 +1,7 @@
 import { Feature } from "../element/feature";
 import { FeatureLayer } from "../layer/feature-layer";
 import { Map } from "../map";
+import { Point } from "../geometry/point";
 import { Symbol } from "../symbol/symbol";
 import { Subject } from "../util/subject";
 export declare enum EditorActionType {
@@ -43,6 +44,7 @@ export declare class Editor extends Subject {
     removeFeature(feature: Feature): void;
     _onResize(event: any): void;
     _extentChange(event: any): void;
+    _getMiddlePoint(point1: Point, point2: Point): Point;
     _switchEditing(event: any): void;
     redraw(): void;
     clear(): void;

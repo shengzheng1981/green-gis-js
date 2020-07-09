@@ -54,15 +54,19 @@ export class Geometry {
         const matrix = (ctx as any).getTransform();
         //keep pixel
         ctx.setTransform(1,0,0,1,0,0);
-        const width = ctx.measureText(text).width + (symbol as SimpleTextSymbol).padding * 2;
-        const height = (symbol as SimpleTextSymbol).fontSize + (symbol as SimpleTextSymbol).padding * 2;
+        const array = text.split("/r/n");
+        let widths = array.map(str => ctx.measureText(str).width + symbol.padding * 2);
+        let width = Math.max(...widths);
+        let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);
         const screenX = (matrix.a * center[0] + matrix.e);
         const screenY = (matrix.d * center[1] + matrix.f);
         ctx.strokeRect(screenX + (symbol as SimpleTextSymbol).offsetX - (symbol as SimpleTextSymbol).padding, screenY + (symbol as SimpleTextSymbol).offsetY - (symbol as SimpleTextSymbol).padding, width, height);
         ctx.fillRect(screenX + (symbol as SimpleTextSymbol).offsetX - (symbol as SimpleTextSymbol).padding, screenY + (symbol as SimpleTextSymbol).offsetY - (symbol as SimpleTextSymbol).padding, width, height);
         ctx.textBaseline = "top";
         ctx.fillStyle = (symbol as SimpleTextSymbol).fontColor;
-        ctx.fillText(text, screenX + (symbol as SimpleTextSymbol).offsetX, screenY + (symbol as SimpleTextSymbol).offsetY);
+        array.forEach((str,index) => {
+            ctx.fillText(str, screenX + (symbol as SimpleTextSymbol).offsetX + (width - widths[index]) / 2, screenY + (symbol as SimpleTextSymbol).offsetY + index * (symbol.fontSize + symbol.padding));
+        });
         ctx.restore();
     };
 

@@ -197,6 +197,14 @@ export class Editor extends Subject{
         this.redraw();
     }
 
+    _getMiddlePoint(point1: Point, point2: Point): Point {
+        point1.project(this._map.projection);
+        point2.project(this._map.projection);
+        const [x, y] = [(point1.x + point2.x) / 2, (point1.y + point2.y) / 2];
+        const [lng, lat] = this._map.projection.unproject([x, y]);
+        return new Point(lng, lat);
+    }
+
     _switchEditing(event) {
         if (!this._editingFeature && this._action === EditorActionType.Select) {
             this._action = EditorActionType.Edit;
@@ -208,7 +216,7 @@ export class Editor extends Subject{
                 this.redraw();
             } else if (this._editingFeature.geometry instanceof Polyline) {
                 const polyline: Polyline = this._editingFeature.geometry;
-                polyline.lnglats.forEach( lnglat => {
+                polyline.lnglats.forEach( (lnglat, index) => {
                     const point: Point = new Point(lnglat[0], lnglat[1]);
                     const vertex: Graphic = new Graphic(point, new VertexSymbol());
                     this._vertexLayer.add(vertex);
@@ -221,6 +229,17 @@ export class Editor extends Subject{
                         polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
                         this.redraw();
                     });
+                    //middle point
+                    /*if (index < polyline.lnglats.length - 1) {
+                        const p1: Point = new Point(lnglat[0], lnglat[1]), p2: Point = new Point(polyline.lnglats[index + 1][0], polyline.lnglats[index + 1][1]);
+                        const p: Point = this._getMiddlePoint(p1, p2);
+                        const symbol: VertexSymbol = new VertexSymbol();
+                        symbol.strokeStyle = "#888888";
+                        symbol.fillStyle = "#88888888";
+                        symbol.size = 6;
+                        const middle: Graphic = new Graphic(p, symbol);
+                        this._vertexLayer.add(middle);
+                    }*/
                 });
                 this.redraw();
             } else if (this._editingFeature.geometry instanceof Polygon) {

@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./fit-bound.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./feature-layer.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -396,6 +396,13 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__["Subject"] {
         this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
         this.redraw();
     }
+    _getMiddlePoint(point1, point2) {
+        point1.project(this._map.projection);
+        point2.project(this._map.projection);
+        const [x, y] = [(point1.x + point2.x) / 2, (point1.y + point2.y) / 2];
+        const [lng, lat] = this._map.projection.unproject([x, y]);
+        return new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](lng, lat);
+    }
     _switchEditing(event) {
         if (!this._editingFeature && this._action === EditorActionType.Select) {
             this._action = EditorActionType.Edit;
@@ -408,7 +415,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__["Subject"] {
             }
             else if (this._editingFeature.geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__["Polyline"]) {
                 const polyline = this._editingFeature.geometry;
-                polyline.lnglats.forEach(lnglat => {
+                polyline.lnglats.forEach((lnglat, index) => {
                     const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__["Point"](lnglat[0], lnglat[1]);
                     const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__["VertexSymbol"]());
                     this._vertexLayer.add(vertex);
@@ -421,6 +428,17 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__["Subject"] {
                         polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
                         this.redraw();
                     });
+                    //middle point
+                    /*if (index < polyline.lnglats.length - 1) {
+                        const p1: Point = new Point(lnglat[0], lnglat[1]), p2: Point = new Point(polyline.lnglats[index + 1][0], polyline.lnglats[index + 1][1]);
+                        const p: Point = this._getMiddlePoint(p1, p2);
+                        const symbol: VertexSymbol = new VertexSymbol();
+                        symbol.strokeStyle = "#888888";
+                        symbol.fillStyle = "#88888888";
+                        symbol.size = 6;
+                        const middle: Graphic = new Graphic(p, symbol);
+                        this._vertexLayer.add(middle);
+                    }*/
                 });
                 this.redraw();
             }
@@ -3747,7 +3765,9 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
         this._canvas.height = this._map.container.clientHeight;
     }
     _extentChange(event) {
-        this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
+        const matrix = DOMMatrix.fromFloat64Array(new Float64Array([event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f]));
+        this._ctx.setTransform(matrix);
+        //this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
         this.redraw();
     }
     _onClick(event) {
@@ -3822,10 +3842,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 
 /***/ }),
 
-/***/ "./fit-bound.js":
-/*!**********************!*\
-  !*** ./fit-bound.js ***!
-  \**********************/
+/***/ "./feature-layer.js":
+/*!**************************!*\
+  !*** ./feature-layer.js ***!
+  \**************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -3872,12 +3892,33 @@ window.load = () => {
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
 
-    const polygon = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polygon"]([[[116.397411,39.909186], [116.397311,39.909186], [116.397211,39.909086], [116.397291,39.908586], [116.397351,39.908786]]]);
-    const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleFillSymbol"]();
-    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](polygon, symbol);
-    map.addGraphic(graphic);
+    //画经纬线交点
+    const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
+    featureLayer.featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"](_dist__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Point);
+    map.addLayer(featureLayer);
+    const pointSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+    pointSymbol.radius = 5;
+    pointSymbol.fillStyle = "#de77ae";
+    pointSymbol.strokeStyle = "#c51b7d";
+    const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
+    renderer.symbol = pointSymbol;
+    featureLayer.renderer = renderer;
 
-    map.fitBound(polygon.bound);
+    const pointSymbol2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+    pointSymbol2.radius = 5;
+    pointSymbol2.fillStyle = "#00ffff88";
+    pointSymbol2.strokeStyle = "#00ffff";
+    for (let i = -180; i <= 180; i = i + 10){
+        for (let j = -90; j <= 90; j = j + 10){
+            const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](i, j);
+            const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, pointSymbol2);
+            const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {});
+            map.addGraphic(graphic);
+            featureLayer.featureClass.addFeature(feature);
+        }
+    }
+
+    map.setView([116.397411,39.909186], 12);
 
 }
 
