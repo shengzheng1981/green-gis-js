@@ -15,11 +15,11 @@ export class Tooltip {
         const container = this._map.container;
         this._tooltipContainer = document.createElement("div");
         Utility.addClass(this._tooltipContainer, "green-tooltip");
-        Utility.addClass(this._tooltipContainer, "green-tooltip-placement-top");
+        //Utility.addClass(this._tooltipContainer, "green-tooltip-placement-top");
         container.appendChild(this._tooltipContainer);
         this._tooltipArrow = document.createElement("div");
         Utility.addClass(this._tooltipArrow, "green-tooltip-arrow");
-        Utility.addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
+        //Utility.addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
         this._tooltipContainer.appendChild(this._tooltipArrow);
         this._tooltipText = document.createElement("div");
         Utility.addClass(this._tooltipText, "green-tooltip-text");
@@ -37,6 +37,19 @@ export class Tooltip {
             node.appendChild(text);
         }
         //this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
+        Utility.removeClass(this._tooltipContainer, "green-tooltip-placement-top");
+        Utility.removeClass(this._tooltipContainer, "green-tooltip-placement-bottom");
+        Utility.removeClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
+        Utility.removeClass(this._tooltipArrow, "green-tooltip-arrow-placement-bottom");
+
+        if (screenY < this._tooltipContainer.offsetHeight) {
+            Utility.addClass(this._tooltipContainer, "green-tooltip-placement-bottom");
+            Utility.addClass(this._tooltipArrow, "green-tooltip-arrow-placement-bottom");
+        } else {
+            Utility.addClass(this._tooltipContainer, "green-tooltip-placement-top");
+            Utility.addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
+        }
+
         this._tooltipContainer.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
     }
 

@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./label.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./tooltip.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -3542,11 +3542,11 @@ class Tooltip {
         const container = this._map.container;
         this._tooltipContainer = document.createElement("div");
         _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipContainer, "green-tooltip");
-        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipContainer, "green-tooltip-placement-top");
+        //Utility.addClass(this._tooltipContainer, "green-tooltip-placement-top");
         container.appendChild(this._tooltipContainer);
         this._tooltipArrow = document.createElement("div");
         _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow");
-        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
+        //Utility.addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
         this._tooltipContainer.appendChild(this._tooltipArrow);
         this._tooltipText = document.createElement("div");
         _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipText, "green-tooltip-text");
@@ -3564,6 +3564,18 @@ class Tooltip {
             node.appendChild(text);
         }
         //this._tooltip.style.cssText = "display: block; left: " + (screenX - this._tooltip.offsetWidth / 2) + "px; top: " + (screenY - this._tooltip.offsetHeight) + "px;";
+        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].removeClass(this._tooltipContainer, "green-tooltip-placement-top");
+        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].removeClass(this._tooltipContainer, "green-tooltip-placement-bottom");
+        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].removeClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
+        _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].removeClass(this._tooltipArrow, "green-tooltip-arrow-placement-bottom");
+        if (screenY < this._tooltipContainer.offsetHeight) {
+            _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipContainer, "green-tooltip-placement-bottom");
+            _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow-placement-bottom");
+        }
+        else {
+            _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipContainer, "green-tooltip-placement-top");
+            _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
+        }
         this._tooltipContainer.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
     }
     hide() {
@@ -3924,10 +3936,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 
 /***/ }),
 
-/***/ "./label.js":
-/*!******************!*\
-  !*** ./label.js ***!
-  \******************/
+/***/ "./tooltip.js":
+/*!********************!*\
+  !*** ./tooltip.js ***!
+  \********************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -3970,6 +3982,7 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -3977,44 +3990,22 @@ window.load = () => {
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
         featureLayer.featureClass = featureClass;
-        const field2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field2.name = "name";
-        field2.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
+        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
+        field.name = "name";
+        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
         const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
-        renderer.generate(featureClass, field2);
+        renderer.generate(featureClass, field);
         featureLayer.renderer = renderer;
-        const label = new _dist__WEBPACK_IMPORTED_MODULE_0__["Label"]();
-        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleTextSymbol"]();
-        label.field = field2;
-        label.symbol = symbol;
-        featureLayer.label = label;
-        featureLayer.labeled = true;
         featureLayer.zoom = [5, 20];
+        featureLayer.on("mouseover", (event) => {
+            map.showTooltip(event.feature, field);
+        });
         map.addLayer(featureLayer);
 
-        map.setView([107.777, 29.809], 7);
+        map.setView([107.411, 29.89], 7);
     };
     req.open("GET", "assets/geojson/chongqing.json", true);
     req.send(null);
-
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-    //beijing gugong
-    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
-    const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {});
-    const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
-    featureClass.addFeature(feature);
-    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-    featureLayer.featureClass = featureClass;
-    const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
-    renderer.symbol = marker;
-    featureLayer.renderer = renderer;
-    map.addLayer(featureLayer);
 
 }
 
