@@ -24,6 +24,14 @@ export class Map extends Subject {
                 y: 0
             }
         };
+        this._touch = {
+            flag: false,
+            finger_dist: 0,
+            mouse: {
+                x: 0,
+                y: 0
+            }
+        };
         //地图缩放等级
         this._zoom = 1;
         //地图视图中心
@@ -45,13 +53,19 @@ export class Map extends Subject {
         this._onMouseMove = this._onMouseMove.bind(this);
         this._onMouseUp = this._onMouseUp.bind(this);
         this._onWheel = this._onWheel.bind(this);
+        this._onTouchStart = this._onTouchStart.bind(this);
+        this._onTouchMove = this._onTouchMove.bind(this);
+        this._onTouchEnd = this._onTouchEnd.bind(this);
         this._ctx = this._canvas.getContext("2d");
         this._canvas.addEventListener("click", this._onClick);
         this._canvas.addEventListener("dblclick", this._onDoubleClick);
         this._canvas.addEventListener("mousedown", this._onMouseDown);
-        this._canvas.addEventListener("mousemove", this._onMouseMove);
+        this._canvas.addEventListener("mousemove", this._onMouseMove, false);
         this._canvas.addEventListener("mouseup", this._onMouseUp);
         this._canvas.addEventListener("wheel", this._onWheel);
+        this._canvas.addEventListener("touchstart", this._onTouchStart, false);
+        this._canvas.addEventListener("touchmove", this._onTouchMove, false);
+        this._canvas.addEventListener("touchend", this._onTouchEnd, false);
         //viewer
         this._viewer = new Viewer(this);
         this._viewer.on("mouseover", () => { Utility.addClass(this._canvas, "green-hover"); });
@@ -276,24 +290,34 @@ export class Map extends Subject {
     }
     _onWheel(event) {
         event.preventDefault();
+        const sensitivity = 5;
+        if (Math.abs(event.deltaY) <= sensitivity)
+            return;
+        //const sensitivity = 100;
+        //const delta = event.deltaY / sensitivity;
+        const delta = event.deltaY < 0 ? -1 : 1;
         let scale = 1;
-        const sensitivity = 100;
-        const delta = event.deltaY / sensitivity;
         if (delta < 0) {
-            if (this._zoom >= 20)
-                return;
             // 放大
             scale *= delta * -2;
         }
         else {
             // 缩小
-            if (this._zoom <= 3)
-                return;
             scale /= delta * 2;
         }
-        const zoom = Math.round(Math.log(scale));
-        scale = Math.pow(2, zoom);
+        let zoom = Math.round(Math.log(scale));
+        if (zoom > 0) {
+            // 放大
+            zoom = this._zoom + zoom >= 20 ? 20 - this._zoom : zoom;
+        }
+        else if (zoom < 0) {
+            // 缩小
+            zoom = this._zoom + zoom <= 3 ? 3 - this.zoom : zoom;
+        }
+        if (zoom == 0)
+            return;
         this._zoom += zoom;
+        scale = Math.pow(2, zoom);
         //交互表现为 鼠标当前位置 屏幕坐标不变 进行缩放 即x2 = x1
         //第一种方案，坐标系不变，变坐标值
         //1.将原屏幕坐标 x1 转成 初始坐标 x0 = (x1 - e1) / a1  初始矩阵 (1,0,0,1,0,0)
@@ -308,6 +332,49 @@ export class Map extends Subject {
         const f = (y2 - scale * (y1 - f1) - f1) / d1;
         this._ctx.transform(scale, 0, 0, scale, e, f);
         this.redraw();
+    }
+    _onTouchStart(event) {
+        if (event.touches.length > 1) { // if multiple touches (pinch zooming)
+            let diffX = event.touches[0].clientX - event.touches[1].clientX;
+            let diffY = event.touches[0].clientY - event.touches[1].clientY;
+            this._touch.finger_dist = Math.sqrt(diffX * diffX + diffY * diffY); // Save current finger distance
+        } // Else just moving around
+        this._touch.mouse.x = event.touches[0].clientX; // Save finger position
+        this._touch.mouse.y = event.touches[0].clientY; //
+    }
+    _onTouchMove(event) {
+        event.preventDefault(); // Stop the window from moving
+        if (event.touches.length > 1) { // If pinch-zooming
+            let diffX = event.touches[0].clientX - event.touches[1].clientX;
+            let diffY = event.touches[0].clientY - event.touches[1].clientY;
+            let new_finger_dist = Math.sqrt(diffX * diffX + diffY * diffY); // Get current distance between fingers
+            let scale = Math.abs(new_finger_dist / this._touch.finger_dist); // Zoom is proportional to change
+            let zoom = Math.round(Math.log(scale));
+            if (zoom > 0) {
+                // 放大
+                zoom = this._zoom + zoom >= 20 ? 20 - this._zoom : zoom;
+            }
+            else if (zoom < 0) {
+                // 缩小
+                zoom = this._zoom + zoom <= 3 ? 3 - this.zoom : zoom;
+            }
+            if (zoom == 0)
+                return;
+            scale = Math.pow(2, zoom);
+            this._zoom += zoom;
+            this._touch.finger_dist = new_finger_dist; // Save current distance for next time
+            const matrix = this._ctx.getTransform();
+            const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
+            const e = (x2 - scale * (x1 - e1) - e1) / a1;
+            const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
+            const f = (y2 - scale * (y1 - f1) - f1) / d1;
+            this._ctx.transform(scale, 0, 0, scale, e, f);
+            this.redraw();
+        }
+    }
+    _onTouchEnd(event) {
+        this._touch.mouse.x = event.touches[0].clientX;
+        this._touch.mouse.y = event.touches[0].clientY; // could be down to 1 finger, back to moving image
     }
     //show tooltip
     showTooltip(feature, field) {
@@ -329,6 +396,9 @@ export class Map extends Subject {
         this._canvas.removeEventListener("mousemove", this._onMouseMove);
         this._canvas.removeEventListener("mouseup", this._onMouseUp);
         this._canvas.removeEventListener("wheel", this._onWheel);
+        this._canvas.removeEventListener("touchstart", this._onTouchStart);
+        this._canvas.removeEventListener("touchmove", this._onTouchMove);
+        this._canvas.removeEventListener("touchend", this._onTouchEnd);
         this._viewer = null;
         this._editor = null;
     }

@@ -28,6 +28,8 @@ export class Geometry {
         return extent.intersect(this._bound);
     }
     label(text, ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleTextSymbol()) {
+        if (!text)
+            return;
         if (!this._projected)
             this.project(projection);
         if (!extent.intersect(this._bound))

@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./feature-layer.js",
+    entry: "./label.js",
     output: {
         filename: "bundle.js"
     },

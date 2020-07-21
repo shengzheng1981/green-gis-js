@@ -12,6 +12,7 @@ export declare class Map extends Subject {
     private _ctx;
     private _option;
     private _drag;
+    private _touch;
     private _zoom;
     private _center;
     private _extent;
@@ -52,6 +53,9 @@ export declare class Map extends Subject {
     _onMouseMove(event: any): void;
     _onMouseUp(event: any): void;
     _onWheel(event: any): void;
+    _onTouchStart(event: any): void;
+    _onTouchMove(event: any): void;
+    _onTouchEnd(event: any): void;
     showTooltip(feature: any, field: any): void;
     hideTooltip(): void;
     destroy(): void;
