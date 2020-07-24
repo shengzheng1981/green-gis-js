@@ -25,12 +25,9 @@ export class Map extends Subject {
             }
         };
         this._touch = {
-            flag: false,
-            finger_dist: 0,
-            mouse: {
-                x: 0,
-                y: 0
-            }
+            zooming: false,
+            dragging: false,
+            finger_dist: 0
         };
         //地图缩放等级
         this._zoom = 1;
@@ -79,13 +76,14 @@ export class Map extends Subject {
         //tooltip
         this._tooltip = new Tooltip(this);
         this._projection = new WebMercator();
-        this._center = [0, 0];
-        this._zoom = 10;
+        //this._center = [0, 0];
+        //this._zoom = 10;
         //Latlng [-180, 180] [-90, 90]
         //this._ctx.setTransform(256/180 * Math.pow(2, this._zoom - 1), 0, 0, -256/90 * Math.pow(2, this._zoom - 1), this._canvas.width/2, this._canvas.height/2);
-        const bound = this._projection.bound;
+        //const bound: Bound = this._projection.bound;
         //设置初始矩阵，由于地图切片是256*256，Math.pow(2, this._zoom)代表在一定缩放级别下x与y轴的切片数量
-        this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale, 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        //this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale , 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        this.setView([0, 0], 10);
         this._onResize = this._onResize.bind(this);
         window.addEventListener("resize", this._onResize);
     }
@@ -126,8 +124,19 @@ export class Map extends Subject {
     //设置投影
     setProjection(projection) {
         this._projection = projection;
+        //const bound: Bound = this._projection.bound;
+        //this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale , 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        //center为经纬度，转化为平面坐标
+        const origin = this._projection.project(this._center);
         const bound = this._projection.bound;
-        this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale, 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        //已知：地理坐标origin，转换后屏幕坐标 即canvas的中心 [this._canvas.width / 2, this._canvas.height / 2]
+        //求：平面坐标转换矩阵=Map初始矩阵:  地理坐标——屏幕坐标
+        //解法如下：
+        const a = 256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale;
+        const d = 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale;
+        const e = this._canvas.width / 2 - a * origin[0];
+        const f = this._canvas.height / 2 - d * origin[1];
+        this._ctx.setTransform(a, 0, 0, d, e, f);
     }
     //设置视图级别及视图中心
     setView(center = [0, 0], zoom = 3) {
@@ -136,8 +145,8 @@ export class Map extends Subject {
         //center为经纬度，转化为平面坐标
         const origin = this._projection.project(center);
         const bound = this._projection.bound;
-        //已知：matrix 转换前 坐标origin，转换后坐标 即canvas的中心 [this._canvas.width / 2, this._canvas.height / 2]
-        //求：转换矩阵
+        //已知：地理坐标origin，转换后屏幕坐标 即canvas的中心 [this._canvas.width / 2, this._canvas.height / 2]
+        //求：平面坐标转换矩阵=Map初始矩阵:  地理坐标——屏幕坐标
         //解法如下：
         const a = 256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale;
         const d = 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale;
@@ -312,19 +321,20 @@ export class Map extends Subject {
         }
         else if (zoom < 0) {
             // 缩小
-            zoom = this._zoom + zoom <= 3 ? 3 - this.zoom : zoom;
+            zoom = this._zoom + zoom <= 3 ? 3 - this._zoom : zoom;
         }
         if (zoom == 0)
             return;
         this._zoom += zoom;
         scale = Math.pow(2, zoom);
-        //交互表现为 鼠标当前位置 屏幕坐标不变 进行缩放 即x2 = x1
-        //第一种方案，坐标系不变，变坐标值
-        //1.将原屏幕坐标 x1 转成 初始坐标 x0 = (x1 - e1) / a1  初始矩阵 (1,0,0,1,0,0)
-        //2.初始坐标x0 转成 现屏幕坐标x2  a2 * x0 + e2 = x2    e2 = x2 - a2 * x0  代入1式 e2 = x2 - a2 * (x1 - e1) / a1
-        //3.已知scale = a2 / a1  故 e2 = x2 - scale * (x1 - e1)
+        //交互表现为 鼠标当前位置 屏幕坐标不变 进行缩放 即x2 = x1，y2=y1
+        //其它设定：变换前矩阵(a1,0,0,d1,e1,f1)   变换矩阵(a,0,0,d,e,f)  变换后矩阵(a2,0,0,d2,e2,f2)
+        //scale已通过滚轮变化，换算得到，且a=d=scale，求e和f
+        //1.将原屏幕坐标 x1 转成 地理坐标 x0 = (x1 - e1) / a1
+        //2.地理坐标x0 转成 现屏幕坐标x2  a2 * x0 + e2 = x2 e2 = x2 - a2 * x0 代入1式 e2 = x2 - a2 * (x1 - e1) / a1
+        //3.已知scale = a2 / a1 故 e2 = x2 - scale * (x1 - e1)
         //4.另矩阵变换 a1 * e + e1 = e2
-        //5.联立3和4  求得 e = (x2 - scale * (x1 - e1) - e1) / a1
+        //5.联立3和4 求得 e = (x2 - scale * (x1 - e1) - e1) / a1
         const matrix = this._ctx.getTransform();
         const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
         const e = (x2 - scale * (x1 - e1) - e1) / a1;
@@ -334,47 +344,73 @@ export class Map extends Subject {
         this.redraw();
     }
     _onTouchStart(event) {
-        if (event.touches.length > 1) { // if multiple touches (pinch zooming)
+        if (event.touches.length == 2) { // if multiple touches (pinch zooming)
             let diffX = event.touches[0].clientX - event.touches[1].clientX;
             let diffY = event.touches[0].clientY - event.touches[1].clientY;
             this._touch.finger_dist = Math.sqrt(diffX * diffX + diffY * diffY); // Save current finger distance
+            this._touch.dragging = false;
+            this._touch.zooming = true;
+            console.log("zoom start(cancel drag)");
         } // Else just moving around
-        this._touch.mouse.x = event.touches[0].clientX; // Save finger position
-        this._touch.mouse.y = event.touches[0].clientY; //
+        else if (event.touches.length == 1) {
+            this._onMouseDown({ x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY });
+            this._touch.dragging = true;
+            console.log("drag start");
+        }
     }
     _onTouchMove(event) {
         event.preventDefault(); // Stop the window from moving
-        if (event.touches.length > 1) { // If pinch-zooming
+        if (event.touches.length == 2 && this._touch.zooming) { // If pinch-zooming
             let diffX = event.touches[0].clientX - event.touches[1].clientX;
             let diffY = event.touches[0].clientY - event.touches[1].clientY;
             let new_finger_dist = Math.sqrt(diffX * diffX + diffY * diffY); // Get current distance between fingers
-            let scale = Math.abs(new_finger_dist / this._touch.finger_dist); // Zoom is proportional to change
-            let zoom = Math.round(Math.log(scale));
+            //let scale = Math.abs(new_finger_dist / this._touch.finger_dist); // Zoom is proportional to change
+            /*let zoom = Math.round(Math.log(scale));
             if (zoom > 0) {
                 // 放大
                 zoom = this._zoom + zoom >= 20 ? 20 - this._zoom : zoom;
-            }
-            else if (zoom < 0) {
+            } else if (zoom < 0) {
                 // 缩小
-                zoom = this._zoom + zoom <= 3 ? 3 - this.zoom : zoom;
+                zoom = this._zoom + zoom <= 3 ? 3 - this._zoom : zoom;
+            }*/
+            let zoom = 0;
+            let sensitivity = 50; //pixel
+            if (new_finger_dist - this._touch.finger_dist > sensitivity) {
+                // 放大
+                zoom = this._zoom + 1 >= 20 ? 20 - this._zoom : 1;
+            }
+            else if (this._touch.finger_dist - new_finger_dist > sensitivity) {
+                // 缩小
+                zoom = this._zoom - 1 <= 3 ? 3 - this._zoom : -1;
+            }
+            else {
+                return;
             }
             if (zoom == 0)
                 return;
-            scale = Math.pow(2, zoom);
+            let scale = Math.pow(2, zoom);
             this._zoom += zoom;
+            console.log("zoom:" + this._zoom + " dist:" + this._touch.finger_dist + "-" + new_finger_dist);
             this._touch.finger_dist = new_finger_dist; // Save current distance for next time
             const matrix = this._ctx.getTransform();
-            const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
+            const a1 = matrix.a, e1 = matrix.e, x1 = (event.touches[0].clientX + event.touches[1].clientX) / 2, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
             const e = (x2 - scale * (x1 - e1) - e1) / a1;
-            const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
+            const d1 = matrix.d, f1 = matrix.f, y1 = (event.touches[0].clientY + event.touches[1].clientY) / 2, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
             const f = (y2 - scale * (y1 - f1) - f1) / d1;
             this._ctx.transform(scale, 0, 0, scale, e, f);
             this.redraw();
         }
     }
     _onTouchEnd(event) {
-        this._touch.mouse.x = event.touches[0].clientX;
-        this._touch.mouse.y = event.touches[0].clientY; // could be down to 1 finger, back to moving image
+        if (this._touch.zooming) {
+            this._touch.zooming = false;
+            console.log("zoom end");
+        }
+        else if (this._touch.dragging) {
+            this._touch.dragging = false;
+            this._onMouseUp({ x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY });
+            console.log("drag end");
+        }
     }
     //show tooltip
     showTooltip(feature, field) {

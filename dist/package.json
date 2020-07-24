@@ -1,6 +1,6 @@
 {
   "name": "green-gis",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "A lite GIS JS API based on Canvas API.",
   "keywords": [
     "GIS",

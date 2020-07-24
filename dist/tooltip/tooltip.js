@@ -15,7 +15,7 @@ export class Tooltip {
         Utility.addClass(this._tooltipText, "green-tooltip-text");
         this._tooltipContainer.appendChild(this._tooltipText);
     }
-    show(text, screenX, screenY) {
+    show(text, screenX, screenY, height) {
         if (typeof text === 'string') {
             this._tooltipText.innerHTML = text;
         }
@@ -31,7 +31,7 @@ export class Tooltip {
         Utility.removeClass(this._tooltipContainer, "green-tooltip-placement-bottom");
         Utility.removeClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
         Utility.removeClass(this._tooltipArrow, "green-tooltip-arrow-placement-bottom");
-        if (screenY < this._tooltipContainer.offsetHeight) {
+        if (screenY < (height || this._tooltipContainer.offsetHeight)) {
             Utility.addClass(this._tooltipContainer, "green-tooltip-placement-bottom");
             Utility.addClass(this._tooltipArrow, "green-tooltip-arrow-placement-bottom");
         }

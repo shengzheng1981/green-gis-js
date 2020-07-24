@@ -72,6 +72,7 @@ export class Point extends Geometry {
                 ctx.lineWidth = symbol.lineWidth;
                 ctx.beginPath(); //Start path
                 //keep size
+                //地理坐标 转回 屏幕坐标
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.arc(this._screenX, this._screenY, symbol.radius, 0, Math.PI * 2, true);
                 ctx.fill();

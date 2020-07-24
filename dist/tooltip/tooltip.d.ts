@@ -4,6 +4,6 @@ export declare class Tooltip {
     private _tooltipArrow;
     private _tooltipText;
     constructor(map: any);
-    show(text: string | HTMLElement, screenX: any, screenY: any): void;
+    show(text: string | HTMLElement, screenX: any, screenY: any, height?: any): void;
     hide(): void;
 }

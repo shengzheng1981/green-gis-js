@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./tooltip.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./basic.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -1543,6 +1543,7 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
                 ctx.lineWidth = symbol.lineWidth;
                 ctx.beginPath(); //Start path
                 //keep size
+                //地理坐标 转回 屏幕坐标
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
                 ctx.arc(this._screenX, this._screenY, symbol.radius, 0, Math.PI * 2, true);
                 ctx.fill();
@@ -2559,12 +2560,9 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
             }
         };
         this._touch = {
-            flag: false,
-            finger_dist: 0,
-            mouse: {
-                x: 0,
-                y: 0
-            }
+            zooming: false,
+            dragging: false,
+            finger_dist: 0
         };
         //地图缩放等级
         this._zoom = 1;
@@ -2613,13 +2611,14 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         //tooltip
         this._tooltip = new _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_8__["Tooltip"](this);
         this._projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_2__["WebMercator"]();
-        this._center = [0, 0];
-        this._zoom = 10;
+        //this._center = [0, 0];
+        //this._zoom = 10;
         //Latlng [-180, 180] [-90, 90]
         //this._ctx.setTransform(256/180 * Math.pow(2, this._zoom - 1), 0, 0, -256/90 * Math.pow(2, this._zoom - 1), this._canvas.width/2, this._canvas.height/2);
-        const bound = this._projection.bound;
+        //const bound: Bound = this._projection.bound;
         //设置初始矩阵，由于地图切片是256*256，Math.pow(2, this._zoom)代表在一定缩放级别下x与y轴的切片数量
-        this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale, 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        //this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale , 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        this.setView([0, 0], 10);
         this._onResize = this._onResize.bind(this);
         window.addEventListener("resize", this._onResize);
     }
@@ -2660,8 +2659,19 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
     //设置投影
     setProjection(projection) {
         this._projection = projection;
+        //const bound: Bound = this._projection.bound;
+        //this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale , 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        //center为经纬度，转化为平面坐标
+        const origin = this._projection.project(this._center);
         const bound = this._projection.bound;
-        this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale, 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
+        //已知：地理坐标origin，转换后屏幕坐标 即canvas的中心 [this._canvas.width / 2, this._canvas.height / 2]
+        //求：平面坐标转换矩阵=Map初始矩阵:  地理坐标——屏幕坐标
+        //解法如下：
+        const a = 256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale;
+        const d = 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale;
+        const e = this._canvas.width / 2 - a * origin[0];
+        const f = this._canvas.height / 2 - d * origin[1];
+        this._ctx.setTransform(a, 0, 0, d, e, f);
     }
     //设置视图级别及视图中心
     setView(center = [0, 0], zoom = 3) {
@@ -2670,8 +2680,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         //center为经纬度，转化为平面坐标
         const origin = this._projection.project(center);
         const bound = this._projection.bound;
-        //已知：matrix 转换前 坐标origin，转换后坐标 即canvas的中心 [this._canvas.width / 2, this._canvas.height / 2]
-        //求：转换矩阵
+        //已知：地理坐标origin，转换后屏幕坐标 即canvas的中心 [this._canvas.width / 2, this._canvas.height / 2]
+        //求：平面坐标转换矩阵=Map初始矩阵:  地理坐标——屏幕坐标
         //解法如下：
         const a = 256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale;
         const d = 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale;
@@ -2846,19 +2856,20 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         }
         else if (zoom < 0) {
             // 缩小
-            zoom = this._zoom + zoom <= 3 ? 3 - this.zoom : zoom;
+            zoom = this._zoom + zoom <= 3 ? 3 - this._zoom : zoom;
         }
         if (zoom == 0)
             return;
         this._zoom += zoom;
         scale = Math.pow(2, zoom);
-        //交互表现为 鼠标当前位置 屏幕坐标不变 进行缩放 即x2 = x1
-        //第一种方案，坐标系不变，变坐标值
-        //1.将原屏幕坐标 x1 转成 初始坐标 x0 = (x1 - e1) / a1  初始矩阵 (1,0,0,1,0,0)
-        //2.初始坐标x0 转成 现屏幕坐标x2  a2 * x0 + e2 = x2    e2 = x2 - a2 * x0  代入1式 e2 = x2 - a2 * (x1 - e1) / a1
-        //3.已知scale = a2 / a1  故 e2 = x2 - scale * (x1 - e1)
+        //交互表现为 鼠标当前位置 屏幕坐标不变 进行缩放 即x2 = x1，y2=y1
+        //其它设定：变换前矩阵(a1,0,0,d1,e1,f1)   变换矩阵(a,0,0,d,e,f)  变换后矩阵(a2,0,0,d2,e2,f2)
+        //scale已通过滚轮变化，换算得到，且a=d=scale，求e和f
+        //1.将原屏幕坐标 x1 转成 地理坐标 x0 = (x1 - e1) / a1
+        //2.地理坐标x0 转成 现屏幕坐标x2  a2 * x0 + e2 = x2 e2 = x2 - a2 * x0 代入1式 e2 = x2 - a2 * (x1 - e1) / a1
+        //3.已知scale = a2 / a1 故 e2 = x2 - scale * (x1 - e1)
         //4.另矩阵变换 a1 * e + e1 = e2
-        //5.联立3和4  求得 e = (x2 - scale * (x1 - e1) - e1) / a1
+        //5.联立3和4 求得 e = (x2 - scale * (x1 - e1) - e1) / a1
         const matrix = this._ctx.getTransform();
         const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
         const e = (x2 - scale * (x1 - e1) - e1) / a1;
@@ -2868,47 +2879,73 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this.redraw();
     }
     _onTouchStart(event) {
-        if (event.touches.length > 1) { // if multiple touches (pinch zooming)
+        if (event.touches.length == 2) { // if multiple touches (pinch zooming)
             let diffX = event.touches[0].clientX - event.touches[1].clientX;
             let diffY = event.touches[0].clientY - event.touches[1].clientY;
             this._touch.finger_dist = Math.sqrt(diffX * diffX + diffY * diffY); // Save current finger distance
+            this._touch.dragging = false;
+            this._touch.zooming = true;
+            console.log("zoom start(cancel drag)");
         } // Else just moving around
-        this._touch.mouse.x = event.touches[0].clientX; // Save finger position
-        this._touch.mouse.y = event.touches[0].clientY; //
+        else if (event.touches.length == 1) {
+            this._onMouseDown({ x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY });
+            this._touch.dragging = true;
+            console.log("drag start");
+        }
     }
     _onTouchMove(event) {
         event.preventDefault(); // Stop the window from moving
-        if (event.touches.length > 1) { // If pinch-zooming
+        if (event.touches.length == 2 && this._touch.zooming) { // If pinch-zooming
             let diffX = event.touches[0].clientX - event.touches[1].clientX;
             let diffY = event.touches[0].clientY - event.touches[1].clientY;
             let new_finger_dist = Math.sqrt(diffX * diffX + diffY * diffY); // Get current distance between fingers
-            let scale = Math.abs(new_finger_dist / this._touch.finger_dist); // Zoom is proportional to change
-            let zoom = Math.round(Math.log(scale));
+            //let scale = Math.abs(new_finger_dist / this._touch.finger_dist); // Zoom is proportional to change
+            /*let zoom = Math.round(Math.log(scale));
             if (zoom > 0) {
                 // 放大
                 zoom = this._zoom + zoom >= 20 ? 20 - this._zoom : zoom;
-            }
-            else if (zoom < 0) {
+            } else if (zoom < 0) {
                 // 缩小
-                zoom = this._zoom + zoom <= 3 ? 3 - this.zoom : zoom;
+                zoom = this._zoom + zoom <= 3 ? 3 - this._zoom : zoom;
+            }*/
+            let zoom = 0;
+            let sensitivity = 50; //pixel
+            if (new_finger_dist - this._touch.finger_dist > sensitivity) {
+                // 放大
+                zoom = this._zoom + 1 >= 20 ? 20 - this._zoom : 1;
+            }
+            else if (this._touch.finger_dist - new_finger_dist > sensitivity) {
+                // 缩小
+                zoom = this._zoom - 1 <= 3 ? 3 - this._zoom : -1;
+            }
+            else {
+                return;
             }
             if (zoom == 0)
                 return;
-            scale = Math.pow(2, zoom);
+            let scale = Math.pow(2, zoom);
             this._zoom += zoom;
+            console.log("zoom:" + this._zoom + " dist:" + this._touch.finger_dist + "-" + new_finger_dist);
             this._touch.finger_dist = new_finger_dist; // Save current distance for next time
             const matrix = this._ctx.getTransform();
-            const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
+            const a1 = matrix.a, e1 = matrix.e, x1 = (event.touches[0].clientX + event.touches[1].clientX) / 2, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
             const e = (x2 - scale * (x1 - e1) - e1) / a1;
-            const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
+            const d1 = matrix.d, f1 = matrix.f, y1 = (event.touches[0].clientY + event.touches[1].clientY) / 2, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
             const f = (y2 - scale * (y1 - f1) - f1) / d1;
             this._ctx.transform(scale, 0, 0, scale, e, f);
             this.redraw();
         }
     }
     _onTouchEnd(event) {
-        this._touch.mouse.x = event.touches[0].clientX;
-        this._touch.mouse.y = event.touches[0].clientY; // could be down to 1 finger, back to moving image
+        if (this._touch.zooming) {
+            this._touch.zooming = false;
+            console.log("zoom end");
+        }
+        else if (this._touch.dragging) {
+            this._touch.dragging = false;
+            this._onMouseUp({ x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY });
+            console.log("drag end");
+        }
     }
     //show tooltip
     showTooltip(feature, field) {
@@ -3300,6 +3337,12 @@ class CategoryRenderer {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ClassRendererItem", function() { return ClassRendererItem; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ClassRenderer", function() { return ClassRenderer; });
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../util/color */ "../dist/util/color.js");
+
+
+
 class ClassRendererItem {
 }
 class ClassRenderer {
@@ -3312,10 +3355,49 @@ class ClassRenderer {
     get items() {
         return this._items;
     }
+    //均分
     generate(featureClass, field, breaks) {
         this._field = field;
         this._items = [];
-        //TODO auto class break
+        const stat = featureClass.features.map(feature => feature.properties[field.name]).reduce((stat, cur) => {
+            stat.max = Math.max(cur, stat.max);
+            stat.min = Math.min(cur, stat.max);
+            return stat;
+        }, { min: 0, max: 0 });
+        for (let i = 0; i < breaks; i++) {
+            const item = new ClassRendererItem();
+            switch (featureClass.type) {
+                case _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Point:
+                    const symbol1 = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+                    symbol1.fillStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
+                    symbol1.strokeStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
+                    item.symbol = symbol1;
+                    item.low = stat.min + i * (stat.max - stat.min) / breaks;
+                    item.high = stat.min + (i + 1) * (stat.max - stat.min) / breaks;
+                    item.label = item.low + " - " + item.high;
+                    this._items.push(item);
+                    break;
+                case _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Polyline:
+                    const symbol2 = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimpleLineSymbol"]();
+                    symbol2.strokeStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
+                    item.symbol = symbol2;
+                    item.low = stat.min + i * (stat.max - stat.min) / breaks;
+                    item.high = stat.min + (i + 1) * (stat.max - stat.min) / breaks;
+                    item.label = item.low + " - " + item.high;
+                    this._items.push(item);
+                    break;
+                case _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__["GeometryType"].Polygon:
+                    const symbol3 = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimpleFillSymbol"]();
+                    symbol3.fillStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
+                    symbol3.strokeStyle = _util_color__WEBPACK_IMPORTED_MODULE_2__["Color"].random().toString();
+                    item.symbol = symbol3;
+                    item.low = stat.min + i * (stat.max - stat.min) / breaks;
+                    item.high = stat.min + (i + 1) * (stat.max - stat.min) / breaks;
+                    item.label = item.low + " - " + item.high;
+                    this._items.push(item);
+                    break;
+            }
+        }
     }
 }
 
@@ -3552,7 +3634,7 @@ class Tooltip {
         _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipText, "green-tooltip-text");
         this._tooltipContainer.appendChild(this._tooltipText);
     }
-    show(text, screenX, screenY) {
+    show(text, screenX, screenY, height) {
         if (typeof text === 'string') {
             this._tooltipText.innerHTML = text;
         }
@@ -3568,7 +3650,7 @@ class Tooltip {
         _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].removeClass(this._tooltipContainer, "green-tooltip-placement-bottom");
         _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].removeClass(this._tooltipArrow, "green-tooltip-arrow-placement-top");
         _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].removeClass(this._tooltipArrow, "green-tooltip-arrow-placement-bottom");
-        if (screenY < this._tooltipContainer.offsetHeight) {
+        if (screenY < (height || this._tooltipContainer.offsetHeight)) {
             _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipContainer, "green-tooltip-placement-bottom");
             _util_utility__WEBPACK_IMPORTED_MODULE_0__["Utility"].addClass(this._tooltipArrow, "green-tooltip-arrow-placement-bottom");
         }
@@ -3936,16 +4018,17 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 
 /***/ }),
 
-/***/ "./tooltip.js":
-/*!********************!*\
-  !*** ./tooltip.js ***!
-  \********************/
+/***/ "./basic.js":
+/*!******************!*\
+  !*** ./basic.js ***!
+  \******************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
+
 
 
 window.load = () => {
@@ -3970,45 +4053,20 @@ window.load = () => {
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
         amap.setZoomAndCenter(event.zoom, event.center);
-        document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
-        document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
-        document.getElementById("zoom").value = event.zoom;
-        document.getElementById("x1").value = Math.round(event.extent.xmin * 1000)/1000;
-        document.getElementById("y1").value = Math.round(event.extent.ymin * 1000)/1000;
-        document.getElementById("x2").value = Math.round(event.extent.xmax * 1000)/1000;
-        document.getElementById("y2").value = Math.round(event.extent.ymax * 1000)/1000;
-        document.getElementById("a").value = Math.round(event.matrix.a * 1000)/1000;
-        document.getElementById("d").value = Math.round(event.matrix.d * 1000)/1000;
-        document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
-        document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-
-    var req = new XMLHttpRequest();
-    req.onload = (event) => {
-        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
-        featureClass.loadGeoJSON(JSON.parse(req.responseText));
-        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-        featureLayer.featureClass = featureClass;
-        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field.name = "name";
-        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
-        renderer.generate(featureClass, field);
-        featureLayer.renderer = renderer;
-        featureLayer.zoom = [5, 20];
-        featureLayer.on("mouseover", (event) => {
-            map.showTooltip(event.feature, field);
-        });
-        map.addLayer(featureLayer);
-
-        map.setView([107.411, 29.89], 7);
-    };
-    req.open("GET", "assets/geojson/chongqing.json", true);
-    req.send(null);
-
+    map.setView([116.397411,39.909186], 12);
+    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
+    marker.width = 32;
+    marker.height = 32;
+    marker.offsetX = -16;
+    marker.offsetY = -32;
+    marker.url = "assets/img/marker.svg";
+    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
+    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, marker);
+    map.addGraphic(graphic);
 }
 
+//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 
