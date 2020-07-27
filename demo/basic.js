@@ -15,16 +15,16 @@ window.load = () => {
         scrollWheel: false,
         expandZoomRange: true,
         zooms: [1, 20],
-        mapStyle: 'normal',
+        mapStyle: 'amap://styles/normal',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
     });
 
     const map = new Map("foo");
     map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center);
+        amap.setZoomAndCenter(event.zoom, event.center, false);
     });
-    map.setView([116.397411,39.909186], 12);
+    map.setView([116.397411,39.909186], 12.5);
     const marker = new SimpleMarkerSymbol();
     marker.width = 32;
     marker.height = 32;

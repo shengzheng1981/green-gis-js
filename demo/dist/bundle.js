@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./basic.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./feature-layer.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -2834,11 +2834,10 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
     }
     _onWheel(event) {
         event.preventDefault();
+        //级别缩放
         const sensitivity = 5;
         if (Math.abs(event.deltaY) <= sensitivity)
             return;
-        //const sensitivity = 100;
-        //const delta = event.deltaY / sensitivity;
         const delta = event.deltaY < 0 ? -1 : 1;
         let scale = 1;
         if (delta < 0) {
@@ -2850,6 +2849,13 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
             scale /= delta * 2;
         }
         let zoom = Math.round(Math.log(scale));
+        //无级缩放
+        /*const sensitivity = 100;
+        const delta = event.deltaY / sensitivity;
+        if (Math.abs(delta) <= 0.05) return;
+        let scale = 1;
+        let zoom = -delta;*/
+        //------------------------------------------------------------
         if (zoom > 0) {
             // 放大
             zoom = this._zoom + zoom >= 20 ? 20 - this._zoom : zoom;
@@ -2885,12 +2891,12 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
             this._touch.finger_dist = Math.sqrt(diffX * diffX + diffY * diffY); // Save current finger distance
             this._touch.dragging = false;
             this._touch.zooming = true;
-            console.log("zoom start(cancel drag)");
+            //console.log("zoom start(cancel drag)");
         } // Else just moving around
         else if (event.touches.length == 1) {
             this._onMouseDown({ x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY });
             this._touch.dragging = true;
-            console.log("drag start");
+            //console.log("drag start");
         }
     }
     _onTouchMove(event) {
@@ -2925,7 +2931,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
                 return;
             let scale = Math.pow(2, zoom);
             this._zoom += zoom;
-            console.log("zoom:" + this._zoom + " dist:" + this._touch.finger_dist + "-" + new_finger_dist);
+            //console.log("zoom:" + this._zoom + " dist:" + this._touch.finger_dist + "-" + new_finger_dist);
             this._touch.finger_dist = new_finger_dist; // Save current distance for next time
             const matrix = this._ctx.getTransform();
             const a1 = matrix.a, e1 = matrix.e, x1 = (event.touches[0].clientX + event.touches[1].clientX) / 2, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
@@ -2939,12 +2945,12 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
     _onTouchEnd(event) {
         if (this._touch.zooming) {
             this._touch.zooming = false;
-            console.log("zoom end");
+            //console.log("zoom end");
         }
         else if (this._touch.dragging) {
             this._touch.dragging = false;
             this._onMouseUp({ x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY });
-            console.log("drag end");
+            //console.log("drag end");
         }
     }
     //show tooltip
@@ -4018,10 +4024,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 
 /***/ }),
 
-/***/ "./basic.js":
-/*!******************!*\
-  !*** ./basic.js ***!
-  \******************/
+/***/ "./feature-layer.js":
+/*!**************************!*\
+  !*** ./feature-layer.js ***!
+  \**************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -4030,43 +4036,64 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
+var AMap = window.AMap;
 
 window.load = () => {
+
     const amap = new AMap.Map("amap", {
-        fadeOnZoom: false,
         navigationMode: 'classic',
-        optimizePanAnimation: false,
-        animateEnable: false,
-        dragEnable: false,
-        zoomEnable: false,
-        resizeEnable: true,
-        doubleClickZoom: false,
-        keyboardEnable: false,
-        scrollWheel: false,
-        expandZoomRange: true,
         zooms: [1, 20],
-        mapStyle: 'normal',
+        mapStyle: 'amap://styles/normal',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
     });
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center);
+        amap.setZoomAndCenter(event.zoom, event.center, true);
+        document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
+        document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
+        document.getElementById("zoom").value = event.zoom;
+        document.getElementById("x1").value = Math.round(event.extent.xmin * 1000)/1000;
+        document.getElementById("y1").value = Math.round(event.extent.ymin * 1000)/1000;
+        document.getElementById("x2").value = Math.round(event.extent.xmax * 1000)/1000;
+        document.getElementById("y2").value = Math.round(event.extent.ymax * 1000)/1000;
+        document.getElementById("a").value = Math.round(event.matrix.a * 1000)/1000;
+        document.getElementById("d").value = Math.round(event.matrix.d * 1000)/1000;
+        document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
+        document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
+
+    //画经纬线交点
+    const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
+    featureLayer.featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"](_dist__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Point);
+    map.addLayer(featureLayer);
+    const pointSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+    pointSymbol.radius = 5;
+    pointSymbol.fillStyle = "#de77ae";
+    pointSymbol.strokeStyle = "#c51b7d";
+    const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
+    renderer.symbol = pointSymbol;
+    featureLayer.renderer = renderer;
+
+    const pointSymbol2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+    pointSymbol2.radius = 5;
+    pointSymbol2.fillStyle = "#00ffff88";
+    pointSymbol2.strokeStyle = "#00ffff";
+    for (let i = -180; i <= 180; i = i + 10){
+        for (let j = -90; j <= 90; j = j + 10){
+            const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](i, j);
+            const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, pointSymbol2);
+            const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {});
+            map.addGraphic(graphic);
+            featureLayer.featureClass.addFeature(feature);
+        }
+    }
+
     map.setView([116.397411,39.909186], 12);
-    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
-    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, marker);
-    map.addGraphic(graphic);
+
 }
 
-//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 

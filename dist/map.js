@@ -299,11 +299,10 @@ export class Map extends Subject {
     }
     _onWheel(event) {
         event.preventDefault();
+        //级别缩放
         const sensitivity = 5;
         if (Math.abs(event.deltaY) <= sensitivity)
             return;
-        //const sensitivity = 100;
-        //const delta = event.deltaY / sensitivity;
         const delta = event.deltaY < 0 ? -1 : 1;
         let scale = 1;
         if (delta < 0) {
@@ -315,6 +314,13 @@ export class Map extends Subject {
             scale /= delta * 2;
         }
         let zoom = Math.round(Math.log(scale));
+        //无级缩放
+        /*const sensitivity = 100;
+        const delta = event.deltaY / sensitivity;
+        if (Math.abs(delta) <= 0.05) return;
+        let scale = 1;
+        let zoom = -delta;*/
+        //------------------------------------------------------------
         if (zoom > 0) {
             // 放大
             zoom = this._zoom + zoom >= 20 ? 20 - this._zoom : zoom;
@@ -350,12 +356,12 @@ export class Map extends Subject {
             this._touch.finger_dist = Math.sqrt(diffX * diffX + diffY * diffY); // Save current finger distance
             this._touch.dragging = false;
             this._touch.zooming = true;
-            console.log("zoom start(cancel drag)");
+            //console.log("zoom start(cancel drag)");
         } // Else just moving around
         else if (event.touches.length == 1) {
             this._onMouseDown({ x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY });
             this._touch.dragging = true;
-            console.log("drag start");
+            //console.log("drag start");
         }
     }
     _onTouchMove(event) {
@@ -390,7 +396,7 @@ export class Map extends Subject {
                 return;
             let scale = Math.pow(2, zoom);
             this._zoom += zoom;
-            console.log("zoom:" + this._zoom + " dist:" + this._touch.finger_dist + "-" + new_finger_dist);
+            //console.log("zoom:" + this._zoom + " dist:" + this._touch.finger_dist + "-" + new_finger_dist);
             this._touch.finger_dist = new_finger_dist; // Save current distance for next time
             const matrix = this._ctx.getTransform();
             const a1 = matrix.a, e1 = matrix.e, x1 = (event.touches[0].clientX + event.touches[1].clientX) / 2, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
@@ -404,12 +410,12 @@ export class Map extends Subject {
     _onTouchEnd(event) {
         if (this._touch.zooming) {
             this._touch.zooming = false;
-            console.log("zoom end");
+            //console.log("zoom end");
         }
         else if (this._touch.dragging) {
             this._touch.dragging = false;
             this._onMouseUp({ x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY });
-            console.log("drag end");
+            //console.log("drag end");
         }
     }
     //show tooltip

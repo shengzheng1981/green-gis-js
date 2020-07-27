@@ -5,26 +5,16 @@ var AMap = window.AMap;
 window.load = () => {
 
     const amap = new AMap.Map("amap", {
-        fadeOnZoom: false,
         navigationMode: 'classic',
-        optimizePanAnimation: false,
-        animateEnable: false,
-        dragEnable: false,
-        zoomEnable: false,
-        resizeEnable: true,
-        doubleClickZoom: false,
-        keyboardEnable: false,
-        scrollWheel: false,
-        expandZoomRange: true,
         zooms: [1, 20],
-        mapStyle: 'normal',
+        mapStyle: 'amap://styles/normal',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
     });
 
     const map = new Map("foo");
     map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center);
+        amap.setZoomAndCenter(event.zoom, event.center, true);
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;

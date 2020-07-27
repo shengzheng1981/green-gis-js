@@ -348,10 +348,9 @@ export class Map extends Subject{
 
     _onWheel(event) {
         event.preventDefault();
+        //级别缩放
         const sensitivity = 5;
         if (Math.abs(event.deltaY) <= sensitivity) return;
-        //const sensitivity = 100;
-        //const delta = event.deltaY / sensitivity;
         const delta = event.deltaY < 0 ? -1 : 1;
         let scale = 1;
         if (delta < 0) {
@@ -363,6 +362,13 @@ export class Map extends Subject{
             scale /= delta * 2;
         }
         let zoom = Math.round(Math.log(scale));
+        //无级缩放
+        /*const sensitivity = 100;
+        const delta = event.deltaY / sensitivity;
+        if (Math.abs(delta) <= 0.05) return;
+        let scale = 1;
+        let zoom = -delta;*/
+        //------------------------------------------------------------
         if (zoom > 0) {
             // 放大
             zoom = this._zoom + zoom >= 20 ? 20 - this._zoom : zoom;
