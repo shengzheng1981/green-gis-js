@@ -1085,38 +1085,37 @@ class MultiplePoint extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             const matrix = ctx.getTransform();
             this._screen = [];
             this._symbol = symbol;
-            if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
-                const marker = symbol;
-                if (!marker.loaded)
-                    yield marker.load();
-            }
+            /*if (symbol instanceof SimpleMarkerSymbol) {
+                const marker: SimpleMarkerSymbol = symbol;
+                if (!marker.loaded) await marker.load();
+            }*/
             this._coordinates.forEach((point) => {
                 const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
                 this._screen.push([screenX, screenY]);
-                if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimplePointSymbol"]) {
+                this._symbol.draw(ctx, screenX, screenY);
+                /*if (symbol instanceof SimplePointSymbol) {
                     ctx.save();
-                    ctx.strokeStyle = symbol.strokeStyle;
-                    ctx.fillStyle = symbol.fillStyle;
-                    ctx.lineWidth = symbol.lineWidth;
+                    ctx.strokeStyle = (symbol as SimplePointSymbol).strokeStyle;
+                    ctx.fillStyle = (symbol as SimplePointSymbol).fillStyle;
+                    ctx.lineWidth = (symbol as SimplePointSymbol).lineWidth;
                     ctx.beginPath(); //Start path
                     //keep size
-                    ctx.setTransform(1, 0, 0, 1, 0, 0);
-                    ctx.arc(screenX, screenY, symbol.radius, 0, Math.PI * 2, true);
+                    ctx.setTransform(1,0,0,1,0,0);
+                    ctx.arc(screenX, screenY, (symbol as SimplePointSymbol).radius, 0, Math.PI * 2, true);
                     ctx.fill();
                     ctx.stroke();
                     ctx.restore();
-                }
-                else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
-                    const marker = symbol;
+                } else if (symbol instanceof SimpleMarkerSymbol) {
+                    const marker: SimpleMarkerSymbol = symbol;
                     if (marker.icon) {
                         ctx.save();
-                        const matrix = ctx.getTransform();
+                        const matrix = (ctx as any).getTransform();
                         //keep size
-                        ctx.setTransform(1, 0, 0, 1, 0, 0);
+                        ctx.setTransform(1,0,0,1,0,0);
                         ctx.drawImage(marker.icon, screenX + marker.offsetX, screenY + marker.offsetY, marker.width, marker.height);
                         ctx.restore();
                     }
-                }
+                }*/
             });
         });
     }
@@ -1536,70 +1535,66 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             this._screenX = (matrix.a * this._x + matrix.e);
             this._screenY = (matrix.d * this._y + matrix.f);
             this._symbol = symbol;
-            if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimplePointSymbol"]) {
+            this._symbol.draw(ctx, this._screenX, this._screenY);
+            /*if (symbol instanceof SimplePointSymbol) {
                 ctx.save();
-                ctx.strokeStyle = symbol.strokeStyle;
-                ctx.fillStyle = symbol.fillStyle;
-                ctx.lineWidth = symbol.lineWidth;
+                ctx.strokeStyle = (symbol as SimplePointSymbol).strokeStyle;
+                ctx.fillStyle = (symbol as SimplePointSymbol).fillStyle;
+                ctx.lineWidth = (symbol as SimplePointSymbol).lineWidth;
                 ctx.beginPath(); //Start path
                 //keep size
                 //地理坐标 转回 屏幕坐标
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.arc(this._screenX, this._screenY, symbol.radius, 0, Math.PI * 2, true);
+                ctx.setTransform(1,0,0,1,0,0);
+                ctx.arc(this._screenX, this._screenY, (symbol as SimplePointSymbol).radius, 0, Math.PI * 2, true);
                 ctx.fill();
                 ctx.stroke();
                 ctx.restore();
-            }
-            else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
-                const marker = symbol;
-                if (!marker.loaded)
-                    yield marker.load();
+            } else if (symbol instanceof SimpleMarkerSymbol) {
+                const marker: SimpleMarkerSymbol = symbol;
+                if (!marker.loaded) await marker.load();
                 if (marker.icon) {
                     ctx.save();
-                    const matrix = ctx.getTransform();
+                    const matrix = (ctx as any).getTransform();
                     //keep size
-                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                    ctx.setTransform(1,0,0,1,0,0);
                     ctx.drawImage(marker.icon, this._screenX + marker.offsetX, this._screenY + marker.offsetY, marker.width, marker.height);
                     ctx.restore();
                 }
-            }
-            else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["LetterSymbol"]) {
-                const letter = symbol;
+            } else if (symbol instanceof LetterSymbol) {
+                const letter: LetterSymbol = symbol;
                 ctx.save();
                 ctx.strokeStyle = letter.strokeStyle;
                 ctx.fillStyle = letter.fillStyle;
                 ctx.lineWidth = letter.lineWidth;
                 ctx.beginPath(); //Start path
                 //keep size
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.setTransform(1,0,0,1,0,0);
                 ctx.arc(this._screenX, this._screenY, letter.radius, 0, Math.PI * 2, true);
                 ctx.fill();
                 ctx.stroke();
                 ctx.textBaseline = "middle";
                 ctx.textAlign = "center";
                 ctx.fillStyle = letter.fontColor;
-                ctx.font = letter.fontSize + "px/1 " + letter.fontFamily + " " + letter.fontWeight;
+                ctx.font =  letter.fontSize + "px/1 " + letter.fontFamily +  " " + letter.fontWeight;
                 ctx.fillText(letter.letter, this._screenX, this._screenY);
                 ctx.restore();
-            }
-            else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["VertexSymbol"]) {
+            } else if (symbol instanceof VertexSymbol) {
                 ctx.save();
-                ctx.strokeStyle = symbol.strokeStyle;
-                ctx.fillStyle = symbol.fillStyle;
-                ctx.lineWidth = symbol.lineWidth;
+                ctx.strokeStyle = (symbol as VertexSymbol).strokeStyle;
+                ctx.fillStyle = (symbol as VertexSymbol).fillStyle;
+                ctx.lineWidth = (symbol as VertexSymbol).lineWidth;
                 ctx.beginPath(); //Start path
                 //keep size
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                const size = symbol.size;
-                ctx.rect(this._screenX - size / 2, this._screenY - size / 2, size, size);
+                ctx.setTransform(1,0,0,1,0,0);
+                const size = (symbol as VertexSymbol).size;
+                ctx.rect(this._screenX - size/2, this._screenY - size/2, size, size);
                 ctx.fill();
                 ctx.stroke();
                 ctx.restore();
-            }
-            else if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["ClusterSymbol"]) {
-                const cluster = symbol;
+            } else if (symbol instanceof ClusterSymbol) {
+                const cluster: ClusterSymbol = symbol;
                 ctx.save();
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.setTransform(1,0,0,1,0,0);
                 ctx.strokeStyle = cluster.strokeStyle;
                 ctx.fillStyle = cluster.outerFillStyle;
                 ctx.lineWidth = cluster.lineWidth;
@@ -1617,26 +1612,24 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
                 ctx.textBaseline = "middle";
                 ctx.textAlign = "center";
                 ctx.fillStyle = cluster.fontColor;
-                ctx.font = cluster.fontSize + "px/1 " + cluster.fontFamily + " " + cluster.fontWeight;
+                ctx.font =  cluster.fontSize + "px/1 " + cluster.fontFamily +  " " + cluster.fontWeight;
                 ctx.fillText(cluster.text, this._screenX, this._screenY);
                 ctx.restore();
-            }
+            }*/
         });
     }
     ;
     contain(screenX, screenY) {
-        if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimplePointSymbol"]) {
-            return Math.sqrt((this._screenX - screenX) * (this._screenX - screenX) + (this._screenY - screenY) * (this._screenY - screenY)) <= this._symbol.radius;
-        }
-        else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["SimpleMarkerSymbol"]) {
-            return screenX >= (this._screenX + this._symbol.offsetX) && screenX <= (this._screenX + this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY + this._symbol.offsetY) && screenY <= (this._screenY + this._symbol.offsetY + this._symbol.height);
-        }
-        else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["LetterSymbol"]) {
-            return Math.sqrt((this._screenX - screenX) * (this._screenX - screenX) + (this._screenY - screenY) * (this._screenY - screenY)) <= this._symbol.radius;
-        }
-        else if (this._symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["VertexSymbol"]) {
-            return screenX >= (this._screenX - this._symbol.size / 2) && screenX <= (this._screenX + this._symbol.size / 2) && screenY >= (this._screenY - this._symbol.size / 2) && screenY <= (this._screenY + this._symbol.size / 2);
-        }
+        /*if (this._symbol instanceof SimplePointSymbol) {
+            return Math.sqrt((this._screenX - screenX) *  (this._screenX - screenX) +  (this._screenY - screenY) *  (this._screenY - screenY)) <= (this._symbol as SimplePointSymbol).radius;
+        } else if (this._symbol instanceof SimpleMarkerSymbol) {
+            return screenX >= (this._screenX + this._symbol.offsetX) &&  screenX <= (this._screenX + this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY + this._symbol.offsetY) &&  screenY <= (this._screenY + this._symbol.offsetY + this._symbol.height);
+        } else if (this._symbol instanceof LetterSymbol) {
+            return Math.sqrt((this._screenX - screenX) *  (this._screenX - screenX) +  (this._screenY - screenY) *  (this._screenY - screenY)) <= (this._symbol as LetterSymbol).radius;
+        } else if (this._symbol instanceof VertexSymbol) {
+            return screenX >= (this._screenX - this._symbol.size / 2) &&  screenX <= (this._screenX + this._symbol.size / 2) && screenY >= (this._screenY - this._symbol.size / 2) &&  screenY <= (this._screenY + this._symbol.size / 2);
+        }*/
+        return this._symbol.contain(this._screenX, this._screenY, screenX, screenY);
     }
     getCenter(type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"]()) {
         if (!this._projected)
@@ -1730,25 +1723,31 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             this.project(projection);
         if (!extent.intersect(this._bound))
             return;
-        ctx.save();
-        ctx.strokeStyle = symbol.strokeStyle;
-        ctx.fillStyle = symbol.fillStyle;
-        ctx.lineWidth = symbol.lineWidth;
         const matrix = ctx.getTransform();
+        this._screen = this._coordinates.map(ring => {
+            return ring.map((point, index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                return [screenX, screenY];
+            });
+        });
+        symbol.draw(ctx, this._screen);
+        /*ctx.save();
+        ctx.strokeStyle = (symbol as SimpleFillSymbol).strokeStyle;
+        ctx.fillStyle = (symbol as SimpleFillSymbol).fillStyle;
+        ctx.lineWidth = (symbol as SimpleFillSymbol).lineWidth;
         //keep lineWidth
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.setTransform(1,0,0,1,0,0);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         this._screen = [];
         ctx.beginPath();
-        this._coordinates.forEach(ring => {
+        this._coordinates.forEach( ring => {
             const temp = [];
             this._screen.push(temp);
-            ring.forEach((point, index) => {
+            ring.forEach((point: any,index) => {
                 const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-                if (index === 0) {
+                if (index === 0){
                     ctx.moveTo(screenX, screenY);
-                }
-                else {
+                } else {
                     ctx.lineTo(screenX, screenY);
                 }
                 temp.push([screenX, screenY]);
@@ -1757,7 +1756,7 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
         ctx.closePath();
         ctx.fill("evenodd");
         ctx.stroke();
-        ctx.restore();
+        ctx.restore();*/
     }
     contain(screenX, screenY) {
         const first = this._screen[0];
@@ -1888,40 +1887,44 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             this.project(projection);
         if (!extent.intersect(this._bound))
             return;
-        ctx.save();
-        ctx.strokeStyle = symbol.strokeStyle;
-        ctx.lineWidth = symbol.lineWidth;
         this._tolerance = Polyline.TOLERANCE + symbol.lineWidth;
         const matrix = ctx.getTransform();
-        //keep lineWidth
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._screen = this._coordinates.map((point, index) => {
+            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+            return [screenX, screenY];
+        });
+        symbol.draw(ctx, this._screen);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
+        /*ctx.save();
+        ctx.strokeStyle = (symbol as SimpleLineSymbol).strokeStyle;
+        ctx.lineWidth = (symbol as SimpleLineSymbol).lineWidth;
+        //keep lineWidth
+        ctx.setTransform(1,0,0,1,0,0);
         this._screen = [];
         ctx.beginPath();
-        this._coordinates.forEach((point, index) => {
+        this._coordinates.forEach( (point: any,index) => {
             const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            if (index === 0) {
+            if (index === 0){
                 ctx.moveTo(screenX, screenY);
-            }
-            else {
+            } else {
                 ctx.lineTo(screenX, screenY);
             }
             this._screen.push([screenX, screenY]);
         });
         ctx.stroke();
-        if (symbol instanceof _symbol_symbol__WEBPACK_IMPORTED_MODULE_2__["ArrowSymbol"]) {
-            const arrow = symbol;
-            this._screen.reduce((prev, cur) => {
+        if (symbol instanceof ArrowSymbol) {
+            const arrow: ArrowSymbol = symbol;
+            this._screen.reduce( (prev, cur) => {
                 if (prev) {
                     const length = Math.sqrt((cur[0] - prev[0]) * (cur[0] - prev[0]) + (cur[1] - prev[1]) * (cur[1] - prev[1]));
                     if (length >= arrow.minLength) {
                         //中点 即箭头
-                        const [middleX, middleY] = [(prev[0] + cur[0]) / 2, (prev[1] + cur[1]) / 2];
+                        const [middleX, middleY] = [(prev[0] + cur[0])/2, (prev[1] + cur[1])/2];
                         //箭尾垂线的垂足
                         const [footX, footY] = this._getPointAlongLine([middleX, middleY], prev, Math.cos(arrow.arrowAngle) * arrow.arrowLength);
                         const k = (cur[1] - prev[1]) / (cur[0] - prev[0]);
                         // 1/k 垂线
-                        const points = this._getPointAlongLine2(-1 / k, footY - footX * -1 / k, [footX, footY], Math.sin(arrow.arrowAngle) * arrow.arrowLength);
+                        const points = this._getPointAlongLine2( -1/k, footY - footX * -1/k, [footX, footY], Math.sin(arrow.arrowAngle) * arrow.arrowLength);
                         //两点
                         points.forEach(point => {
                             ctx.beginPath();
@@ -1931,26 +1934,26 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
                         });
                     }
                     return cur;
-                }
-                else {
+                } else {
                     return cur;
                 }
             });
         }
-        ctx.restore();
+        ctx.restore();*/
     }
-    //已知 起点和终点  求沿线距起点定长的点
+    /*//已知 起点和终点  求沿线距起点定长的点
     _getPointAlongLine(p1, p2, d) {
         //line length
         let l = Math.sqrt((p2[0] - p1[0]) * (p2[0] - p1[0]) + (p2[1] - p1[1]) * (p2[1] - p1[1]));
         let t = d / l;
         return [(1 - t) * p1[0] + t * p2[0], (1 - t) * p1[1] + t * p2[1]];
     }
+
     //已知 起点 y = kx + b   求沿线距起点定长的点 两个点
     _getPointAlongLine2(k, b, p, d) {
-        let x0 = p[0] + Math.sqrt((d * d) / (k * k + 1)), x1 = p[0] - Math.sqrt((d * d) / (k * k + 1));
+        let x0 = p[0] + Math.sqrt( (d * d) / (k * k + 1)), x1 = p[0] - Math.sqrt( (d * d) / (k * k + 1));
         return [[x0, k * x0 + b], [x1, k * x1 + b]];
-    }
+    }*/
     contain(screenX, screenY) {
         let p2;
         const distance = this._screen.reduce((acc, cur) => {
@@ -2034,7 +2037,7 @@ Polyline.TOLERANCE = 4; //screen pixel
 /*!************************!*\
   !*** ../dist/index.js ***!
   \************************/
-/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Tooltip, Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, LetterSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject */
+/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Label, Tooltip, Symbol, PointSymbol, LineSymbol, FillSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, LetterSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2110,7 +2113,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/symbol/symbol.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Symbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["Symbol"]; });
 
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "PointSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["PointSymbol"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "LineSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["LineSymbol"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "FillSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["FillSymbol"]; });
+
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimplePointSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["SimplePointSymbol"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GradientPointSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["GradientPointSymbol"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SimpleLineSymbol", function() { return _symbol_symbol__WEBPACK_IMPORTED_MODULE_20__["SimpleLineSymbol"]; });
 
@@ -3446,13 +3457,17 @@ class SimpleRenderer {
 /*!********************************!*\
   !*** ../dist/symbol/symbol.js ***!
   \********************************/
-/*! exports provided: Symbol, SimplePointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, LetterSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol */
+/*! exports provided: Symbol, PointSymbol, LineSymbol, FillSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, SimpleTextSymbol, LetterSymbol, ArrowSymbol, VertexSymbol, ClusterSymbol */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Symbol", function() { return Symbol; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PointSymbol", function() { return PointSymbol; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LineSymbol", function() { return LineSymbol; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FillSymbol", function() { return FillSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimplePointSymbol", function() { return SimplePointSymbol; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GradientPointSymbol", function() { return GradientPointSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleLineSymbol", function() { return SimpleLineSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleFillSymbol", function() { return SimpleFillSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SimpleMarkerSymbol", function() { return SimpleMarkerSymbol; });
@@ -3462,35 +3477,143 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "VertexSymbol", function() { return VertexSymbol; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ClusterSymbol", function() { return ClusterSymbol; });
 /* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/color */ "../dist/util/color.js");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 
 class Symbol {
-}
-class SimplePointSymbol extends Symbol {
     constructor() {
-        super(...arguments);
-        //circle
-        this.radius = 6;
         this.lineWidth = 1;
         this.strokeStyle = "#ff0000"; //#ff0000
         this.fillStyle = "#ff000088"; //#ff0000
     }
 }
-class SimpleLineSymbol extends Symbol {
+class PointSymbol extends Symbol {
+    //渲染
+    draw(ctx, screenX, screenY) { }
+    //判断点是否在符号范围内
+    contain(anchorX, anchorY, screenX, screenY) { return false; }
+}
+class LineSymbol extends Symbol {
+    draw(ctx, screen) { }
+}
+class FillSymbol extends Symbol {
+    draw(ctx, screen) { }
+}
+class SimplePointSymbol extends PointSymbol {
     constructor() {
         super(...arguments);
-        this.lineWidth = 1;
-        this.strokeStyle = "#ff0000"; //#ff0000
+        //circle
+        this.radius = 6;
+    }
+    draw(ctx, screenX, screenY) {
+        ctx.save();
+        ctx.strokeStyle = this.strokeStyle;
+        ctx.fillStyle = this.fillStyle;
+        ctx.lineWidth = this.lineWidth;
+        ctx.beginPath(); //Start path
+        //keep size
+        //地理坐标 转回 屏幕坐标
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2, true);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+    }
+    contain(anchorX, anchorY, screenX, screenY) {
+        return Math.sqrt((anchorX - screenX) * (anchorX - screenX) + (anchorY - screenY) * (anchorY - screenY)) <= this.radius;
+    }
+}
+class GradientPointSymbol extends PointSymbol {
+    constructor() {
+        super(...arguments);
+        //circle
+        this.radius = 6;
+        this.lineWidth = 0;
+        this.startColor = "#ff0000"; //#ff0000
+        this.endColor = "#ff0000"; //#ff0000
+    }
+    draw(ctx, screenX, screenY) {
+        ctx.save();
+        //keep size
+        //地理坐标 转回 屏幕坐标
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.lineWidth = this.lineWidth;
+        ctx.strokeStyle = this.strokeStyle;
+        const radgrad = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, this.radius);
+        radgrad.addColorStop(0, this.startColor);
+        radgrad.addColorStop(1, this.endColor);
+        ctx.fillStyle = radgrad;
+        ctx.lineWidth = this.lineWidth;
+        ctx.beginPath(); //Start path
+        ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2, true);
+        ctx.fill();
+        //ctx.stroke();
+        ctx.restore();
+    }
+    contain(anchorX, anchorY, screenX, screenY) {
+        return Math.sqrt((anchorX - screenX) * (anchorX - screenX) + (anchorY - screenY) * (anchorY - screenY)) <= this.radius;
+    }
+}
+class SimpleLineSymbol extends LineSymbol {
+    draw(ctx, screen) {
+        ctx.save();
+        ctx.strokeStyle = this.strokeStyle;
+        ctx.lineWidth = this.lineWidth;
+        //keep lineWidth
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.beginPath();
+        screen.forEach((point, index) => {
+            const screenX = point[0], screenY = point[1];
+            if (index === 0) {
+                ctx.moveTo(screenX, screenY);
+            }
+            else {
+                ctx.lineTo(screenX, screenY);
+            }
+        });
+        ctx.stroke();
+        ctx.restore();
     }
 }
 class SimpleFillSymbol extends Symbol {
     constructor() {
         super(...arguments);
         this.lineWidth = 2;
-        this.strokeStyle = "#ff0000"; //#ff0000
-        this.fillStyle = "#ff000088"; //#ff0000
+    }
+    draw(ctx, screen) {
+        ctx.save();
+        ctx.strokeStyle = this.strokeStyle;
+        ctx.fillStyle = this.fillStyle;
+        ctx.lineWidth = this.lineWidth;
+        //keep lineWidth
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
+        ctx.beginPath();
+        screen.forEach(ring => {
+            ring.forEach((point, index) => {
+                const screenX = point[0], screenY = point[1];
+                if (index === 0) {
+                    ctx.moveTo(screenX, screenY);
+                }
+                else {
+                    ctx.lineTo(screenX, screenY);
+                }
+            });
+        });
+        ctx.closePath();
+        ctx.fill("evenodd");
+        ctx.stroke();
+        ctx.restore();
     }
 }
-class SimpleMarkerSymbol extends Symbol {
+class SimpleMarkerSymbol extends PointSymbol {
     constructor() {
         super(...arguments);
         this.width = 16;
@@ -3515,6 +3638,23 @@ class SimpleMarkerSymbol extends Symbol {
             img.src = this.url;
         });
     }
+    draw(ctx, screenX, screenY) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.loaded)
+                yield this.load();
+            if (this.icon) {
+                ctx.save();
+                const matrix = ctx.getTransform();
+                //keep size
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.drawImage(this.icon, screenX + this.offsetX, screenY + this.offsetY, this.width, this.height);
+                ctx.restore();
+            }
+        });
+    }
+    contain(anchorX, anchorY, screenX, screenY) {
+        return screenX >= (anchorX + this.offsetX) && screenX <= (anchorX + this.offsetX + this.width) && screenY >= (anchorY + this.offsetY) && screenY <= (anchorY + this.offsetY + this.height);
+    }
 }
 class SimpleTextSymbol extends Symbol {
     constructor() {
@@ -3531,45 +3671,131 @@ class SimpleTextSymbol extends Symbol {
         this.fontWeight = "Bold";
     }
 }
-class LetterSymbol extends Symbol {
+class LetterSymbol extends PointSymbol {
     constructor() {
         super(...arguments);
         this.radius = 10;
-        this.lineWidth = 1;
-        this.strokeStyle = "#ff0000"; //#ff0000
-        this.fillStyle = "#ff0000"; //#ff0000
         this.letter = "";
         this.fontColor = "#ff0000";
         this.fontSize = 12;
         this.fontFamily = "YaHei";
         this.fontWeight = "Bold";
     }
+    draw(ctx, screenX, screenY) {
+        ctx.save();
+        ctx.strokeStyle = this.strokeStyle;
+        ctx.fillStyle = this.fillStyle;
+        ctx.lineWidth = this.lineWidth;
+        ctx.beginPath(); //Start path
+        //keep size
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2, true);
+        ctx.fill();
+        ctx.stroke();
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.fillStyle = this.fontColor;
+        ctx.font = this.fontSize + "px/1 " + this.fontFamily + " " + this.fontWeight;
+        ctx.fillText(this.letter, screenX, screenY);
+        ctx.restore();
+    }
+    contain(anchorX, anchorY, screenX, screenY) {
+        return Math.sqrt((anchorX - screenX) * (anchorX - screenX) + (anchorY - screenY) * (anchorY - screenY)) <= this.radius;
+    }
 }
 class ArrowSymbol extends Symbol {
     constructor() {
         super(...arguments);
         this.lineWidth = 2;
-        this.strokeStyle = "#ff0000"; //#ff0000
         this.minLength = 50; //>50pixel will draw arrow
         this.arrowLength = 10;
         this.arrowAngle = Math.PI / 6; //angle 30
     }
+    draw(ctx, screen) {
+        ctx.save();
+        ctx.strokeStyle = this.strokeStyle;
+        ctx.lineWidth = this.lineWidth;
+        //keep lineWidth
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.beginPath();
+        screen.forEach((point, index) => {
+            const screenX = point[0], screenY = point[1];
+            if (index === 0) {
+                ctx.moveTo(screenX, screenY);
+            }
+            else {
+                ctx.lineTo(screenX, screenY);
+            }
+        });
+        ctx.stroke();
+        screen.reduce((prev, cur) => {
+            if (prev) {
+                const length = Math.sqrt((cur[0] - prev[0]) * (cur[0] - prev[0]) + (cur[1] - prev[1]) * (cur[1] - prev[1]));
+                if (length >= this.minLength) {
+                    //中点 即箭头
+                    const [middleX, middleY] = [(prev[0] + cur[0]) / 2, (prev[1] + cur[1]) / 2];
+                    //箭尾垂线的垂足
+                    const [footX, footY] = this._getPointAlongLine([middleX, middleY], prev, Math.cos(this.arrowAngle) * this.arrowLength);
+                    const k = (cur[1] - prev[1]) / (cur[0] - prev[0]);
+                    // 1/k 垂线
+                    const points = this._getPointAlongLine2(-1 / k, footY - footX * -1 / k, [footX, footY], Math.sin(this.arrowAngle) * this.arrowLength);
+                    //两点
+                    points.forEach(point => {
+                        ctx.beginPath();
+                        ctx.moveTo(middleX, middleY);
+                        ctx.lineTo(point[0], point[1]);
+                        ctx.stroke();
+                    });
+                }
+                return cur;
+            }
+            else {
+                return cur;
+            }
+        });
+        ctx.restore();
+    }
+    //已知 起点和终点  求沿线距起点定长的点
+    _getPointAlongLine(p1, p2, d) {
+        //line length
+        let l = Math.sqrt((p2[0] - p1[0]) * (p2[0] - p1[0]) + (p2[1] - p1[1]) * (p2[1] - p1[1]));
+        let t = d / l;
+        return [(1 - t) * p1[0] + t * p2[0], (1 - t) * p1[1] + t * p2[1]];
+    }
+    //已知 起点 y = kx + b   求沿线距起点定长的点 两个点
+    _getPointAlongLine2(k, b, p, d) {
+        let x0 = p[0] + Math.sqrt((d * d) / (k * k + 1)), x1 = p[0] - Math.sqrt((d * d) / (k * k + 1));
+        return [[x0, k * x0 + b], [x1, k * x1 + b]];
+    }
 }
-class VertexSymbol extends Symbol {
+class VertexSymbol extends PointSymbol {
     constructor() {
         super(...arguments);
         this.size = 10;
-        this.lineWidth = 1;
-        this.strokeStyle = "#ff0000"; //#ff0000
-        this.fillStyle = "#ff000088"; //#ff0000
+    }
+    draw(ctx, screenX, screenY) {
+        ctx.save();
+        ctx.strokeStyle = this.strokeStyle;
+        ctx.fillStyle = this.fillStyle;
+        ctx.lineWidth = this.lineWidth;
+        ctx.beginPath(); //Start path
+        //keep size
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        const size = this.size;
+        ctx.rect(screenX - size / 2, screenY - size / 2, size, size);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+    }
+    contain(anchorX, anchorY, screenX, screenY) {
+        return screenX >= (anchorX - this.size / 2) && screenX <= (anchorX + this.size / 2) && screenY >= (anchorY - this.size / 2) && screenY <= (anchorY + this.size / 2);
     }
 }
-class ClusterSymbol extends Symbol {
+class ClusterSymbol extends PointSymbol {
     constructor(count) {
         super();
         this._count = 2;
         this.radius = 10;
-        this.lineWidth = 1;
         this.strokeStyle = "#ffffff"; //#ff0000
         this.outerFillStyle = "#ffffff"; //#ff0000
         this.fontColor = "#ffffff";
@@ -3604,8 +3830,34 @@ class ClusterSymbol extends Symbol {
         }
     }
     get innerFillStyle() {
-        const colors = _util_color__WEBPACK_IMPORTED_MODULE_0__["Color"].ramp(new _util_color__WEBPACK_IMPORTED_MODULE_0__["Color"](0, 255, 0), new _util_color__WEBPACK_IMPORTED_MODULE_0__["Color"](255, 0, 0), 16);
+        //const colors = Color.ramp(new Color(0, 255, 0), new Color(255,0,0), 16);
+        //const colors = Color.ramp(new Color(22,198,227), new Color(255, 0, 255), 16);
+        const colors = _util_color__WEBPACK_IMPORTED_MODULE_0__["Color"].ramp(new _util_color__WEBPACK_IMPORTED_MODULE_0__["Color"](25, 202, 173), new _util_color__WEBPACK_IMPORTED_MODULE_0__["Color"](244, 96, 108), 16);
         return colors[this._count <= 15 ? this._count : 15].toString();
+    }
+    draw(ctx, screenX, screenY) {
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.strokeStyle = this.strokeStyle;
+        ctx.fillStyle = this.outerFillStyle;
+        ctx.lineWidth = this.lineWidth;
+        ctx.beginPath(); //Start path
+        //keep size
+        ctx.arc(screenX, screenY, this.outer, 0, Math.PI * 2, true);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = this.innerFillStyle;
+        ctx.beginPath(); //Start path
+        //keep size
+        ctx.arc(screenX, screenY, this.inner, 0, Math.PI * 2, true);
+        ctx.fill();
+        ctx.stroke();
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.fillStyle = this.fontColor;
+        ctx.font = this.fontSize + "px/1 " + this.fontFamily + " " + this.fontWeight;
+        ctx.fillText(this.text, screenX, screenY);
+        ctx.restore();
     }
 }
 
@@ -4076,17 +4328,23 @@ window.load = () => {
     renderer.symbol = pointSymbol;
     featureLayer.renderer = renderer;
 
-    const pointSymbol2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+    /*const pointSymbol2 = new SimplePointSymbol();
     pointSymbol2.radius = 5;
     pointSymbol2.fillStyle = "#00ffff88";
-    pointSymbol2.strokeStyle = "#00ffff";
+    pointSymbol2.strokeStyle = "#00ffff";*/
+
+    const pointSymbol2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["GradientPointSymbol"]();
+    pointSymbol2.radius = 10;
+    pointSymbol2.startColor = "#ff00ff";
+    pointSymbol2.endColor = "#ff00ff00";
+
     for (let i = -180; i <= 180; i = i + 10){
         for (let j = -90; j <= 90; j = j + 10){
             const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](i, j);
             const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, pointSymbol2);
             const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {});
             map.addGraphic(graphic);
-            featureLayer.featureClass.addFeature(feature);
+            //featureLayer.featureClass.addFeature(feature);
         }
     }
 

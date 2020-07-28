@@ -2,6 +2,7 @@ import {CoordinateType, Geometry} from "./geometry";
 import {Bound} from "../util/bound";
 import {Projection} from "../projection/projection";
 import {
+    PointSymbol,
     ClusterSymbol, LetterSymbol,
     SimpleMarkerSymbol,
     SimplePointSymbol,
@@ -19,7 +20,7 @@ export class Point extends Geometry{
 
     //interaction: hover && identify
     static INTERACTION_TOLERANCE: number = 0; //screen pixel
-    private _symbol: Symbol; //TOLERANCE + symbol.radius
+    private _symbol: PointSymbol; //TOLERANCE + symbol.radius
 
     //经纬度
     private _lng: number;
@@ -77,15 +78,15 @@ export class Point extends Geometry{
         this._projected = true;
     }
 
-    async draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
+    async draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: PointSymbol = new SimplePointSymbol()) {
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
-
         const matrix = (ctx as any).getTransform();
         this._screenX = (matrix.a * this._x + matrix.e);
         this._screenY = (matrix.d * this._y + matrix.f);
         this._symbol = symbol;
-        if (symbol instanceof SimplePointSymbol) {
+        this._symbol.draw(ctx, this._screenX, this._screenY);
+        /*if (symbol instanceof SimplePointSymbol) {
             ctx.save();
             ctx.strokeStyle = (symbol as SimplePointSymbol).strokeStyle;
             ctx.fillStyle = (symbol as SimplePointSymbol).fillStyle;
@@ -164,11 +165,11 @@ export class Point extends Geometry{
             ctx.font =  cluster.fontSize + "px/1 " + cluster.fontFamily +  " " + cluster.fontWeight;
             ctx.fillText(cluster.text, this._screenX, this._screenY);
             ctx.restore();
-        }
+        }*/
     };
 
     contain(screenX: number, screenY: number): boolean {
-        if (this._symbol instanceof SimplePointSymbol) {
+        /*if (this._symbol instanceof SimplePointSymbol) {
             return Math.sqrt((this._screenX - screenX) *  (this._screenX - screenX) +  (this._screenY - screenY) *  (this._screenY - screenY)) <= (this._symbol as SimplePointSymbol).radius;
         } else if (this._symbol instanceof SimpleMarkerSymbol) {
             return screenX >= (this._screenX + this._symbol.offsetX) &&  screenX <= (this._screenX + this._symbol.offsetX + this._symbol.width) && screenY >= (this._screenY + this._symbol.offsetY) &&  screenY <= (this._screenY + this._symbol.offsetY + this._symbol.height);
@@ -176,7 +177,8 @@ export class Point extends Geometry{
             return Math.sqrt((this._screenX - screenX) *  (this._screenX - screenX) +  (this._screenY - screenY) *  (this._screenY - screenY)) <= (this._symbol as LetterSymbol).radius;
         } else if (this._symbol instanceof VertexSymbol) {
             return screenX >= (this._screenX - this._symbol.size / 2) &&  screenX <= (this._screenX + this._symbol.size / 2) && screenY >= (this._screenY - this._symbol.size / 2) &&  screenY <= (this._screenY + this._symbol.size / 2);
-        }
+        }*/
+        return this._symbol.contain(this._screenX, this._screenY, screenX, screenY);
     }
 
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {

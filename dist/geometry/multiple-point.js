@@ -45,38 +45,37 @@ export class MultiplePoint extends Geometry {
             const matrix = ctx.getTransform();
             this._screen = [];
             this._symbol = symbol;
-            if (symbol instanceof SimpleMarkerSymbol) {
-                const marker = symbol;
-                if (!marker.loaded)
-                    yield marker.load();
-            }
+            /*if (symbol instanceof SimpleMarkerSymbol) {
+                const marker: SimpleMarkerSymbol = symbol;
+                if (!marker.loaded) await marker.load();
+            }*/
             this._coordinates.forEach((point) => {
                 const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
                 this._screen.push([screenX, screenY]);
-                if (symbol instanceof SimplePointSymbol) {
+                this._symbol.draw(ctx, screenX, screenY);
+                /*if (symbol instanceof SimplePointSymbol) {
                     ctx.save();
-                    ctx.strokeStyle = symbol.strokeStyle;
-                    ctx.fillStyle = symbol.fillStyle;
-                    ctx.lineWidth = symbol.lineWidth;
+                    ctx.strokeStyle = (symbol as SimplePointSymbol).strokeStyle;
+                    ctx.fillStyle = (symbol as SimplePointSymbol).fillStyle;
+                    ctx.lineWidth = (symbol as SimplePointSymbol).lineWidth;
                     ctx.beginPath(); //Start path
                     //keep size
-                    ctx.setTransform(1, 0, 0, 1, 0, 0);
-                    ctx.arc(screenX, screenY, symbol.radius, 0, Math.PI * 2, true);
+                    ctx.setTransform(1,0,0,1,0,0);
+                    ctx.arc(screenX, screenY, (symbol as SimplePointSymbol).radius, 0, Math.PI * 2, true);
                     ctx.fill();
                     ctx.stroke();
                     ctx.restore();
-                }
-                else if (symbol instanceof SimpleMarkerSymbol) {
-                    const marker = symbol;
+                } else if (symbol instanceof SimpleMarkerSymbol) {
+                    const marker: SimpleMarkerSymbol = symbol;
                     if (marker.icon) {
                         ctx.save();
-                        const matrix = ctx.getTransform();
+                        const matrix = (ctx as any).getTransform();
                         //keep size
-                        ctx.setTransform(1, 0, 0, 1, 0, 0);
+                        ctx.setTransform(1,0,0,1,0,0);
                         ctx.drawImage(marker.icon, screenX + marker.offsetX, screenY + marker.offsetY, marker.width, marker.height);
                         ctx.restore();
                     }
-                }
+                }*/
             });
         });
     }

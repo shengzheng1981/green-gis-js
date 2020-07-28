@@ -57,25 +57,31 @@ export class Polygon extends Geometry {
             this.project(projection);
         if (!extent.intersect(this._bound))
             return;
-        ctx.save();
-        ctx.strokeStyle = symbol.strokeStyle;
-        ctx.fillStyle = symbol.fillStyle;
-        ctx.lineWidth = symbol.lineWidth;
         const matrix = ctx.getTransform();
+        this._screen = this._coordinates.map(ring => {
+            return ring.map((point, index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                return [screenX, screenY];
+            });
+        });
+        symbol.draw(ctx, this._screen);
+        /*ctx.save();
+        ctx.strokeStyle = (symbol as SimpleFillSymbol).strokeStyle;
+        ctx.fillStyle = (symbol as SimpleFillSymbol).fillStyle;
+        ctx.lineWidth = (symbol as SimpleFillSymbol).lineWidth;
         //keep lineWidth
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.setTransform(1,0,0,1,0,0);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         this._screen = [];
         ctx.beginPath();
-        this._coordinates.forEach(ring => {
+        this._coordinates.forEach( ring => {
             const temp = [];
             this._screen.push(temp);
-            ring.forEach((point, index) => {
+            ring.forEach((point: any,index) => {
                 const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-                if (index === 0) {
+                if (index === 0){
                     ctx.moveTo(screenX, screenY);
-                }
-                else {
+                } else {
                     ctx.lineTo(screenX, screenY);
                 }
                 temp.push([screenX, screenY]);
@@ -84,7 +90,7 @@ export class Polygon extends Geometry {
         ctx.closePath();
         ctx.fill("evenodd");
         ctx.stroke();
-        ctx.restore();
+        ctx.restore();*/
     }
     contain(screenX, screenY) {
         const first = this._screen[0];

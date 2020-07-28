@@ -1,4 +1,4 @@
-import {Map, Point, Polyline, Graphic, Feature, SimpleLineSymbol, SimplePointSymbol, SimpleMarkerSymbol, GraphicLayer, FeatureLayer, GeometryType, FeatureClass, SimpleRenderer} from "../dist";
+import {Map, Point, Polyline, Graphic, Feature, SimpleLineSymbol, SimplePointSymbol, GradientPointSymbol, SimpleMarkerSymbol, GraphicLayer, FeatureLayer, GeometryType, FeatureClass, SimpleRenderer} from "../dist";
 
 var AMap = window.AMap;
 
@@ -40,17 +40,23 @@ window.load = () => {
     renderer.symbol = pointSymbol;
     featureLayer.renderer = renderer;
 
-    const pointSymbol2 = new SimplePointSymbol();
+    /*const pointSymbol2 = new SimplePointSymbol();
     pointSymbol2.radius = 5;
     pointSymbol2.fillStyle = "#00ffff88";
-    pointSymbol2.strokeStyle = "#00ffff";
+    pointSymbol2.strokeStyle = "#00ffff";*/
+
+    const pointSymbol2 = new GradientPointSymbol();
+    pointSymbol2.radius = 10;
+    pointSymbol2.startColor = "#ff00ff";
+    pointSymbol2.endColor = "#ff00ff00";
+
     for (let i = -180; i <= 180; i = i + 10){
         for (let j = -90; j <= 90; j = j + 10){
             const point = new Point(i, j);
             const graphic = new Graphic(point, pointSymbol2);
             const feature = new Feature(point, {});
             map.addGraphic(graphic);
-            featureLayer.featureClass.addFeature(feature);
+            //featureLayer.featureClass.addFeature(feature);
         }
     }
 

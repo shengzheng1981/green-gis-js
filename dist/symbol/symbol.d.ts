@@ -1,21 +1,39 @@
 export declare class Symbol {
-}
-export declare class SimplePointSymbol extends Symbol {
-    radius: number;
     lineWidth: number;
     strokeStyle: string;
     fillStyle: string;
 }
-export declare class SimpleLineSymbol extends Symbol {
+export declare class PointSymbol extends Symbol {
+    draw(ctx: CanvasRenderingContext2D, screenX: any, screenY: any): void;
+    contain(anchorX: any, anchorY: any, screenX: any, screenY: any): boolean;
+}
+export declare class LineSymbol extends Symbol {
+    draw(ctx: CanvasRenderingContext2D, screen: number[][]): void;
+}
+export declare class FillSymbol extends Symbol {
+    draw(ctx: CanvasRenderingContext2D, screen: number[][][]): void;
+}
+export declare class SimplePointSymbol extends PointSymbol {
+    radius: number;
+    draw(ctx: CanvasRenderingContext2D, screenX: any, screenY: any): void;
+    contain(anchorX: any, anchorY: any, screenX: any, screenY: any): boolean;
+}
+export declare class GradientPointSymbol extends PointSymbol {
+    radius: number;
     lineWidth: number;
-    strokeStyle: string;
+    startColor: string;
+    endColor: string;
+    draw(ctx: CanvasRenderingContext2D, screenX: any, screenY: any): void;
+    contain(anchorX: any, anchorY: any, screenX: any, screenY: any): boolean;
+}
+export declare class SimpleLineSymbol extends LineSymbol {
+    draw(ctx: CanvasRenderingContext2D, screen: number[][]): void;
 }
 export declare class SimpleFillSymbol extends Symbol {
     lineWidth: number;
-    strokeStyle: string;
-    fillStyle: string;
+    draw(ctx: CanvasRenderingContext2D, screen: number[][][]): void;
 }
-export declare class SimpleMarkerSymbol extends Symbol {
+export declare class SimpleMarkerSymbol extends PointSymbol {
     width: number;
     height: number;
     offsetX: number;
@@ -25,6 +43,8 @@ export declare class SimpleMarkerSymbol extends Symbol {
     private _loaded;
     get loaded(): boolean;
     load(): Promise<any>;
+    draw(ctx: CanvasRenderingContext2D, screenX: any, screenY: any): Promise<void>;
+    contain(anchorX: any, anchorY: any, screenX: any, screenY: any): boolean;
 }
 export declare class SimpleTextSymbol extends Symbol {
     lineWidth: number;
@@ -38,34 +58,33 @@ export declare class SimpleTextSymbol extends Symbol {
     fontFamily: string;
     fontWeight: string;
 }
-export declare class LetterSymbol extends Symbol {
+export declare class LetterSymbol extends PointSymbol {
     radius: number;
-    lineWidth: number;
-    strokeStyle: string;
-    fillStyle: string;
     letter: string;
     fontColor: string;
     fontSize: number;
     fontFamily: string;
     fontWeight: string;
+    draw(ctx: CanvasRenderingContext2D, screenX: any, screenY: any): void;
+    contain(anchorX: any, anchorY: any, screenX: any, screenY: any): boolean;
 }
 export declare class ArrowSymbol extends Symbol {
     lineWidth: number;
-    strokeStyle: string;
     minLength: number;
     arrowLength: number;
     arrowAngle: number;
+    draw(ctx: CanvasRenderingContext2D, screen: number[][]): void;
+    _getPointAlongLine(p1: any, p2: any, d: any): number[];
+    _getPointAlongLine2(k: any, b: any, p: any, d: any): any[][];
 }
-export declare class VertexSymbol extends Symbol {
+export declare class VertexSymbol extends PointSymbol {
     size: number;
-    lineWidth: number;
-    strokeStyle: string;
-    fillStyle: string;
+    draw(ctx: CanvasRenderingContext2D, screenX: any, screenY: any): void;
+    contain(anchorX: any, anchorY: any, screenX: any, screenY: any): boolean;
 }
-export declare class ClusterSymbol extends Symbol {
+export declare class ClusterSymbol extends PointSymbol {
     private _count;
     radius: number;
-    lineWidth: number;
     strokeStyle: string;
     outerFillStyle: string;
     fontColor: string;
@@ -77,4 +96,5 @@ export declare class ClusterSymbol extends Symbol {
     get fontSize(): number;
     get innerFillStyle(): string;
     constructor(count: number);
+    draw(ctx: CanvasRenderingContext2D, screenX: any, screenY: any): void;
 }

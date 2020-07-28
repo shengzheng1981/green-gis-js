@@ -1,7 +1,7 @@
 import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
 import { Projection } from "../projection/projection";
-import { Symbol } from "../symbol/symbol";
+import { PointSymbol } from "../symbol/symbol";
 export declare class Point extends Geometry {
     static BOUND_TOLERANCE: number;
     static INTERACTION_TOLERANCE: number;
@@ -23,7 +23,7 @@ export declare class Point extends Geometry {
     };
     project(projection: Projection): void;
     move(ctx: CanvasRenderingContext2D, projection: Projection, screenX: number, screenY: number): void;
-    draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): Promise<void>;
+    draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: PointSymbol): Promise<void>;
     contain(screenX: number, screenY: number): boolean;
     getCenter(type?: CoordinateType, projection?: Projection): number[];
 }

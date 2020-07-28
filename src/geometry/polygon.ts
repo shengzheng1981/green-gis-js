@@ -1,7 +1,7 @@
 import {CoordinateType, Geometry} from "./geometry";
 import {Bound} from "../util/bound";
 import {Projection} from "../projection/projection";
-import {SimpleFillSymbol, SimpleTextSymbol, Symbol} from "../symbol/symbol";
+import {FillSymbol, SimpleFillSymbol, SimpleTextSymbol, Symbol} from "../symbol/symbol";
 import {WebMercator} from "../projection/web-mercator";
 //面
 export class Polygon extends Geometry{
@@ -66,15 +66,21 @@ export class Polygon extends Geometry{
         this.project(projection);
     }
 
-    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimpleFillSymbol()) {
+    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: FillSymbol = new SimpleFillSymbol()) {
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
-        ctx.save();
+        const matrix = (ctx as any).getTransform();
+        this._screen = this._coordinates.map( ring => {
+            return ring.map((point: any,index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                return [screenX, screenY];
+            });
+        });
+        symbol.draw(ctx, this._screen);
+        /*ctx.save();
         ctx.strokeStyle = (symbol as SimpleFillSymbol).strokeStyle;
         ctx.fillStyle = (symbol as SimpleFillSymbol).fillStyle;
         ctx.lineWidth = (symbol as SimpleFillSymbol).lineWidth;
-
-        const matrix = (ctx as any).getTransform();
         //keep lineWidth
         ctx.setTransform(1,0,0,1,0,0);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
@@ -96,7 +102,7 @@ export class Polygon extends Geometry{
         ctx.closePath();
         ctx.fill("evenodd");
         ctx.stroke();
-        ctx.restore();
+        ctx.restore();*/
     }
 
     contain(screenX: number, screenY: number): boolean {

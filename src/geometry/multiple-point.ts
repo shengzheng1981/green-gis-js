@@ -1,7 +1,7 @@
 import {CoordinateType, Geometry} from "./geometry";
 import {Bound} from "../util/bound";
 import {Projection} from "../projection/projection";
-import {SimpleMarkerSymbol, SimplePointSymbol, Symbol} from "../symbol/symbol";
+import {SimpleMarkerSymbol, SimplePointSymbol, Symbol, PointSymbol} from "../symbol/symbol";
 import {WebMercator} from "../projection/web-mercator";
 
 //点
@@ -9,7 +9,7 @@ export class MultiplePoint extends Geometry{
     //such as [[1,1],[2,2]]
     //interaction: hover && identify
     static TOLERANCE: number = 0; //screen pixel
-    private _symbol: Symbol; //TOLERANCE + symbol.radius
+    private _symbol: PointSymbol; //TOLERANCE + symbol.radius
 
     //经纬度
     private _lnglats: number[][];
@@ -49,15 +49,16 @@ export class MultiplePoint extends Geometry{
         if (!extent.intersect(this._bound)) return;
         const matrix = (ctx as any).getTransform();
         this._screen = [];
-        this._symbol = symbol;
-        if (symbol instanceof SimpleMarkerSymbol) {
+        this._symbol = symbol as PointSymbol;
+        /*if (symbol instanceof SimpleMarkerSymbol) {
             const marker: SimpleMarkerSymbol = symbol;
             if (!marker.loaded) await marker.load();
-        }
+        }*/
         this._coordinates.forEach( (point: any) => {
             const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
             this._screen.push([screenX, screenY]);
-            if (symbol instanceof SimplePointSymbol) {
+            this._symbol.draw(ctx, screenX, screenY);
+            /*if (symbol instanceof SimplePointSymbol) {
                 ctx.save();
                 ctx.strokeStyle = (symbol as SimplePointSymbol).strokeStyle;
                 ctx.fillStyle = (symbol as SimplePointSymbol).fillStyle;
@@ -79,7 +80,7 @@ export class MultiplePoint extends Geometry{
                     ctx.drawImage(marker.icon, screenX + marker.offsetX, screenY + marker.offsetY, marker.width, marker.height);
                     ctx.restore();
                 }
-            }
+            }*/
         });
     };
 

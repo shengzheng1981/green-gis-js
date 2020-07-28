@@ -1,7 +1,7 @@
 import {CoordinateType, Geometry} from "./geometry";
 import {Bound} from "../util/bound";
 import {Projection} from "../projection/projection";
-import {ArrowSymbol, SimpleLineSymbol, Symbol} from "../symbol/symbol";
+import {ArrowSymbol, LineSymbol, SimpleLineSymbol, Symbol} from "../symbol/symbol";
 import {WebMercator} from "../projection/web-mercator";
 //线
 export class Polyline extends Geometry{
@@ -64,17 +64,22 @@ export class Polyline extends Geometry{
         this.project(projection);
     }
 
-    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimpleLineSymbol()) {
+    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: LineSymbol = new SimpleLineSymbol()) {
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
-        ctx.save();
+        this._tolerance = Polyline.TOLERANCE + symbol.lineWidth;
+        const matrix = (ctx as any).getTransform();
+        this._screen = this._coordinates.map( (point: any,index) => {
+            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+            return [screenX, screenY];
+        });
+        symbol.draw(ctx, this._screen);
+        //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
+        /*ctx.save();
         ctx.strokeStyle = (symbol as SimpleLineSymbol).strokeStyle;
         ctx.lineWidth = (symbol as SimpleLineSymbol).lineWidth;
-        this._tolerance = Polyline.TOLERANCE + (symbol as SimpleLineSymbol).lineWidth;
-        const matrix = (ctx as any).getTransform();
         //keep lineWidth
         ctx.setTransform(1,0,0,1,0,0);
-        //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         this._screen = [];
         ctx.beginPath();
         this._coordinates.forEach( (point: any,index) => {
@@ -114,10 +119,10 @@ export class Polyline extends Geometry{
                 }
             });
         }
-        ctx.restore();
+        ctx.restore();*/
     }
 
-    //已知 起点和终点  求沿线距起点定长的点
+    /*//已知 起点和终点  求沿线距起点定长的点
     _getPointAlongLine(p1, p2, d) {
         //line length
         let l = Math.sqrt((p2[0] - p1[0]) * (p2[0] - p1[0]) + (p2[1] - p1[1]) * (p2[1] - p1[1]));
@@ -129,7 +134,7 @@ export class Polyline extends Geometry{
     _getPointAlongLine2(k, b, p, d) {
         let x0 = p[0] + Math.sqrt( (d * d) / (k * k + 1)), x1 = p[0] - Math.sqrt( (d * d) / (k * k + 1));
         return [[x0, k * x0 + b], [x1, k * x1 + b]];
-    }
+    }*/
 
     contain(screenX: number, screenY: number): boolean {
         let p2;

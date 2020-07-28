@@ -1,6 +1,6 @@
 import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
-import { ArrowSymbol, SimpleLineSymbol } from "../symbol/symbol";
+import { SimpleLineSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 //线
 export class Polyline extends Geometry {
@@ -52,40 +52,44 @@ export class Polyline extends Geometry {
             this.project(projection);
         if (!extent.intersect(this._bound))
             return;
-        ctx.save();
-        ctx.strokeStyle = symbol.strokeStyle;
-        ctx.lineWidth = symbol.lineWidth;
         this._tolerance = Polyline.TOLERANCE + symbol.lineWidth;
         const matrix = ctx.getTransform();
-        //keep lineWidth
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._screen = this._coordinates.map((point, index) => {
+            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+            return [screenX, screenY];
+        });
+        symbol.draw(ctx, this._screen);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
+        /*ctx.save();
+        ctx.strokeStyle = (symbol as SimpleLineSymbol).strokeStyle;
+        ctx.lineWidth = (symbol as SimpleLineSymbol).lineWidth;
+        //keep lineWidth
+        ctx.setTransform(1,0,0,1,0,0);
         this._screen = [];
         ctx.beginPath();
-        this._coordinates.forEach((point, index) => {
+        this._coordinates.forEach( (point: any,index) => {
             const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            if (index === 0) {
+            if (index === 0){
                 ctx.moveTo(screenX, screenY);
-            }
-            else {
+            } else {
                 ctx.lineTo(screenX, screenY);
             }
             this._screen.push([screenX, screenY]);
         });
         ctx.stroke();
         if (symbol instanceof ArrowSymbol) {
-            const arrow = symbol;
-            this._screen.reduce((prev, cur) => {
+            const arrow: ArrowSymbol = symbol;
+            this._screen.reduce( (prev, cur) => {
                 if (prev) {
                     const length = Math.sqrt((cur[0] - prev[0]) * (cur[0] - prev[0]) + (cur[1] - prev[1]) * (cur[1] - prev[1]));
                     if (length >= arrow.minLength) {
                         //中点 即箭头
-                        const [middleX, middleY] = [(prev[0] + cur[0]) / 2, (prev[1] + cur[1]) / 2];
+                        const [middleX, middleY] = [(prev[0] + cur[0])/2, (prev[1] + cur[1])/2];
                         //箭尾垂线的垂足
                         const [footX, footY] = this._getPointAlongLine([middleX, middleY], prev, Math.cos(arrow.arrowAngle) * arrow.arrowLength);
                         const k = (cur[1] - prev[1]) / (cur[0] - prev[0]);
                         // 1/k 垂线
-                        const points = this._getPointAlongLine2(-1 / k, footY - footX * -1 / k, [footX, footY], Math.sin(arrow.arrowAngle) * arrow.arrowLength);
+                        const points = this._getPointAlongLine2( -1/k, footY - footX * -1/k, [footX, footY], Math.sin(arrow.arrowAngle) * arrow.arrowLength);
                         //两点
                         points.forEach(point => {
                             ctx.beginPath();
@@ -95,26 +99,26 @@ export class Polyline extends Geometry {
                         });
                     }
                     return cur;
-                }
-                else {
+                } else {
                     return cur;
                 }
             });
         }
-        ctx.restore();
+        ctx.restore();*/
     }
-    //已知 起点和终点  求沿线距起点定长的点
+    /*//已知 起点和终点  求沿线距起点定长的点
     _getPointAlongLine(p1, p2, d) {
         //line length
         let l = Math.sqrt((p2[0] - p1[0]) * (p2[0] - p1[0]) + (p2[1] - p1[1]) * (p2[1] - p1[1]));
         let t = d / l;
         return [(1 - t) * p1[0] + t * p2[0], (1 - t) * p1[1] + t * p2[1]];
     }
+
     //已知 起点 y = kx + b   求沿线距起点定长的点 两个点
     _getPointAlongLine2(k, b, p, d) {
-        let x0 = p[0] + Math.sqrt((d * d) / (k * k + 1)), x1 = p[0] - Math.sqrt((d * d) / (k * k + 1));
+        let x0 = p[0] + Math.sqrt( (d * d) / (k * k + 1)), x1 = p[0] - Math.sqrt( (d * d) / (k * k + 1));
         return [[x0, k * x0 + b], [x1, k * x1 + b]];
-    }
+    }*/
     contain(screenX, screenY) {
         let p2;
         const distance = this._screen.reduce((acc, cur) => {
