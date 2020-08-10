@@ -1,8 +1,9 @@
 import {CoordinateType, Geometry} from "./geometry";
 import {Bound} from "../util/bound";
 import {Projection} from "../projection/projection";
-import {SimpleLineSymbol, Symbol} from "../symbol/symbol";
+import {LineSymbol, SimpleLineSymbol, Symbol} from "../symbol/symbol";
 import {WebMercator} from "../projection/web-mercator";
+import {Polyline} from "./polyline";
 //线
 export class MultiplePolyline extends Geometry{
     //[polyline[point[xy]]]
@@ -46,10 +47,19 @@ export class MultiplePolyline extends Geometry{
         this._bound = new Bound(xmin, ymin, xmax, ymax);
     }
 
-    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimpleLineSymbol()) {
+    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: LineSymbol = new SimpleLineSymbol()) {
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
-        ctx.save();
+        this._tolerance = Polyline.TOLERANCE + symbol.lineWidth;
+        const matrix = (ctx as any).getTransform();
+        this._screen = this._coordinates.map( polyline => polyline.map( (point: any,index) => {
+            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+            return [screenX, screenY];
+        }));
+        this._screen.forEach( polyline => {
+            symbol.draw(ctx, polyline);
+        });
+        /*ctx.save();
         ctx.strokeStyle = (symbol as SimpleLineSymbol).strokeStyle;
         ctx.lineWidth = (symbol as SimpleLineSymbol).lineWidth;
         this._tolerance = MultiplePolyline.TOLERANCE + (symbol as SimpleLineSymbol).lineWidth;
@@ -73,7 +83,7 @@ export class MultiplePolyline extends Geometry{
             });
             ctx.stroke();
         });
-        ctx.restore();
+        ctx.restore();*/
     }
 
     contain(screenX: number, screenY: number): boolean {

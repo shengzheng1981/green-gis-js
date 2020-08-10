@@ -99,7 +99,7 @@ export class FeatureLayer extends Layer{
                         }
                         return acc;
                     }
-                }, []); // {feature, count}
+                }, []); // [{feature, count}]
                 cluster.forEach( (item: any) => {
                     if (item.count == 1) {
                         item.feature.draw(ctx, projection, extent, this._getSymbol(item.feature));
@@ -132,7 +132,7 @@ export class FeatureLayer extends Layer{
                     acc.push({feature: cur, count: 1});
                 }
                 return acc;
-            }, []); // {feature, count}
+            }, []); // [{feature, count}]
             cluster.forEach( (item: any) => {
                 item.feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
             });
