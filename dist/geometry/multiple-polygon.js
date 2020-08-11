@@ -36,29 +36,36 @@ export class MultiplePolygon extends Geometry {
             this.project(projection);
         if (!extent.intersect(this._bound))
             return;
-        ctx.save();
-        ctx.strokeStyle = symbol.strokeStyle;
-        ctx.fillStyle = symbol.fillStyle;
-        ctx.lineWidth = symbol.lineWidth;
         const matrix = ctx.getTransform();
+        this._screen = this._coordinates.map(polygon => polygon.map(ring => ring.map((point, index) => {
+            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+            return [screenX, screenY];
+        })));
+        this._screen.forEach(polygon => {
+            symbol.draw(ctx, polygon);
+        });
+        /*ctx.save();
+        ctx.strokeStyle = (symbol as SimpleFillSymbol).strokeStyle;
+        ctx.fillStyle = (symbol as SimpleFillSymbol).fillStyle;
+        ctx.lineWidth = (symbol as SimpleFillSymbol).lineWidth;
+        const matrix = (ctx as any).getTransform();
         //keep lineWidth
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.setTransform(1,0,0,1,0,0);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         //TODO:  ring is not supported
         this._screen = [];
-        this._coordinates.forEach(polygon => {
+        this._coordinates.forEach( polygon => {
             const screen_polygon = [];
             this._screen.push(screen_polygon);
             ctx.beginPath();
             polygon.forEach(ring => {
                 const screen_ring = [];
                 screen_polygon.push(screen_ring);
-                ring.forEach((point, index) => {
+                ring.forEach((point: any,index) => {
                     const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-                    if (index === 0) {
+                    if (index === 0){
                         ctx.moveTo(screenX, screenY);
-                    }
-                    else {
+                    } else {
                         ctx.lineTo(screenX, screenY);
                     }
                     screen_ring.push([screenX, screenY]);
@@ -68,10 +75,10 @@ export class MultiplePolygon extends Geometry {
             ctx.fill("evenodd");
             ctx.stroke();
         });
-        ctx.restore();
+        ctx.restore();*/
     }
     contain(screenX, screenY) {
-        //TODO: ring is not supported
+        //TODO: only test first polygon, ring is not supported
         return this._screen.some(polygon => this._pointInPolygon([screenX, screenY], polygon[0]));
     }
     //from https://github.com/substack/point-in-polygon

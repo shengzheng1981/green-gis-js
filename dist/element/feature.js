@@ -40,9 +40,9 @@ export class Feature extends Subject {
         if (this.visible)
             this._geometry.draw(ctx, projection, extent, symbol instanceof ClusterSymbol ? symbol : (this._symbol || symbol));
     }
-    label(field, ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleTextSymbol()) {
+    label(field, ctx, projection = new WebMercator(), symbol = new SimpleTextSymbol()) {
         if (this.visible)
-            this._geometry.label(this._properties[field.name], ctx, projection, extent, this._text || symbol);
+            this._geometry.label(this._properties[field.name], ctx, projection, this._text || symbol);
     }
     intersect(projection = new WebMercator(), extent = projection.bound) {
         if (this.visible)

@@ -41,16 +41,15 @@ export class Geometry {
         return extent.intersect(this._bound);
     }
 
-    label(text: string, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: SimpleTextSymbol = new SimpleTextSymbol()) {
+    label(text: string, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), symbol: SimpleTextSymbol = new SimpleTextSymbol()) {
         if (!text) return;
         if (!this._projected) this.project(projection);
-        if (!extent.intersect(this._bound)) return;
         ctx.save();
-        ctx.strokeStyle = (symbol as SimpleTextSymbol).strokeStyle;
-        ctx.fillStyle = (symbol as SimpleTextSymbol).fillStyle;
-        ctx.lineWidth = (symbol as SimpleTextSymbol).lineWidth;
+        ctx.strokeStyle = symbol.strokeStyle;
+        ctx.fillStyle = symbol.fillStyle;
+        ctx.lineWidth = symbol.lineWidth;
         ctx.lineJoin = "round";
-        ctx.font =  (symbol as SimpleTextSymbol).fontSize + "px/1 " + (symbol as SimpleTextSymbol).fontFamily +  " " + (symbol as SimpleTextSymbol).fontWeight;
+        ctx.font = symbol.fontSize + "px/1 " + symbol.fontFamily +  " " + symbol.fontWeight;
         const center = this.getCenter(CoordinateType.Projection, projection);
         const matrix = (ctx as any).getTransform();
         //keep pixel
@@ -61,14 +60,70 @@ export class Geometry {
         let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);
         const screenX = (matrix.a * center[0] + matrix.e);
         const screenY = (matrix.d * center[1] + matrix.f);
-        ctx.strokeRect(screenX + (symbol as SimpleTextSymbol).offsetX - (symbol as SimpleTextSymbol).padding, screenY + (symbol as SimpleTextSymbol).offsetY - (symbol as SimpleTextSymbol).padding, width, height);
-        ctx.fillRect(screenX + (symbol as SimpleTextSymbol).offsetX - (symbol as SimpleTextSymbol).padding, screenY + (symbol as SimpleTextSymbol).offsetY - (symbol as SimpleTextSymbol).padding, width, height);
+        let totalX: number, totalY: number;
+        switch (symbol.placement) {
+            case "TOP":
+                totalX = - width/2;
+                totalY = - symbol.pointSymbolHeight / 2 - height;
+                break;
+            case "BOTTOM":
+                totalX = - width/2;
+                totalY = symbol.pointSymbolHeight / 2;
+                break;
+            case "RIGHT":
+                totalX = symbol.pointSymbolWidth / 2;
+                totalY = - height/2;
+                break;
+            case "LEFT":
+                totalX = - symbol.pointSymbolWidth / 2 - width;
+                totalY = - height/2;
+                break;
+        }
+        ctx.strokeRect(screenX + totalX, screenY + totalY, width, height);
+        ctx.fillRect(screenX + totalX, screenY + totalY, width, height);
         ctx.textBaseline = "top";
-        ctx.fillStyle = (symbol as SimpleTextSymbol).fontColor;
+        ctx.fillStyle = symbol.fontColor;
         array.forEach((str,index) => {
-            ctx.fillText(str, screenX + (symbol as SimpleTextSymbol).offsetX + (width - widths[index]) / 2, screenY + (symbol as SimpleTextSymbol).offsetY + index * (symbol.fontSize + symbol.padding));
+            ctx.fillText(str, screenX + totalX + symbol.padding + (width - widths[index]) / 2, screenY + totalY + symbol.padding + index * (symbol.fontSize + symbol.padding));
         });
         ctx.restore();
+    };
+
+    measure(text: string, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), symbol: SimpleTextSymbol = new SimpleTextSymbol()) {
+        if (!text) return;
+        ctx.save();
+        ctx.font = symbol.fontSize + "px/1 " + symbol.fontFamily +  " " + symbol.fontWeight;
+        const center = this.getCenter(CoordinateType.Projection, projection);
+        const matrix = (ctx as any).getTransform();
+        //keep pixel
+        ctx.setTransform(1,0,0,1,0,0);
+        const array = text.split("/r/n");
+        let widths = array.map(str => ctx.measureText(str).width + symbol.padding * 2);
+        let width = Math.max(...widths);
+        let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);
+        const screenX = (matrix.a * center[0] + matrix.e);
+        const screenY = (matrix.d * center[1] + matrix.f);
+        ctx.restore();
+        let totalX: number, totalY: number;
+        switch (symbol.placement) {
+            case "TOP":
+                totalX = - width/2;
+                totalY = - symbol.pointSymbolHeight / 2 - height;
+                break;
+            case "BOTTOM":
+                totalX = - width/2;
+                totalY = symbol.pointSymbolHeight / 2;
+                break;
+            case "RIGHT":
+                totalX = symbol.pointSymbolWidth / 2;
+                totalY = - height/2;
+                break;
+            case "LEFT":
+                totalX = - symbol.pointSymbolWidth / 2 - width;
+                totalY = - height/2;
+                break;
+        }
+        return new Bound(screenX + totalX, screenY + totalY, screenX + totalX + width,  screenY + totalY + height);
     };
 
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {};

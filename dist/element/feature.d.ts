@@ -23,7 +23,7 @@ export declare class Feature extends Subject {
     set text(value: SimpleTextSymbol);
     constructor(geometry: any, properties: any, symbol?: any);
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): void;
-    label(field: Field, ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: SimpleTextSymbol): void;
+    label(field: Field, ctx: CanvasRenderingContext2D, projection?: Projection, symbol?: SimpleTextSymbol): void;
     intersect(projection?: Projection, extent?: Bound): boolean;
     contain(screenX: number, screenY: number, event?: string): boolean;
 }

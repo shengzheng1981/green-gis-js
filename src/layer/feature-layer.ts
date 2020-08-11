@@ -118,10 +118,11 @@ export class FeatureLayer extends Layer{
     drawLabel(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
         if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent));
+            this._label.draw(features, ctx, projection);
             /*features.forEach( feature => {
                 feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
             });*/
-            const cluster = features.reduce( (acc, cur) => {
+            /*const cluster = features.reduce( (acc, cur) => {
                 const item: any = acc.find((item: any) => {
                     const distance = cur.geometry.distance(item.feature.geometry, CoordinateType.Screen, ctx, projection);
                     return distance <= 50;
@@ -135,7 +136,7 @@ export class FeatureLayer extends Layer{
             }, []); // [{feature, count}]
             cluster.forEach( (item: any) => {
                 item.feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
-            });
+            });*/
         }
     }
 

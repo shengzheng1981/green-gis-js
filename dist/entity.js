@@ -21,4 +21,9 @@ export class Entity {
             return (Math.random() * 16 | 0).toString(16);
         }).toLowerCase();
     }
+    copy(entity) {
+        Object.keys(this).forEach(property => {
+            this[property] = entity[property];
+        });
+    }
 }

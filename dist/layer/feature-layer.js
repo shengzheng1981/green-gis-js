@@ -81,7 +81,7 @@ export class FeatureLayer extends Layer {
                         }
                         return acc;
                     }
-                }, []); // {feature, count}
+                }, []); // [{feature, count}]
                 cluster.forEach((item) => {
                     if (item.count == 1) {
                         item.feature.draw(ctx, projection, extent, this._getSymbol(item.feature));
@@ -101,25 +101,25 @@ export class FeatureLayer extends Layer {
     drawLabel(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
         if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
+            this._label.draw(features, ctx, projection);
             /*features.forEach( feature => {
                 feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
             });*/
-            const cluster = features.reduce((acc, cur) => {
-                const item = acc.find((item) => {
+            /*const cluster = features.reduce( (acc, cur) => {
+                const item: any = acc.find((item: any) => {
                     const distance = cur.geometry.distance(item.feature.geometry, CoordinateType.Screen, ctx, projection);
                     return distance <= 50;
                 });
                 if (item) {
                     item.count += 1;
-                }
-                else {
-                    acc.push({ feature: cur, count: 1 });
+                } else {
+                    acc.push({feature: cur, count: 1});
                 }
                 return acc;
-            }, []); // {feature, count}
-            cluster.forEach((item) => {
+            }, []); // [{feature, count}]
+            cluster.forEach( (item: any) => {
                 item.feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
-            });
+            });*/
         }
     }
     contain(screenX, screenY, projection = new WebMercator(), extent = projection.bound, zoom = 10, event = undefined) {

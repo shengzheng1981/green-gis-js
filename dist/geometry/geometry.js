@@ -1,3 +1,4 @@
+import { Bound } from "../util/bound";
 import { SimplePointSymbol, SimpleTextSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
 export var CoordinateType;
@@ -27,13 +28,11 @@ export class Geometry {
             this.project(projection);
         return extent.intersect(this._bound);
     }
-    label(text, ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleTextSymbol()) {
+    label(text, ctx, projection = new WebMercator(), symbol = new SimpleTextSymbol()) {
         if (!text)
             return;
         if (!this._projected)
             this.project(projection);
-        if (!extent.intersect(this._bound))
-            return;
         ctx.save();
         ctx.strokeStyle = symbol.strokeStyle;
         ctx.fillStyle = symbol.fillStyle;
@@ -50,14 +49,71 @@ export class Geometry {
         let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);
         const screenX = (matrix.a * center[0] + matrix.e);
         const screenY = (matrix.d * center[1] + matrix.f);
-        ctx.strokeRect(screenX + symbol.offsetX - symbol.padding, screenY + symbol.offsetY - symbol.padding, width, height);
-        ctx.fillRect(screenX + symbol.offsetX - symbol.padding, screenY + symbol.offsetY - symbol.padding, width, height);
+        let totalX, totalY;
+        switch (symbol.placement) {
+            case "TOP":
+                totalX = -width / 2;
+                totalY = -symbol.pointSymbolHeight / 2 - height;
+                break;
+            case "BOTTOM":
+                totalX = -width / 2;
+                totalY = symbol.pointSymbolHeight / 2;
+                break;
+            case "RIGHT":
+                totalX = symbol.pointSymbolWidth / 2;
+                totalY = -height / 2;
+                break;
+            case "LEFT":
+                totalX = -symbol.pointSymbolWidth / 2 - width;
+                totalY = -height / 2;
+                break;
+        }
+        ctx.strokeRect(screenX + totalX, screenY + totalY, width, height);
+        ctx.fillRect(screenX + totalX, screenY + totalY, width, height);
         ctx.textBaseline = "top";
         ctx.fillStyle = symbol.fontColor;
         array.forEach((str, index) => {
-            ctx.fillText(str, screenX + symbol.offsetX + (width - widths[index]) / 2, screenY + symbol.offsetY + index * (symbol.fontSize + symbol.padding));
+            ctx.fillText(str, screenX + totalX + symbol.padding + (width - widths[index]) / 2, screenY + totalY + symbol.padding + index * (symbol.fontSize + symbol.padding));
         });
         ctx.restore();
+    }
+    ;
+    measure(text, ctx, projection = new WebMercator(), symbol = new SimpleTextSymbol()) {
+        if (!text)
+            return;
+        ctx.save();
+        ctx.font = symbol.fontSize + "px/1 " + symbol.fontFamily + " " + symbol.fontWeight;
+        const center = this.getCenter(CoordinateType.Projection, projection);
+        const matrix = ctx.getTransform();
+        //keep pixel
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        const array = text.split("/r/n");
+        let widths = array.map(str => ctx.measureText(str).width + symbol.padding * 2);
+        let width = Math.max(...widths);
+        let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);
+        const screenX = (matrix.a * center[0] + matrix.e);
+        const screenY = (matrix.d * center[1] + matrix.f);
+        ctx.restore();
+        let totalX, totalY;
+        switch (symbol.placement) {
+            case "TOP":
+                totalX = -width / 2;
+                totalY = -symbol.pointSymbolHeight / 2 - height;
+                break;
+            case "BOTTOM":
+                totalX = -width / 2;
+                totalY = symbol.pointSymbolHeight / 2;
+                break;
+            case "RIGHT":
+                totalX = symbol.pointSymbolWidth / 2;
+                totalY = -height / 2;
+                break;
+            case "LEFT":
+                totalX = -symbol.pointSymbolWidth / 2 - width;
+                totalY = -height / 2;
+                break;
+        }
+        return new Bound(screenX + totalX, screenY + totalY, screenX + totalX + width, screenY + totalY + height);
     }
     ;
     getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) { }

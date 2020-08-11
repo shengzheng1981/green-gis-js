@@ -29,6 +29,12 @@ export class Entity {
         }).toLowerCase();
     }
 
+    copy(entity: Entity) {
+        Object.keys(this).forEach( property => {
+            this[property] = entity[property];
+        });
+    }
+
 }
 
 

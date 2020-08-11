@@ -2,6 +2,7 @@ import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
 import { SimpleLineSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
+import { Polyline } from "./polyline";
 //线
 export class MultiplePolyline extends Geometry {
     constructor(lnglats) {
@@ -35,32 +36,40 @@ export class MultiplePolyline extends Geometry {
             this.project(projection);
         if (!extent.intersect(this._bound))
             return;
-        ctx.save();
-        ctx.strokeStyle = symbol.strokeStyle;
-        ctx.lineWidth = symbol.lineWidth;
-        this._tolerance = MultiplePolyline.TOLERANCE + symbol.lineWidth;
+        this._tolerance = Polyline.TOLERANCE + symbol.lineWidth;
         const matrix = ctx.getTransform();
+        this._screen = this._coordinates.map(polyline => polyline.map((point, index) => {
+            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+            return [screenX, screenY];
+        }));
+        this._screen.forEach(polyline => {
+            symbol.draw(ctx, polyline);
+        });
+        /*ctx.save();
+        ctx.strokeStyle = (symbol as SimpleLineSymbol).strokeStyle;
+        ctx.lineWidth = (symbol as SimpleLineSymbol).lineWidth;
+        this._tolerance = MultiplePolyline.TOLERANCE + (symbol as SimpleLineSymbol).lineWidth;
+        const matrix = (ctx as any).getTransform();
         //keep lineWidth
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.setTransform(1,0,0,1,0,0);
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         this._screen = [];
-        this._coordinates.forEach(polyline => {
+        this._coordinates.forEach( polyline => {
             ctx.beginPath();
             const screen_polyline = [];
             this._screen.push(screen_polyline);
-            polyline.forEach((point, index) => {
+            polyline.forEach((point: any,index) =>{
                 const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
                 if (index === 0) {
                     ctx.moveTo(screenX, screenY);
-                }
-                else {
+                } else {
                     ctx.lineTo(screenX, screenY);
                 }
                 screen_polyline.push([screenX, screenY]);
             });
             ctx.stroke();
         });
-        ctx.restore();
+        ctx.restore();*/
     }
     contain(screenX, screenY) {
         let p2;

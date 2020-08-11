@@ -1,4 +1,5 @@
 import {Color} from "../util/color";
+import {Entity} from "../entity";
 
 export class Symbol {
     public lineWidth: number = 1;
@@ -128,8 +129,8 @@ export class SimpleFillSymbol extends Symbol {
 export class SimpleMarkerSymbol extends PointSymbol {
     public width: number = 16;
     public height: number = 16;
-    public offsetX: number = 8;
-    public offsetY: number = 8;
+    public offsetX: number = -8;
+    public offsetY: number = -8;
     public icon: ImageBitmap;
     public url: string;
     private _loaded: boolean;
@@ -173,12 +174,42 @@ export class SimpleTextSymbol extends Symbol {
     public strokeStyle: string = "#ff0000"; //#ffffff
     public fillStyle: string = "#ffffff";    //#ffffff
     public offsetX: number = 0;
-    public offsetY: number = 1;
+    public offsetY: number = 0;
+    public pointSymbolWidth: number = 0;
+    public pointSymbolHeight: number = 0;
     public padding: number = 5;
     public fontColor: string = "#ff0000";
     public fontSize: number = 12;
     public fontFamily: string = "YaHei";
     public fontWeight: string = "Bold";
+    public placement: string = "BOTTOM";   //BOTTOM TOP LEFT RIGHT
+    public auto: boolean = false;
+
+    //counterclockwise
+    replacement() {
+        if (this.auto) {
+            switch (this.placement) {
+                case "BOTTOM":
+                    this.placement = "RIGHT";
+                    break;
+                case "RIGHT":
+                    this.placement = "TOP";
+                    break;
+                case "TOP":
+                    this.placement = "LEFT";
+                    break;
+                case "LEFT":
+                    this.placement = "BOTTOM";
+                    break;
+            }
+        }
+    }
+
+    copy(symbol: SimpleTextSymbol) {
+        Object.keys(this).forEach( property => {
+            this[property] = symbol[property];
+        });
+    }
 }
 
 export class LetterSymbol extends PointSymbol {

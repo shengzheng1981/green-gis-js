@@ -21,7 +21,8 @@ export declare class Geometry {
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: Symbol): void;
     contain(screenX: number, screenY: number): boolean;
     intersect(projection?: Projection, extent?: Bound): boolean;
-    label(text: string, ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: SimpleTextSymbol): void;
+    label(text: string, ctx: CanvasRenderingContext2D, projection?: Projection, symbol?: SimpleTextSymbol): void;
+    measure(text: string, ctx: CanvasRenderingContext2D, projection?: Projection, symbol?: SimpleTextSymbol): Bound;
     getCenter(type?: CoordinateType, projection?: Projection): void;
     getBound(projection?: Projection): Bound;
     distance(geometry: Geometry, type: CoordinateType, ctx: CanvasRenderingContext2D, projection?: Projection): number;

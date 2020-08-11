@@ -159,7 +159,7 @@ export class Point extends Geometry {
         } else if (this._symbol instanceof VertexSymbol) {
             return screenX >= (this._screenX - this._symbol.size / 2) &&  screenX <= (this._screenX + this._symbol.size / 2) && screenY >= (this._screenY - this._symbol.size / 2) &&  screenY <= (this._screenY + this._symbol.size / 2);
         }*/
-        return this._symbol.contain(this._screenX, this._screenY, screenX, screenY);
+        return this._symbol ? this._symbol.contain(this._screenX, this._screenY, screenX, screenY) : false;
     }
     getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) {
         if (!this._projected)

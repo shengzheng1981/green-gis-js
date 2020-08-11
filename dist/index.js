@@ -16,6 +16,7 @@ export * from './geometry/multiple-polygon';
 export * from './layer/layer';
 export * from './layer/graphic-layer';
 export * from './layer/feature-layer';
+export * from './label/collision';
 export * from './label/label';
 export * from './tooltip/tooltip';
 export * from './symbol/symbol';

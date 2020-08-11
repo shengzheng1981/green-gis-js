@@ -9,7 +9,7 @@ import {
     SimpleRenderer,
     CategoryRenderer,
     CategoryRendererItem,
-    Field, Label, Tooltip,
+    Field, Label, Tooltip, CoverCollision,
     FieldType,
     Graphic, SimpleMarkerSymbol, Feature, SimpleTextSymbol
 } from "../dist";
@@ -56,23 +56,39 @@ window.load = () => {
         const featureLayer = new FeatureLayer();
         featureLayer.featureClass = featureClass;
         const field2 = new Field();
-        field2.name = "name";
+        field2.name = "NAME";
         field2.type = FieldType.String;
         const renderer = new CategoryRenderer();
         renderer.generate(featureClass, field2);
         featureLayer.renderer = renderer;
         const label = new Label();
         const symbol = new SimpleTextSymbol();
+        symbol.pointSymbolWidth = 12;     //diameter
+        symbol.pointSymbolHeight = 12;   //diameter
+        symbol.auto = true;
+        /*symbol.offsetX = 0;  //
+        symbol.offsetY = 6;  //radius
+        symbol.placement = "BOTTOM";*/
+        /*symbol.offsetX = 0;  //
+        symbol.offsetY = -6;  //-radius
+        symbol.placement = "TOP";*/
+        /*symbol.offsetX = 6;  //radius
+        symbol.offsetY = 0;  //
+        symbol.placement = "RIGHT";*/
+        /*symbol.offsetX = -6;  //radius
+        symbol.offsetY = 0;  //
+        symbol.placement = "LEFT";*/
         label.field = field2;
         label.symbol = symbol;
+        label.collision = new CoverCollision();
         featureLayer.label = label;
         featureLayer.labeled = true;
-        featureLayer.zoom = [5, 20];
+        featureLayer.zoom = [12, 20];
         map.addLayer(featureLayer);
 
-        map.setView([107.777, 29.809], 7);
+        map.setView([109.519, 18.271], 13);
     };
-    req.open("GET", "assets/geojson/chongqing.json", true);
+    req.open("GET", "assets/geojson/junction.json", true);
     req.send(null);
 
     map.setProjection(new GCJ02(LatLngType.GCJ02));

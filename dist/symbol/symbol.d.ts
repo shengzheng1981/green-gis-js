@@ -52,11 +52,17 @@ export declare class SimpleTextSymbol extends Symbol {
     fillStyle: string;
     offsetX: number;
     offsetY: number;
+    pointSymbolWidth: number;
+    pointSymbolHeight: number;
     padding: number;
     fontColor: string;
     fontSize: number;
     fontFamily: string;
     fontWeight: string;
+    placement: string;
+    auto: boolean;
+    replacement(): void;
+    copy(symbol: SimpleTextSymbol): void;
 }
 export declare class LetterSymbol extends PointSymbol {
     radius: number;

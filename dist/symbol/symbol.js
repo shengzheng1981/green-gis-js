@@ -139,8 +139,8 @@ export class SimpleMarkerSymbol extends PointSymbol {
         super(...arguments);
         this.width = 16;
         this.height = 16;
-        this.offsetX = 8;
-        this.offsetY = 8;
+        this.offsetX = -8;
+        this.offsetY = -8;
     }
     get loaded() {
         return this._loaded;
@@ -184,12 +184,40 @@ export class SimpleTextSymbol extends Symbol {
         this.strokeStyle = "#ff0000"; //#ffffff
         this.fillStyle = "#ffffff"; //#ffffff
         this.offsetX = 0;
-        this.offsetY = 1;
+        this.offsetY = 0;
+        this.pointSymbolWidth = 0;
+        this.pointSymbolHeight = 0;
         this.padding = 5;
         this.fontColor = "#ff0000";
         this.fontSize = 12;
         this.fontFamily = "YaHei";
         this.fontWeight = "Bold";
+        this.placement = "BOTTOM"; //BOTTOM TOP LEFT RIGHT
+        this.auto = false;
+    }
+    //counterclockwise
+    replacement() {
+        if (this.auto) {
+            switch (this.placement) {
+                case "BOTTOM":
+                    this.placement = "RIGHT";
+                    break;
+                case "RIGHT":
+                    this.placement = "TOP";
+                    break;
+                case "TOP":
+                    this.placement = "LEFT";
+                    break;
+                case "LEFT":
+                    this.placement = "BOTTOM";
+                    break;
+            }
+        }
+    }
+    copy(symbol) {
+        Object.keys(this).forEach(property => {
+            this[property] = symbol[property];
+        });
     }
 }
 export class LetterSymbol extends PointSymbol {

@@ -5,4 +5,5 @@ export declare class Entity {
     toString(): string;
     print(): void;
     create(): void;
+    copy(entity: Entity): void;
 }
