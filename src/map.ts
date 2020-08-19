@@ -37,6 +37,8 @@ export class Map extends Subject{
     };
     //地图缩放等级
     private _zoom: number = 1;
+    public minZoom: number = 3;
+    public maxZoom: number = 20;
     //地图视图中心
     private _center: number[] = [0,0];
     //地图视图范围
@@ -173,7 +175,7 @@ export class Map extends Subject{
     //设置视图级别及视图中心
     setView(center: number[] = [0,0], zoom: number = 3) {
         this._center = center;
-        this._zoom = Math.max(3, Math.min(20, zoom));
+        this._zoom = Math.max(this.minZoom, Math.min(this.maxZoom, zoom));
         //center为经纬度，转化为平面坐标
         const origin = this._projection.project(center as any);
         const bound: Bound = this._projection.bound;
@@ -197,12 +199,12 @@ export class Map extends Subject{
         const y_mpp = (bound.ymax - bound.ymin) / this._canvas.height; //y  meter per pixel
         //反算 zoom : x_mpp = (bound.xmax - bound.xmin) / (256 * Math.pow(2, this._zoom))
         if (x_mpp == 0 || y_mpp == 0) {
-            this.setView(center, 20);
+            this.setView(center, this.maxZoom);
         } else {
             const full_bound: Bound = this._projection.bound;
             const x_zoom = Math.log2((full_bound.xmax - full_bound.xmin) / x_mpp / 256);
             const y_zoom = Math.log2((full_bound.ymax - full_bound.ymin) / y_mpp / 256);
-            const zoom = Math.floor(Math.min(x_zoom, y_zoom, 20));
+            const zoom = Math.floor(Math.min(x_zoom, y_zoom, this.maxZoom));
             this.setView(center, zoom);
         }
     }
@@ -268,6 +270,10 @@ export class Map extends Subject{
         this.updateExtent();
     }
 
+    resize() {
+        this._onResize(null);
+    }
+
     _onResize(event) {
         this._canvas.width = this._container.clientWidth ;
         this._canvas.height = this._container.clientHeight;
@@ -293,7 +299,7 @@ export class Map extends Subject{
             return;
         }
         if (!this._option.disableDoubleClick) {
-            if (this._zoom >= 20) return;
+            if (this._zoom >= this.maxZoom) return;
             const scale = 2;
             this._zoom += 1;
             const matrix = (this._ctx as any).getTransform();
@@ -371,10 +377,10 @@ export class Map extends Subject{
         //------------------------------------------------------------
         if (zoom > 0) {
             // 放大
-            zoom = this._zoom + zoom >= 20 ? 20 - this._zoom : zoom;
+            zoom = this._zoom + zoom >= this.maxZoom ? this.maxZoom - this._zoom : zoom;
         } else if (zoom < 0) {
             // 缩小
-            zoom = this._zoom + zoom <= 3 ? 3 - this._zoom : zoom;
+            zoom = this._zoom + zoom <= this.minZoom ? this.minZoom - this._zoom : zoom;
         }
         if (zoom == 0) return;
         this._zoom += zoom;
@@ -423,19 +429,19 @@ export class Map extends Subject{
             /*let zoom = Math.round(Math.log(scale));
             if (zoom > 0) {
                 // 放大
-                zoom = this._zoom + zoom >= 20 ? 20 - this._zoom : zoom;
+                zoom = this._zoom + zoom >= this.maxZoom ? this.maxZoom - this._zoom : zoom;
             } else if (zoom < 0) {
                 // 缩小
-                zoom = this._zoom + zoom <= 3 ? 3 - this._zoom : zoom;
+                zoom = this._zoom + zoom <= this.minZoom ? this.minZoom - this._zoom : zoom;
             }*/
             let zoom = 0;
             let sensitivity = 50;  //pixel
             if (new_finger_dist - this._touch.finger_dist > sensitivity) {
                 // 放大
-                zoom = this._zoom + 1 >= 20 ? 20 - this._zoom : 1;
+                zoom = this._zoom + 1 >= this.maxZoom ? this.maxZoom - this._zoom : 1;
             } else if (this._touch.finger_dist - new_finger_dist > sensitivity) {
                 // 缩小
-                zoom = this._zoom - 1 <= 3 ? 3 - this._zoom : -1;
+                zoom = this._zoom - 1 <= this.minZoom ? this.minZoom - this._zoom : -1;
             } else {
                 return;
             }

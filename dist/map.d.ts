@@ -14,6 +14,8 @@ export declare class Map extends Subject {
     private _drag;
     private _touch;
     private _zoom;
+    minZoom: number;
+    maxZoom: number;
     private _center;
     private _extent;
     private _projection;
@@ -46,6 +48,7 @@ export declare class Map extends Subject {
     updateExtent(): void;
     redraw(): void;
     clear(): void;
+    resize(): void;
     _onResize(event: any): void;
     _onClick(event: any): void;
     _onDoubleClick(event: any): void;
