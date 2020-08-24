@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./large-than-20.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./tooltip.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -811,10 +811,12 @@ class Feature extends _util_subject__WEBPACK_IMPORTED_MODULE_2__["Subject"] {
             const flag = this._geometry.contain(screenX, screenY);
             if (event == "mousemove") {
                 if (!this._contained && flag) {
-                    this._handlers["mouseover"].forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
+                    //this._handlers["mouseover"].forEach(handler => handler({feature: this, screenX: screenX, screenY: screenY}));
+                    this.emit("mouseover", { feature: this, screenX: screenX, screenY: screenY });
                 }
                 else if (this._contained && !flag) {
-                    this._handlers["mouseout"].forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
+                    //this._handlers["mouseout"].forEach(handler => handler({feature: this, screenX: screenX, screenY: screenY}));
+                    this.emit("mouseout", { feature: this, screenX: screenX, screenY: screenY });
                 }
             }
             this._contained = flag;
@@ -869,10 +871,10 @@ class Graphic extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
             const flag = this._geometry.contain(screenX, screenY);
             if (event == "mousemove") {
                 if (!this._contained && flag) {
-                    this._handlers["mouseover"].forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
+                    this.emit("mouseover", { feature: this, screenX: screenX, screenY: screenY });
                 }
                 else if (this._contained && !flag) {
-                    this._handlers["mouseout"].forEach(handler => handler({ feature: this, screenX: screenX, screenY: screenY }));
+                    this.emit("mouseout", { feature: this, screenX: screenX, screenY: screenY });
                 }
             }
             this._contained = flag;
@@ -2722,9 +2724,12 @@ class GraphicLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Layer", function() { return Layer; });
 /* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../projection/web-mercator */ "../dist/projection/web-mercator.js");
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../util/subject */ "../dist/util/subject.js");
 
-class Layer {
+
+class Layer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
     constructor() {
+        super([]);
         this._visible = true;
     }
     get visible() {
@@ -2735,6 +2740,7 @@ class Layer {
     }
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_0__["WebMercator"](), extent = projection.bound, zoom = 10) { }
     ;
+    contain(screenX, screenY, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_0__["WebMercator"](), extent = projection.bound, zoom = 10, event = undefined) { return false; }
 }
 
 
@@ -2969,7 +2975,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         const x1 = (0 - matrix.e) / matrix.a, y1 = (0 - matrix.f) / matrix.d, x2 = (this._canvas.width - matrix.e) / matrix.a, y2 = (this._canvas.height - matrix.f) / matrix.d;
         this._extent = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
         this._center = this._projection.unproject([(x1 + x2) / 2, (y1 + y2) / 2]);
-        this._handlers["extent"].forEach(handler => handler({ extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix }));
+        //this._handlers["extent"].forEach(handler => handler({extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix}));
+        this.emit("extent", { extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix });
     }
     redraw() {
         this._ctx.save();
@@ -2993,7 +3000,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
     _onResize(event) {
         this._canvas.width = this._container.clientWidth;
         this._canvas.height = this._container.clientHeight;
-        this._handlers["resize"].forEach(handler => handler(event));
+        //this._handlers["resize"].forEach(handler => handler(event));
+        this.emit("resize", event);
         this.setView(this._center, this._zoom);
     }
     _onClick(event) {
@@ -3005,7 +3013,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
             this._editor._onClick(event);
             return;
         }
-        this._handlers["click"].forEach(handler => handler(event));
+        //this._handlers["click"].forEach(handler => handler(event));
+        this.emit("click", event);
     }
     _onDoubleClick(event) {
         if (this._editor.editing) {
@@ -3025,7 +3034,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
             this._ctx.transform(scale, 0, 0, scale, e, f);
             this.redraw();
         }
-        this._handlers["dblclick"].forEach(handler => handler(event));
+        //this._handlers["dblclick"].forEach(handler => handler(event));
+        this.emit("dblclick", event);
     }
     _onMouseDown(event) {
         if (this._editor.editing && this._editor.editingFeature) {
@@ -4308,23 +4318,27 @@ class Color {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Subject", function() { return Subject; });
+//可订阅对象
 class Subject {
     constructor(events) {
+        //事件监听者列表
         this._handlers = {};
         events.forEach(event => {
             this._handlers[event] = []; //handlers array
         });
     }
-    //地图事件注册监听
+    //事件注册监听
     on(event, handler) {
         this._handlers[event].push(handler);
     }
+    //事件取消监听
     off(event, handler) {
         if (Array.isArray(this._handlers[event])) {
             const index = this._handlers[event].findIndex(item => item === handler);
             index != -1 && this._handlers[event].splice(index, 1);
         }
     }
+    //激发事件
     emit(event, param) {
         this._handlers[event].forEach(handler => handler(param));
     }
@@ -4530,10 +4544,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 
 /***/ }),
 
-/***/ "./large-than-20.js":
-/*!**************************!*\
-  !*** ./large-than-20.js ***!
-  \**************************/
+/***/ "./tooltip.js":
+/*!********************!*\
+  !*** ./tooltip.js ***!
+  \********************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -4562,15 +4576,8 @@ window.load = () => {
     });
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
-    map.maxZoom = 22;
-    const element = document.getElementById("amap");
     map.on("extent", (event) => {
-        if (event.zoom <= 20) {
-            element.style.setProperty("display", "block");
-            amap.setZoomAndCenter(event.zoom, event.center);
-        } else {
-            element.style.setProperty("display", "none");
-        }
+        amap.setZoomAndCenter(event.zoom, event.center);
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;
@@ -4583,6 +4590,7 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -4590,60 +4598,22 @@ window.load = () => {
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
         featureLayer.featureClass = featureClass;
-        const field2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field2.name = "NAME";
-        field2.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
+        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
+        field.name = "name";
+        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
         const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
-        renderer.generate(featureClass, field2);
+        renderer.generate(featureClass, field);
         featureLayer.renderer = renderer;
-        const label = new _dist__WEBPACK_IMPORTED_MODULE_0__["Label"]();
-        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleTextSymbol"]();
-        symbol.pointSymbolWidth = 12;     //diameter
-        symbol.pointSymbolHeight = 12;   //diameter
-        symbol.auto = true;
-        /*symbol.offsetX = 0;  //
-        symbol.offsetY = 6;  //radius
-        symbol.placement = "BOTTOM";*/
-        /*symbol.offsetX = 0;  //
-        symbol.offsetY = -6;  //-radius
-        symbol.placement = "TOP";*/
-        /*symbol.offsetX = 6;  //radius
-        symbol.offsetY = 0;  //
-        symbol.placement = "RIGHT";*/
-        /*symbol.offsetX = -6;  //radius
-        symbol.offsetY = 0;  //
-        symbol.placement = "LEFT";*/
-        label.field = field2;
-        label.symbol = symbol;
-        label.collision = new _dist__WEBPACK_IMPORTED_MODULE_0__["CoverCollision"]();
-        featureLayer.label = label;
-        featureLayer.labeled = true;
-        featureLayer.zoom = [12, 22];
+        featureLayer.zoom = [5, 20];
+        featureLayer.on("mouseover", (event) => {
+            map.showTooltip(event.feature, field);
+        });
         map.addLayer(featureLayer);
 
-        map.setView([109.519, 18.271], 13);
+        map.setView([107.411, 29.89], 7);
     };
-    req.open("GET", "assets/geojson/junction.json", true);
+    req.open("GET", "assets/geojson/chongqing.json", true);
     req.send(null);
-
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-    //beijing gugong
-    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
-    const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {});
-    const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
-    featureClass.addFeature(feature);
-    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-    featureLayer.featureClass = featureClass;
-    const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
-    renderer.symbol = marker;
-    featureLayer.renderer = renderer;
-    map.addLayer(featureLayer);
 
 }
 

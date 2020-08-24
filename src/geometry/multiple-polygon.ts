@@ -53,38 +53,6 @@ export class MultiplePolygon extends Geometry{
         this._screen.forEach( polygon => {
             symbol.draw(ctx, polygon);
         });
-        /*ctx.save();
-        ctx.strokeStyle = (symbol as SimpleFillSymbol).strokeStyle;
-        ctx.fillStyle = (symbol as SimpleFillSymbol).fillStyle;
-        ctx.lineWidth = (symbol as SimpleFillSymbol).lineWidth;
-        const matrix = (ctx as any).getTransform();
-        //keep lineWidth
-        ctx.setTransform(1,0,0,1,0,0);
-        //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
-        //TODO:  ring is not supported
-        this._screen = [];
-        this._coordinates.forEach( polygon => {
-            const screen_polygon = [];
-            this._screen.push(screen_polygon);
-            ctx.beginPath();
-            polygon.forEach(ring => {
-                const screen_ring = [];
-                screen_polygon.push(screen_ring);
-                ring.forEach((point: any,index) => {
-                    const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-                    if (index === 0){
-                        ctx.moveTo(screenX, screenY);
-                    } else {
-                        ctx.lineTo(screenX, screenY);
-                    }
-                    screen_ring.push([screenX, screenY]);
-                });
-            });
-            ctx.closePath();
-            ctx.fill("evenodd");
-            ctx.stroke();
-        });
-        ctx.restore();*/
     }
 
     contain(screenX: number, screenY: number): boolean {

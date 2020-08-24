@@ -208,7 +208,8 @@ export class Map extends Subject {
         const x1 = (0 - matrix.e) / matrix.a, y1 = (0 - matrix.f) / matrix.d, x2 = (this._canvas.width - matrix.e) / matrix.a, y2 = (this._canvas.height - matrix.f) / matrix.d;
         this._extent = new Bound(Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
         this._center = this._projection.unproject([(x1 + x2) / 2, (y1 + y2) / 2]);
-        this._handlers["extent"].forEach(handler => handler({ extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix }));
+        //this._handlers["extent"].forEach(handler => handler({extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix}));
+        this.emit("extent", { extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix });
     }
     redraw() {
         this._ctx.save();
@@ -232,7 +233,8 @@ export class Map extends Subject {
     _onResize(event) {
         this._canvas.width = this._container.clientWidth;
         this._canvas.height = this._container.clientHeight;
-        this._handlers["resize"].forEach(handler => handler(event));
+        //this._handlers["resize"].forEach(handler => handler(event));
+        this.emit("resize", event);
         this.setView(this._center, this._zoom);
     }
     _onClick(event) {
@@ -244,7 +246,8 @@ export class Map extends Subject {
             this._editor._onClick(event);
             return;
         }
-        this._handlers["click"].forEach(handler => handler(event));
+        //this._handlers["click"].forEach(handler => handler(event));
+        this.emit("click", event);
     }
     _onDoubleClick(event) {
         if (this._editor.editing) {
@@ -264,7 +267,8 @@ export class Map extends Subject {
             this._ctx.transform(scale, 0, 0, scale, e, f);
             this.redraw();
         }
-        this._handlers["dblclick"].forEach(handler => handler(event));
+        //this._handlers["dblclick"].forEach(handler => handler(event));
+        this.emit("dblclick", event);
     }
     _onMouseDown(event) {
         if (this._editor.editing && this._editor.editingFeature) {

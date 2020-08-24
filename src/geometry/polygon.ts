@@ -77,32 +77,6 @@ export class Polygon extends Geometry{
             });
         });
         symbol.draw(ctx, this._screen);
-        /*ctx.save();
-        ctx.strokeStyle = (symbol as SimpleFillSymbol).strokeStyle;
-        ctx.fillStyle = (symbol as SimpleFillSymbol).fillStyle;
-        ctx.lineWidth = (symbol as SimpleFillSymbol).lineWidth;
-        //keep lineWidth
-        ctx.setTransform(1,0,0,1,0,0);
-        //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
-        this._screen = [];
-        ctx.beginPath();
-        this._coordinates.forEach( ring => {
-            const temp = [];
-            this._screen.push(temp);
-            ring.forEach((point: any,index) => {
-                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-                if (index === 0){
-                    ctx.moveTo(screenX, screenY);
-                } else {
-                    ctx.lineTo(screenX, screenY);
-                }
-                temp.push([screenX, screenY]);
-            });
-        });
-        ctx.closePath();
-        ctx.fill("evenodd");
-        ctx.stroke();
-        ctx.restore();*/
     }
 
     contain(screenX: number, screenY: number): boolean {

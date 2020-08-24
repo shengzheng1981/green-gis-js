@@ -40,9 +40,9 @@ export class Graphic extends Subject{
             const flag = this._geometry.contain(screenX, screenY);
             if (event == "mousemove") {
                 if (!this._contained && flag) {
-                    this._handlers["mouseover"].forEach(handler => handler({feature: this, screenX: screenX, screenY: screenY}));
+                    this.emit("mouseover", {feature: this, screenX: screenX, screenY: screenY})
                 } else if(this._contained && !flag) {
-                    this._handlers["mouseout"].forEach(handler => handler({feature: this, screenX: screenX, screenY: screenY}));
+                    this.emit("mouseout", {feature: this, screenX: screenX, screenY: screenY})
                 }
             }
             this._contained = flag;

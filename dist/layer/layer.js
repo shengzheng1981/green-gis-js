@@ -1,6 +1,8 @@
 import { WebMercator } from "../projection/web-mercator";
-export class Layer {
+import { Subject } from "../util/subject";
+export class Layer extends Subject {
     constructor() {
+        super([]);
         this._visible = true;
     }
     get visible() {
@@ -11,4 +13,5 @@ export class Layer {
     }
     draw(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) { }
     ;
+    contain(screenX, screenY, projection = new WebMercator(), extent = projection.bound, zoom = 10, event = undefined) { return false; }
 }

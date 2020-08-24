@@ -74,52 +74,6 @@ export class Polyline extends Geometry{
             return [screenX, screenY];
         });
         symbol.draw(ctx, this._screen);
-        //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
-        /*ctx.save();
-        ctx.strokeStyle = (symbol as SimpleLineSymbol).strokeStyle;
-        ctx.lineWidth = (symbol as SimpleLineSymbol).lineWidth;
-        //keep lineWidth
-        ctx.setTransform(1,0,0,1,0,0);
-        this._screen = [];
-        ctx.beginPath();
-        this._coordinates.forEach( (point: any,index) => {
-            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            if (index === 0){
-                ctx.moveTo(screenX, screenY);
-            } else {
-                ctx.lineTo(screenX, screenY);
-            }
-            this._screen.push([screenX, screenY]);
-        });
-        ctx.stroke();
-        if (symbol instanceof ArrowSymbol) {
-            const arrow: ArrowSymbol = symbol;
-            this._screen.reduce( (prev, cur) => {
-                if (prev) {
-                    const length = Math.sqrt((cur[0] - prev[0]) * (cur[0] - prev[0]) + (cur[1] - prev[1]) * (cur[1] - prev[1]));
-                    if (length >= arrow.minLength) {
-                        //中点 即箭头
-                        const [middleX, middleY] = [(prev[0] + cur[0])/2, (prev[1] + cur[1])/2];
-                        //箭尾垂线的垂足
-                        const [footX, footY] = this._getPointAlongLine([middleX, middleY], prev, Math.cos(arrow.arrowAngle) * arrow.arrowLength);
-                        const k = (cur[1] - prev[1]) / (cur[0] - prev[0]);
-                        // 1/k 垂线
-                        const points = this._getPointAlongLine2( -1/k, footY - footX * -1/k, [footX, footY], Math.sin(arrow.arrowAngle) * arrow.arrowLength);
-                        //两点
-                        points.forEach(point => {
-                            ctx.beginPath();
-                            ctx.moveTo(middleX, middleY);
-                            ctx.lineTo(point[0], point[1]);
-                            ctx.stroke();
-                        });
-                    }
-                    return cur;
-                } else {
-                    return cur;
-                }
-            });
-        }
-        ctx.restore();*/
     }
 
     /*//已知 起点和终点  求沿线距起点定长的点
