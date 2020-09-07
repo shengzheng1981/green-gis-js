@@ -13,6 +13,7 @@ import {Tooltip} from "../tooltip/tooltip";
 import {GeometryType, CoordinateType} from "../geometry/geometry";
 import {Point} from "../geometry/point";
 import {ClusterSymbol} from "../symbol/symbol";
+import {Animation} from "../animation/animation";
 
 export class FeatureLayer extends Layer{
     //是否显示标注
@@ -114,6 +115,15 @@ export class FeatureLayer extends Layer{
             }
         }
     }
+
+    /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
+        if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
+            const features = this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent));
+            features.forEach( (feature: Feature) => {
+                feature.animate(elapsed, ctx, projection, extent, new Animation());
+            });
+        }
+    }*/
 
     drawLabel(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
         if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {

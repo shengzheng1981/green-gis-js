@@ -7,6 +7,7 @@ import { Editor } from "./editor/editor";
 import { Viewer } from "./viewer";
 import { Subject } from "./util/subject";
 import { Tooltip } from "./tooltip/tooltip";
+import { Animator } from "./animator";
 export class Map extends Subject {
     constructor(id, option) {
         super(["extent", "click", "dblclick", "mousemove", "resize"]);
@@ -75,6 +76,8 @@ export class Map extends Subject {
         this._editor.on("mouseout", () => { Utility.removeClass(this._canvas, "green-hover"); });
         this._editor.on("startedit", () => { this._viewer.redraw(); });
         this._editor.on("stopedit", () => { this._viewer.redraw(); });
+        //animator
+        this._animator = new Animator(this);
         //tooltip
         this._tooltip = new Tooltip(this);
         this._projection = new WebMercator();
@@ -188,6 +191,16 @@ export class Map extends Subject {
     }
     clearLayers() {
         this._viewer.clearLayers();
+    }
+    //animator
+    addAnimation(animation) {
+        this._animator.addAnimation(animation);
+    }
+    removeAnimation(animation) {
+        this._animator.removeAnimation(animation);
+    }
+    clearAnimations() {
+        this._animator.clearAnimations();
     }
     //shortcut
     addGraphic(graphic) {

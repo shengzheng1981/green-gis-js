@@ -5,6 +5,7 @@ import {Projection} from "../projection/projection";
 import {WebMercator} from "../projection/web-mercator";
 import {Field} from "../data/field";
 import {Subject} from "../util/subject";
+import {Animation} from "../animation/animation";
 
 export class Feature extends Subject{
     private _geometry: Geometry;
@@ -50,6 +51,14 @@ export class Feature extends Subject{
         this._text = value;
     }
 
+    /*private _animation: Animation;
+    get animation(): Animation {
+        return this._animation;
+    }
+    set animation(value: Animation) {
+        this._animation = value;
+    }*/
+
     constructor(geometry, properties, symbol?) {
         super(["click", "dblclick", "mouseover", "mouseout"]);
         this._geometry = geometry;
@@ -60,6 +69,10 @@ export class Feature extends Subject{
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
         if (this.visible) this._geometry.draw(ctx, projection, extent, symbol instanceof ClusterSymbol ? symbol : (this._symbol || symbol));
     }
+
+    /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, animation: Animation = new Animation()) {
+        if (this.visible) this._geometry.animate(elapsed, ctx, projection, extent, this._animation || animation);
+    }*/
 
     label(field:Field, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), symbol: SimpleTextSymbol = new SimpleTextSymbol()) {
         if (this.visible) this._geometry.label(this._properties[field.name], ctx, projection,this._text || symbol);

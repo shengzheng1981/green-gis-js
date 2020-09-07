@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./tooltip.js",
+    entry: "./animation.js",
     output: {
         filename: "bundle.js"
     },

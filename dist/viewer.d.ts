@@ -1,10 +1,8 @@
 import { Map } from "./map";
-import { FeatureLayer } from "./layer/feature-layer";
 import { Subject } from "./util/subject";
 export declare class Viewer extends Subject {
     private _canvas;
     private _ctx;
-    private _drag;
     private _map;
     private _layers;
     constructor(map: Map);
@@ -13,9 +11,9 @@ export declare class Viewer extends Subject {
     _onClick(event: any): void;
     _onDoubleClick(event: any): void;
     _onMouseMove(event: any): void;
-    addLayer(layer: FeatureLayer): void;
-    insertLayer(layer: FeatureLayer, index?: number): void;
-    removeLayer(layer: FeatureLayer): void;
+    addLayer(layer: any): void;
+    insertLayer(layer: any, index?: number): void;
+    removeLayer(layer: any): void;
     clearLayers(): void;
     redraw(): void;
     clear(): void;

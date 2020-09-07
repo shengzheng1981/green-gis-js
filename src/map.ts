@@ -11,6 +11,7 @@ import {Editor} from "./editor/editor";
 import {Viewer} from "./viewer";
 import {Subject} from "./util/subject";
 import {Tooltip} from "./tooltip/tooltip";
+import {Animator} from "./animator";
 
 export class Map extends Subject{
     private _container: HTMLDivElement;
@@ -52,6 +53,8 @@ export class Map extends Subject{
     private _viewer: Viewer;
     //编辑器
     private _editor: Editor;
+    //动画控制
+    private _animator: Animator;
 
     //提示框
     private _tooltip: Tooltip;
@@ -130,6 +133,10 @@ export class Map extends Subject{
         this._editor.on("mouseout", () => { Utility.removeClass(this._canvas, "green-hover");});
         this._editor.on("startedit", () => {this._viewer.redraw();});
         this._editor.on("stopedit", () => {this._viewer.redraw();});
+
+        //animator
+        this._animator = new Animator(this);
+
         //tooltip
         this._tooltip = new Tooltip(this);
 
@@ -225,6 +232,18 @@ export class Map extends Subject{
     clearLayers() {
         this._viewer.clearLayers();
     }
+
+    //animator
+    addAnimation(animation) {
+        this._animator.addAnimation(animation);
+    }
+    removeAnimation(animation) {
+        this._animator.removeAnimation(animation);
+    }
+    clearAnimations() {
+        this._animator.clearAnimations();
+    }
+
 
     //shortcut
     addGraphic(graphic: Graphic) {

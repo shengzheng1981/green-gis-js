@@ -3,20 +3,27 @@ import {SimplePointSymbol, SimpleTextSymbol, Symbol} from "../symbol/symbol";
 import {Projection} from "../projection/projection";
 import {WebMercator} from "../projection/web-mercator";
 import {Point} from "./point";
+import {Animation} from "../animation/animation";
 
+//坐标类型
 export enum CoordinateType {
+    //经纬度坐标
     Latlng = 1,
+    //地理平面坐标
     Projection = 2,
+    //屏幕平面坐标
     Screen = 3
 }
 
-
+//图形类型
 export enum GeometryType {
+    //点
     Point = 1,
+    //线
     Polyline = 2,
+    //面
     Polygon = 3
 }
-
 
 export class Geometry {
 
@@ -33,6 +40,8 @@ export class Geometry {
     project(projection: Projection) {};
 
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {};
+
+    //animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, animation: Animation) {};
 
     contain(screenX: number, screenY: number): boolean { return false; }
 

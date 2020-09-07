@@ -38,6 +38,13 @@ export class GraphicLayer extends Layer {
             });
         }
     }
+    /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
+        if (this.visible) {
+            this._graphics.forEach( (graphic: Graphic) => {
+                graphic.animate(elapsed, ctx, projection, extent);
+            });
+        }
+    }*/
     contain(screenX, screenY, projection = new WebMercator(), extent = projection.bound, zoom = 10, event = undefined) {
         if (this.visible) {
             const graphics = this._graphics.filter((graphic) => graphic.intersect(projection, extent)).filter((graphic) => {

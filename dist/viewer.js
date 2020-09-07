@@ -2,17 +2,6 @@ import { Subject } from "./util/subject";
 export class Viewer extends Subject {
     constructor(map) {
         super(["mouseover", "mouseout"]); //when mouseover feature
-        this._drag = {
-            flag: false,
-            start: {
-                x: 0,
-                y: 0
-            },
-            end: {
-                x: 0,
-                y: 0
-            }
-        };
         //图层列表
         this._layers = [];
         this._map = map;
@@ -66,7 +55,7 @@ export class Viewer extends Subject {
     }
     addLayer(layer) {
         this._layers.push(layer);
-        layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this.redraw();
     }
     insertLayer(layer, index = -1) {
         index = index > this._layers.length ? -1 : index;

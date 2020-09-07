@@ -22,6 +22,7 @@ export declare class Map extends Subject {
     private _defaultGraphicLayer;
     private _viewer;
     private _editor;
+    private _animator;
     private _tooltip;
     get container(): HTMLDivElement;
     get viewer(): Viewer;
@@ -42,6 +43,9 @@ export declare class Map extends Subject {
     insertLayer(layer: FeatureLayer, index?: number): void;
     removeLayer(layer: FeatureLayer): void;
     clearLayers(): void;
+    addAnimation(animation: any): void;
+    removeAnimation(animation: any): void;
+    clearAnimations(): void;
     addGraphic(graphic: Graphic): void;
     removeGraphic(graphic: Graphic): void;
     clearGraphics(): void;

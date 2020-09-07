@@ -22,6 +22,10 @@ export class Polyline extends Geometry{
         return this._lnglats;
     }
 
+    get coordinates(): number[][] {
+        return this._coordinates;
+    }
+
     constructor(lnglats: number[][]) {
         super();
         this._lnglats = lnglats;

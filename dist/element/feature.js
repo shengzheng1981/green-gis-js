@@ -2,6 +2,13 @@ import { SimplePointSymbol, SimpleTextSymbol, ClusterSymbol } from "../symbol/sy
 import { WebMercator } from "../projection/web-mercator";
 import { Subject } from "../util/subject";
 export class Feature extends Subject {
+    /*private _animation: Animation;
+    get animation(): Animation {
+        return this._animation;
+    }
+    set animation(value: Animation) {
+        this._animation = value;
+    }*/
     constructor(geometry, properties, symbol) {
         super(["click", "dblclick", "mouseover", "mouseout"]);
         this.visible = true;
@@ -40,6 +47,9 @@ export class Feature extends Subject {
         if (this.visible)
             this._geometry.draw(ctx, projection, extent, symbol instanceof ClusterSymbol ? symbol : (this._symbol || symbol));
     }
+    /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, animation: Animation = new Animation()) {
+        if (this.visible) this._geometry.animate(elapsed, ctx, projection, extent, this._animation || animation);
+    }*/
     label(field, ctx, projection = new WebMercator(), symbol = new SimpleTextSymbol()) {
         if (this.visible)
             this._geometry.label(this._properties[field.name], ctx, projection, this._text || symbol);

@@ -11,17 +11,6 @@ import {Subject} from "./util/subject";
 export class Viewer extends Subject{
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D;
-    private _drag: any = {
-        flag: false,
-        start: {
-            x: 0,
-            y: 0
-        },
-        end: {
-            x: 0,
-            y: 0
-        }
-    };
 
     private _map: Map;
     //图层列表
@@ -87,12 +76,12 @@ export class Viewer extends Subject{
         }
     }
 
-    addLayer(layer: FeatureLayer) {
+    addLayer(layer) {
         this._layers.push(layer);
-        layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this.redraw();
     }
 
-    insertLayer(layer: FeatureLayer, index: number = -1){
+    insertLayer(layer, index: number = -1){
         index = index > this._layers.length ? -1 : index;
         if (index == -1) {
             this.addLayer(layer);
@@ -102,7 +91,7 @@ export class Viewer extends Subject{
         }
     }
 
-    removeLayer(layer: FeatureLayer) {
+    removeLayer(layer) {
         const index = this._layers.findIndex(item => item === layer);
         index != -1 && this._layers.splice(index, 1);
         this.redraw();

@@ -32,3 +32,5 @@ export * from './util/utility';
 export * from './util/bound';
 export * from './util/color';
 export * from './util/subject';
+export * from './animation/animation';
+export * from './animation/particle-animation';

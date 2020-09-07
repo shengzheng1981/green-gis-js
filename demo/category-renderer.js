@@ -9,7 +9,7 @@ import {
     CategoryRenderer,
     CategoryRendererItem,
     Field,
-    FieldType,
+    FieldType, GeometryType,
     Graphic, SimpleMarkerSymbol, Feature, LatLngType, GCJ02
 } from "../dist";
 
@@ -53,7 +53,7 @@ window.load = () => {
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
-        const featureClass = new FeatureClass();
+        const featureClass = new FeatureClass(GeometryType.Polygon);
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new FeatureLayer();
         featureLayer.featureClass = featureClass;
@@ -100,7 +100,7 @@ window.load = () => {
     //beijing gugong
     const point = new Point(116.397411,39.909186);
     const feature = new Feature(point, {});
-    const featureClass = new FeatureClass();
+    const featureClass = new FeatureClass(GeometryType.Point);
     featureClass.addFeature(feature);
     const marker = new SimpleMarkerSymbol();
     marker.width = 32;

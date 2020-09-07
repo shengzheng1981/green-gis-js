@@ -1,16 +1,24 @@
 import { Bound } from "../util/bound";
 import { SimplePointSymbol, SimpleTextSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
+//坐标类型
 export var CoordinateType;
 (function (CoordinateType) {
+    //经纬度坐标
     CoordinateType[CoordinateType["Latlng"] = 1] = "Latlng";
+    //地理平面坐标
     CoordinateType[CoordinateType["Projection"] = 2] = "Projection";
+    //屏幕平面坐标
     CoordinateType[CoordinateType["Screen"] = 3] = "Screen";
 })(CoordinateType || (CoordinateType = {}));
+//图形类型
 export var GeometryType;
 (function (GeometryType) {
+    //点
     GeometryType[GeometryType["Point"] = 1] = "Point";
+    //线
     GeometryType[GeometryType["Polyline"] = 2] = "Polyline";
+    //面
     GeometryType[GeometryType["Polygon"] = 3] = "Polygon";
 })(GeometryType || (GeometryType = {}));
 export class Geometry {
@@ -22,6 +30,7 @@ export class Geometry {
     ;
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimplePointSymbol()) { }
     ;
+    //animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, animation: Animation) {};
     contain(screenX, screenY) { return false; }
     intersect(projection = new WebMercator(), extent = projection.bound) {
         if (!this._projected)

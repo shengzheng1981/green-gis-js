@@ -9,6 +9,7 @@ export declare class Polyline extends Geometry {
     private _coordinates;
     private _screen;
     get lnglats(): number[][];
+    get coordinates(): number[][];
     constructor(lnglats: number[][]);
     toGeoJSON(): {
         type: string;

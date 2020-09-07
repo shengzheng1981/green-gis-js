@@ -37,25 +37,31 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setView([116.397411,39.909186], 12);
+
 
     //画经线
+    const lngLayer = new GraphicLayer();
+    map.addLayer(lngLayer);
     const lngSymbol = new SimpleLineSymbol();
     lngSymbol.strokeStyle = "#0000ff";
     for (let i = -180; i <= 180; i = i + 10){
         const line = new Polyline([[i, -80], [i, 80]]);
         const graphic = new Graphic(line, lngSymbol);
-        map.addGraphic(graphic);
+        lngLayer.add(graphic);
     }
     //画纬线
+    const latLayer = new GraphicLayer();
+    map.addLayer(latLayer);
     const latSymbol = new SimpleLineSymbol();
-    lngSymbol.strokeStyle = "#4d9221";
+    latSymbol.strokeStyle = "#4d9221";
     for (let j = -80; j <= 80; j = j + 10){
         const line = new Polyline([[-180, j], [180, j]]);
         const graphic = new Graphic(line, latSymbol);
-        map.addGraphic(graphic);
+        latLayer.add(graphic);
     }
     //画经纬线交点
+    const pointLayer = new GraphicLayer();
+    map.addLayer(pointLayer);
     const pointSymbol = new SimplePointSymbol();
     pointSymbol.radius = 5;
     pointSymbol.fillStyle = "#de77ae";
@@ -64,18 +70,9 @@ window.load = () => {
         for (let j = -90; j <= 90; j = j + 10){
             const point = new Point(i, j);
             const graphic = new Graphic(point, pointSymbol);
-            map.addGraphic(graphic);
+            pointLayer.add(graphic);
         }
     }
-    //beijing gugong
-    const marker = new SimpleMarkerSymbol();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    const point = new Point(116.397411,39.909186);
-    const graphic = new Graphic(point, marker);
-    map.addGraphic(graphic);
+    map.setView([0, 0], 3);
 
 }

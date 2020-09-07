@@ -13,5 +13,6 @@ export class Layer extends Subject {
     }
     draw(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) { }
     ;
+    //animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {};
     contain(screenX, screenY, projection = new WebMercator(), extent = projection.bound, zoom = 10, event = undefined) { return false; }
 }

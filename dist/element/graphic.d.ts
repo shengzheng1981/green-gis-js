@@ -8,9 +8,10 @@ export declare class Graphic extends Subject {
     private _symbol;
     private _contained;
     visible: boolean;
+    get bound(): Bound;
     get geometry(): Geometry;
     get symbol(): Symbol;
-    get bound(): Bound;
+    set symbol(value: Symbol);
     constructor(geometry: any, symbol: any);
     draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound): void;
     intersect(projection?: Projection, extent?: Bound): boolean;
