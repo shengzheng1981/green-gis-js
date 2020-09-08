@@ -8,8 +8,22 @@ import { Viewer } from "./viewer";
 import { Subject } from "./util/subject";
 import { Tooltip } from "./tooltip/tooltip";
 import { Animator } from "./animator";
+/**
+ * 地图
+ * 容器: 1 viewer 1 editor 1 animator 1 tooltip
+ */
 export class Map extends Subject {
+    /**
+     * 创建地图
+     * @param {string | HTMLDivElement} id - HTMLDivElement | id
+     * @param {Object} option - 选项配置
+     */
     constructor(id, option) {
+        //extent: 视图范围更新时
+        //click:  单击地图时
+        //dblclick: 双击地图时
+        //mousemove: 鼠标移动时
+        //resize: 视图容器尺寸调整时
         super(["extent", "click", "dblclick", "mousemove", "resize"]);
         this._option = {
             disableDoubleClick: false
@@ -92,41 +106,73 @@ export class Map extends Subject {
         this._onResize = this._onResize.bind(this);
         window.addEventListener("resize", this._onResize);
     }
+    /**
+     * DIV容器
+     */
     get container() {
         return this._container;
     }
+    /**
+     * Viewer
+     */
     get viewer() {
         return this._viewer;
     }
+    /**
+     * Tooltip
+     */
     get tooltip() {
         return this._tooltip;
     }
+    /**
+     * Editor
+     */
     get editor() {
         return this._editor;
     }
     set editor(value) {
         this._editor = value;
     }
+    /**
+     * 视图中心
+     */
     get center() {
         return this._center;
     }
+    /**
+     * 可视范围
+     */
     get extent() {
         return this._extent;
     }
+    /**
+     * 缩放级别
+     */
     get zoom() {
         return this._zoom;
     }
+    /**
+     * 坐标投影变换
+     */
     get projection() {
         return this._projection;
     }
-    //设置option
+    /**
+     * 禁用双击交互
+     */
     disableDoubleClick() {
         this._option.disableDoubleClick = true;
     }
+    /**
+     * 启用双击交互
+     */
     enableDoubleClick() {
         this._option.disableDoubleClick = false;
     }
-    //设置投影
+    /**
+     * 设置坐标投影变换
+     * @param {Projection} projection - 坐标投影变换
+     */
     setProjection(projection) {
         this._projection = projection;
         //const bound: Bound = this._projection.bound;
@@ -143,7 +189,11 @@ export class Map extends Subject {
         const f = this._canvas.height / 2 - d * origin[1];
         this._ctx.setTransform(a, 0, 0, d, e, f);
     }
-    //设置视图级别及视图中心
+    /**
+     * 设置视图级别及视图中心
+     * @param {number[]} center - 视图中心
+     * @param {number} zoom - 视图级别
+     */
     setView(center = [0, 0], zoom = 3) {
         this._center = center;
         this._zoom = Math.max(this.minZoom, Math.min(this.maxZoom, zoom));
@@ -160,7 +210,11 @@ export class Map extends Subject {
         this._ctx.setTransform(a, 0, 0, d, e, f);
         this.redraw();
     }
-    //设置缩放到某一范围. 默认该范围2倍. 用于缩放到某一要素对应的bound
+    /**
+     * 设置缩放到某一范围
+     * 默认该范围2倍. 用于缩放到某一要素对应的bound
+     * @param {Bound} bound - 视图范围
+     */
     fitBound(bound) {
         const origin = bound.getCenter();
         const center = this._projection.unproject(origin);
@@ -179,43 +233,86 @@ export class Map extends Subject {
             this.setView(center, zoom);
         }
     }
-    //viewer
+    /**
+     * 添加图层
+     * @param {Layer} layer - 图层
+     */
     addLayer(layer) {
         this._viewer.addLayer(layer);
     }
+    /**
+     * 插入图层
+     * @param {Layer} layer - 图层
+     * @param {number} index - 图层顺序
+     */
     insertLayer(layer, index = -1) {
         this._viewer.insertLayer(layer, index);
     }
+    /**
+     * 移除图层
+     * @param {Layer} layer - 图层
+     */
     removeLayer(layer) {
         this._viewer.removeLayer(layer);
     }
+    /**
+     * 清空图层
+     */
     clearLayers() {
         this._viewer.clearLayers();
     }
-    //animator
+    /**
+     * 添加动画
+     * @param {Animation} animation - 动画
+     */
     addAnimation(animation) {
         this._animator.addAnimation(animation);
     }
+    /**
+     * 删除动画
+     * @param {Animation} animation - 动画
+     */
     removeAnimation(animation) {
         this._animator.removeAnimation(animation);
     }
+    /**
+     * 清除动画
+     */
     clearAnimations() {
         this._animator.clearAnimations();
     }
-    //shortcut
+    /**
+     * 添加图形
+     * 参考_defaultGraphicLayer定义处的说明
+     * shortcut
+     * @param {Graphic} graphic - 图形
+     */
     addGraphic(graphic) {
         this._defaultGraphicLayer.add(graphic);
         graphic.draw(this._ctx, this._projection, this._extent);
     }
+    /**
+     * 删除图形
+     * 参考_defaultGraphicLayer定义处的说明
+     * shortcut
+     * @param {Graphic} graphic - 图形
+     */
     removeGraphic(graphic) {
         this._defaultGraphicLayer.remove(graphic);
         this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
     }
+    /**
+     * 清除图形
+     * 参考_defaultGraphicLayer定义处的说明
+     * shortcut
+     */
     clearGraphics() {
         this._defaultGraphicLayer.clear();
         this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
     }
-    //更新地图视图范围以及中心点
+    /**
+     * 更新地图视图范围以及中心点
+     */
     updateExtent() {
         const matrix = this._ctx.getTransform();
         const x1 = (0 - matrix.e) / matrix.a, y1 = (0 - matrix.f) / matrix.d, x2 = (this._canvas.width - matrix.e) / matrix.a, y2 = (this._canvas.height - matrix.f) / matrix.d;
@@ -224,6 +321,9 @@ export class Map extends Subject {
         //this._handlers["extent"].forEach(handler => handler({extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix}));
         this.emit("extent", { extent: this._extent, center: this._center, zoom: this._zoom, matrix: matrix });
     }
+    /**
+     * 重绘
+     */
     redraw() {
         this._ctx.save();
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -233,6 +333,9 @@ export class Map extends Subject {
         this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
         this.hideTooltip();
     }
+    /**
+     * 清空视图
+     */
     clear() {
         this._ctx.save();
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -240,9 +343,13 @@ export class Map extends Subject {
         this._ctx.restore();
         this.updateExtent();
     }
+    /**
+     * 响应窗体resize
+     */
     resize() {
         this._onResize(null);
     }
+    //响应窗体resize
     _onResize(event) {
         this._canvas.width = this._container.clientWidth;
         this._canvas.height = this._container.clientHeight;
@@ -250,6 +357,7 @@ export class Map extends Subject {
         this.emit("resize", event);
         this.setView(this._center, this._zoom);
     }
+    //响应canvas被点击
     _onClick(event) {
         const matrix = this._ctx.getTransform();
         const x = (event.offsetX - matrix.e) / matrix.a;
@@ -262,6 +370,8 @@ export class Map extends Subject {
         //this._handlers["click"].forEach(handler => handler(event));
         this.emit("click", event);
     }
+    //响应canvas被双击
+    //默认交互，双击放大一倍
     _onDoubleClick(event) {
         if (this._editor.editing) {
             this._editor._onDoubleClick(event);
@@ -283,6 +393,8 @@ export class Map extends Subject {
         //this._handlers["dblclick"].forEach(handler => handler(event));
         this.emit("dblclick", event);
     }
+    //响应canvas mousedown
+    //漫游起始
     _onMouseDown(event) {
         if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseDown(event);
@@ -305,6 +417,8 @@ export class Map extends Subject {
             this._handlers["mousemove"].forEach(handler => handler(event));
         }
     }
+    //响应canvas mouseup
+    //漫游结束
     _onMouseUp(event) {
         if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseUp(event);
@@ -319,6 +433,7 @@ export class Map extends Subject {
         }
         this._drag.flag = false;
     }
+    //响应滚轮缩放
     _onWheel(event) {
         event.preventDefault();
         //级别缩放
@@ -371,6 +486,7 @@ export class Map extends Subject {
         this._ctx.transform(scale, 0, 0, scale, e, f);
         this.redraw();
     }
+    //响应触摸
     _onTouchStart(event) {
         if (event.touches.length == 2) { // if multiple touches (pinch zooming)
             let diffX = event.touches[0].clientX - event.touches[1].clientX;
@@ -440,7 +556,12 @@ export class Map extends Subject {
             //console.log("drag end");
         }
     }
-    //show tooltip
+    /**
+     * 显示Tooltip
+     * shortcut
+     * @param {Feature} feature - 要素
+     * @param {Field} field - 字段
+     */
     showTooltip(feature, field) {
         const text = feature.properties[field.name];
         const center = feature.geometry.getCenter(CoordinateType.Projection, this.projection);
@@ -449,9 +570,16 @@ export class Map extends Subject {
         const screenY = (matrix.d * center[1] + matrix.f);
         this._tooltip.show(text, screenX, screenY);
     }
+    /**
+     * 隐藏Tooltip
+     * shortcut
+     */
     hideTooltip() {
         this._tooltip.hide();
     }
+    /**
+     * 销毁
+     */
     destroy() {
         window.removeEventListener("resize", this._onResize);
         this._canvas.removeEventListener("click", this._onClick);

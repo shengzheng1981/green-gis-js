@@ -64,7 +64,7 @@ export class Color {
                 hex = sColorNew;
             }
             //处理六位的颜色值
-            if (hex.length === 4) {
+            if (hex.length === 7) {
                 hex += "ff";
             }
             let sColorChange = [];

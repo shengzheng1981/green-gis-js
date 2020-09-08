@@ -13,7 +13,17 @@ export var EditorActionType;
     EditorActionType[EditorActionType["Create"] = 1] = "Create";
     EditorActionType[EditorActionType["Edit"] = 2] = "Edit";
 })(EditorActionType || (EditorActionType = {}));
+/**
+ * Editor
+ * 相对于Viewer，管理所有编辑状态下的图层
+ * 优化的产物
+ */
 export class Editor extends Subject {
+    /**
+     * 创建Editor
+     * 不应自主创建，map内部创建
+     * @param {Map} map - 地图容器
+     */
     constructor(map) {
         super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit", "create", "delete"]); //when mouseover feature or vertex
         this._drag = {

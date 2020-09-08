@@ -9,6 +9,11 @@ export declare enum EditorActionType {
     Create = 1,
     Edit = 2
 }
+/**
+ * Editor
+ * 相对于Viewer，管理所有编辑状态下的图层
+ * 优化的产物
+ */
 export declare class Editor extends Subject {
     private _canvas;
     private _ctx;
@@ -34,6 +39,11 @@ export declare class Editor extends Subject {
     set defaultLineSymbol(value: Symbol);
     get defaultPolygonSymbol(): Symbol;
     set defaultPolygonSymbol(value: Symbol);
+    /**
+     * 创建Editor
+     * 不应自主创建，map内部创建
+     * @param {Map} map - 地图容器
+     */
     constructor(map: Map);
     setFeatureLayer(layer: FeatureLayer): void;
     start(): void;

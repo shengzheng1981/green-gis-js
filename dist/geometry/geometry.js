@@ -1,7 +1,10 @@
 import { Bound } from "../util/bound";
 import { SimplePointSymbol, SimpleTextSymbol } from "../symbol/symbol";
 import { WebMercator } from "../projection/web-mercator";
-//坐标类型
+/**
+ * 坐标类型
+ * @enum {number}
+ */
 export var CoordinateType;
 (function (CoordinateType) {
     //经纬度坐标
@@ -11,7 +14,10 @@ export var CoordinateType;
     //屏幕平面坐标
     CoordinateType[CoordinateType["Screen"] = 3] = "Screen";
 })(CoordinateType || (CoordinateType = {}));
-//图形类型
+/**
+ * 图形类型
+ * @enum {number}
+ */
 export var GeometryType;
 (function (GeometryType) {
     //点
@@ -21,22 +27,66 @@ export var GeometryType;
     //面
     GeometryType[GeometryType["Polygon"] = 3] = "Polygon";
 })(GeometryType || (GeometryType = {}));
+/**
+ * 图形基类
+ */
 export class Geometry {
+    /**
+     * 包络矩形
+     * @remarks
+     * 注意bound的坐标类型：一般为地理平面坐标，即投影后坐标
+     */
     get bound() {
         return this._bound;
     }
+    /**
+     * 输出GeoJSON格式字符串
+     */
     toGeoJSON() { }
+    /**
+     * 投影变换虚函数
+     * @param {Projection} projection - 坐标投影转换
+     */
     project(projection) { }
     ;
+    /**
+     * 图形绘制虚函数
+     * @param {CanvasRenderingContext2D} ctx - 绘图上下文
+     * @param {Projection} projection - 坐标投影转换
+     * @param {Bound} extent - 当前可视范围
+     * @param {Symbol} symbol - 渲染符号
+     */
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimplePointSymbol()) { }
     ;
     //animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, animation: Animation) {};
+    /**
+     * 是否包含传入坐标
+     * @remarks 主要用于鼠标交互
+     * @param {number} screenX - 鼠标屏幕坐标X
+     * @param {number} screenX - 鼠标屏幕坐标Y
+     * @return {boolean} 是否落入
+     */
     contain(screenX, screenY) { return false; }
+    /**
+     * 图形包络矩形与可见视图范围是否包含或相交
+     * @param {Projection} projection - 坐标投影转换
+     * @param {Bound} extent - 当前可视范围
+     * @return {boolean} 是否在可视范围内
+     */
     intersect(projection = new WebMercator(), extent = projection.bound) {
         if (!this._projected)
             this.project(projection);
         return extent.intersect(this._bound);
     }
+    /**
+     * 标注绘制
+     * @remarks
+     * 标注文本支持多行，/r/n换行
+     * @param {string} text - 标注文本
+     * @param {CanvasRenderingContext2D} ctx - 绘图上下文
+     * @param {Projection} projection - 坐标投影转换
+     * @param {SimpleTextSymbol} symbol - 标注符号
+     */
     label(text, ctx, projection = new WebMercator(), symbol = new SimpleTextSymbol()) {
         if (!text)
             return;
@@ -87,6 +137,16 @@ export class Geometry {
         ctx.restore();
     }
     ;
+    /**
+     * 标注量算
+     * @remarks
+     * 标注文本支持多行，/r/n换行
+     * 目前用于寻找自动标注最合适的方位：top bottom left right
+     * @param {string} text - 标注文本
+     * @param {CanvasRenderingContext2D} ctx - 绘图上下文
+     * @param {Projection} projection - 坐标投影转换
+     * @param {SimpleTextSymbol} symbol - 标注符号
+     */
     measure(text, ctx, projection = new WebMercator(), symbol = new SimpleTextSymbol()) {
         if (!text)
             return;
@@ -125,14 +185,37 @@ export class Geometry {
         return new Bound(screenX + totalX, screenY + totalY, screenX + totalX + width, screenY + totalY + height);
     }
     ;
+    /**
+     * 获取图形中心点虚函数
+     * @param {CoordinateType} type - 坐标类型
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number[]} 中心点坐标
+     */
     getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) { }
     ;
+    /**
+     * 获取图形包络矩形
+     * 针对新建图形，还未进行投影的情况
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number[]} 包络矩形
+     */
     getBound(projection = new WebMercator()) {
         if (!this._projected)
             this.project(projection);
         return this._bound;
     }
     ;
+    /**
+     * 获取两个图形间距离
+     * @remarks
+     * 当前为两图形中心点间的直线距离
+     * 多用于聚合判断
+     * @param {Geometry} geometry - 另一图形
+     * @param {CoordinateType} type - 坐标类型
+     * @param {CanvasRenderingContext2D} ctx - 绘图上下文
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number} 距离
+     */
     distance(geometry, type, ctx, projection = new WebMercator()) {
         const center = this.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
         const point = geometry.getCenter(type == CoordinateType.Screen ? CoordinateType.Projection : type, projection);
