@@ -1,5 +1,6 @@
 # Green GIS JS API
 Green GIS JS API is a lite GIS JS API based on Canvas API. Currently, this API only implement basic functions, so it can only be used by learning and researching! But, you can use it in a simple APP! Have fun!
+
 Demo: [https://green.ispongecity.com](https://green.ispongecity.com)
 
 ## Functions & Boundary
@@ -16,6 +17,7 @@ Demo: [https://green.ispongecity.com](https://green.ispongecity.com)
 10.Module, **only support ESM2015**, no bundle, no umd/cmd/amd...
 
 ## Usage & Demo
+[https://green.ispongecity.com](https://green.ispongecity.com)
 1. Basic Map
 ```
 //foo is a canvas
