@@ -2,6 +2,9 @@ import {Field} from "../data/field";
 import {Utility} from "../util/utility";
 import {Map} from "../map";
 
+/**
+ * Tooltip
+ */
 export class Tooltip {
 
     private _map: Map;
@@ -10,6 +13,10 @@ export class Tooltip {
     private _tooltipArrow: HTMLDivElement;
     private _tooltipText: HTMLDivElement;
 
+    /**
+     * 创建Tooltip
+     * @param {Map} map - 地图容器
+     */
     constructor(map) {
         this._map = map;
         const container = this._map.container;
@@ -26,6 +33,16 @@ export class Tooltip {
         this._tooltipContainer.appendChild(this._tooltipText);
     }
 
+    /**
+     * 显示Tooltip
+     * 设置限高
+     * 小于限高，显示在上方
+     * 超出限高，显示在下方
+     * @param {string | HTMLElement} text - HTMLElement | string
+     * @param {number} screenX - 屏幕坐标X
+     * @param {number} screenY - 屏幕坐标Y
+     * @param {number} height - 设置限高
+     */
     show(text: string | HTMLElement, screenX, screenY, height?){
         if (typeof text === 'string') {
             this._tooltipText.innerHTML = text;
@@ -53,6 +70,9 @@ export class Tooltip {
         this._tooltipContainer.style.cssText = "display: block; left: " + (screenX) + "px; top: " + (screenY) + "px;";
     }
 
+    /**
+     * 隐藏Tooltip
+     */
     hide() {
         this._tooltipContainer.style.cssText = "display: none";
     }

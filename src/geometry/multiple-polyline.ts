@@ -4,11 +4,14 @@ import {Projection} from "../projection/projection";
 import {LineSymbol, SimpleLineSymbol, Symbol} from "../symbol/symbol";
 import {WebMercator} from "../projection/web-mercator";
 import {Polyline} from "./polyline";
-//线
+/**
+ * 多段线
+ * @remarks
+ * 数据结构：such as [[[1,1],[2,2]],[[3,3],[4,4]]]
+ * [polyline[point[xy]]]
+ */
 export class MultiplePolyline extends Geometry{
-    //[polyline[point[xy]]]
-    //such as [[[1,1],[2,2]],[[3,3],[4,4]]]
-    //interaction: hover && identify
+
     static TOLERANCE: number = 4; //screen pixel
     private _tolerance: number = 4; //TOLERANCE + symbol.lineWidth
 
@@ -18,19 +21,27 @@ export class MultiplePolyline extends Geometry{
     private _coordinates: number[][][];
     //屏幕坐标
     private _screen: number[][][];
-
+    /**
+     * 创建多段线
+     * @param {number[][][} lnglats - 坐标集合，三维数组
+     */
     constructor(lnglats: number[][][]) {
         super();
         this._lnglats = lnglats;
     };
-
+    /**
+     * 输出GeoJSON格式字符串
+     */
     toGeoJSON() {
         return {
             "type": "MultiPolyline",
             "coordinates": this._lnglats
         }
     }
-
+    /**
+     * 投影变换
+     * @param {Projection} projection - 坐标投影转换
+     */
     project(projection: Projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((polyline: any) => polyline.map((point: any) => this._projection.project(point)));
@@ -46,7 +57,13 @@ export class MultiplePolyline extends Geometry{
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
     }
-
+    /**
+     * 绘制线
+     * @param {CanvasRenderingContext2D} ctx - 绘图上下文
+     * @param {Projection} projection - 坐标投影转换
+     * @param {Bound} extent - 当前可视范围
+     * @param {Symbol} symbol - 渲染符号
+     */
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: LineSymbol = new SimpleLineSymbol()) {
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
@@ -60,15 +77,47 @@ export class MultiplePolyline extends Geometry{
             symbol.draw(ctx, polyline);
         });
     }
-
+    /**
+     * 是否包含传入坐标
+     * @remarks
+     * 线是1维，所以要设置一个tolerance容差，来判断坐标是否落到线上
+     * @param {number} screenX - 鼠标屏幕坐标X
+     * @param {number} screenX - 鼠标屏幕坐标Y
+     * @return {boolean} 是否落入
+     */
     contain(screenX: number, screenY: number): boolean {
         let p2;
+        const _distanceToSegment = (p, p1, p2) => {
+            let x = p1[0],
+                y = p1[1],
+                dx = p2[0] - x,
+                dy = p2[1] - y,
+                dot = dx * dx + dy * dy,
+                t;
+
+            if (dot > 0) {
+                t = ((p[0] - x) * dx + (p[1] - y) * dy) / dot;
+
+                if (t > 1) {
+                    x = p2[0];
+                    y = p2[1];
+                } else if (t > 0) {
+                    x += dx * t;
+                    y += dy * t;
+                }
+            }
+
+            dx = p[0] - x;
+            dy = p[1] - y;
+
+            return Math.sqrt(dx * dx + dy * dy);
+        };
         return this._screen.some(polyline => {
             const distance = polyline.reduce( (acc, cur) => {
                 if (p2) {
                     const p1 = p2;
                     p2 = cur;
-                    return Math.min(acc, this._distanceToSegment([screenX, screenY], p1, p2));
+                    return Math.min(acc, _distanceToSegment([screenX, screenY], p1, p2));
                 } else {
                     p2 = cur;
                     return acc;
@@ -78,35 +127,15 @@ export class MultiplePolyline extends Geometry{
         });
     }
 
-    //from Leaflet
-    _distanceToSegment(p, p1, p2) {
-        let x = p1[0],
-            y = p1[1],
-            dx = p2[0] - x,
-            dy = p2[1] - y,
-            dot = dx * dx + dy * dy,
-            t;
-
-        if (dot > 0) {
-            t = ((p[0] - x) * dx + (p[1] - y) * dy) / dot;
-
-            if (t > 1) {
-                x = p2[0];
-                y = p2[1];
-            } else if (t > 0) {
-                x += dx * t;
-                y += dy * t;
-            }
-        }
-
-        dx = p[0] - x;
-        dy = p[1] - y;
-
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    //from Leaflet
-    //TODO: now return first polyline center
+    /**
+     * 获取线的中心点
+     * @remarks
+     * from Leaflet
+     * TODO: now return first polyline center
+     * @param {CoordinateType} type - 坐标类型
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number[]} 中心点坐标
+     */
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {
         if (!this._projected) this.project(projection);
         let i, halfDist, segDist, dist, p1, p2, ratio,

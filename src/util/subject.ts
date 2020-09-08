@@ -46,7 +46,7 @@ export class Subject {
     /**
      * 激发事件
      * @param {string} event - 事件名称
-     * @param {Function} param - 事件参数
+     * @param {Object} param - 事件参数
      */
     emit(event, param) {
         this._handlers[event].forEach(handler => handler(param));

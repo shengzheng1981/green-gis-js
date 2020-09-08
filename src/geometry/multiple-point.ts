@@ -4,11 +4,13 @@ import {Projection} from "../projection/projection";
 import {SimpleMarkerSymbol, SimplePointSymbol, Symbol, PointSymbol} from "../symbol/symbol";
 import {WebMercator} from "../projection/web-mercator";
 
-//点
+/**
+ * 多点
+ * @remarks
+ * 数据结构：such as [[1,1],[2,2]]
+ */
 export class MultiplePoint extends Geometry{
-    //such as [[1,1],[2,2]]
-    //interaction: hover && identify
-    static TOLERANCE: number = 0; //screen pixel
+
     private _symbol: PointSymbol; //TOLERANCE + symbol.radius
 
     //经纬度
@@ -17,19 +19,27 @@ export class MultiplePoint extends Geometry{
     private _coordinates: number[][];
     //屏幕坐标
     private _screen: number[][];
-
+    /**
+     * 创建多点
+     * @param {number[][]} lnglats - 坐标集合，二维数组
+     */
     constructor(lnglats: number[][]) {
         super();
         this._lnglats = lnglats;
     };
-
+    /**
+     * 输出GeoJSON格式字符串
+     */
     toGeoJSON() {
         return {
             "type": "MultiPoint",
             "coordinates": this._lnglats
         }
     }
-
+    /**
+     * 投影变换
+     * @param {Projection} projection - 坐标投影转换
+     */
     project(projection: Projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map( (point: any) => this._projection.project(point));
@@ -43,7 +53,13 @@ export class MultiplePoint extends Geometry{
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
     }
-
+    /**
+     * 绘制点
+     * @param {CanvasRenderingContext2D} ctx - 绘图上下文
+     * @param {Projection} projection - 坐标投影转换
+     * @param {Bound} extent - 当前可视范围
+     * @param {Symbol} symbol - 渲染符号
+     */
     async draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
@@ -56,7 +72,14 @@ export class MultiplePoint extends Geometry{
             this._symbol.draw(ctx, screenX, screenY);
         });
     };
-
+    /**
+     * 是否包含传入坐标
+     * @remarks
+     * 由于点是0维，主要根据渲染的符号大小来判断传入坐标是否落到点内
+     * @param {number} screenX - 鼠标屏幕坐标X
+     * @param {number} screenX - 鼠标屏幕坐标Y
+     * @return {boolean} 是否落入
+     */
     contain(screenX: number, screenY: number): boolean {
         return this._screen.some( (point: any) => {
             if (this._symbol instanceof SimplePointSymbol) {
@@ -66,8 +89,14 @@ export class MultiplePoint extends Geometry{
             }
         });
     }
-
-    //TODO: now return first point center
+    
+    /**
+     * 获取中心点
+     * TODO: now return first point center
+     * @param {CoordinateType} type - 坐标类型
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number[]} 中心点坐标
+     */
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {
         if (!this._projected) this.project(projection);
         if (type = CoordinateType.Latlng) {

@@ -121,6 +121,14 @@ export class SimpleTextSymbol extends Symbol {
      * 自动调整位置
      */
     public auto: boolean = false;
+    /**
+     * 标注点符号的宽度
+     */
+    public pointSymbolWidth: number = 0;
+    /**
+     * 标注点符号的高度
+     */
+    public pointSymbolHeight: number = 0;
 
     /**
      * 自动调整位置
@@ -614,7 +622,14 @@ export class ClusterSymbol extends PointSymbol {
      * 聚合数量字体粗细
      */
     public fontWeight: string = "Bold";
-
+    /**
+     * 色带起始色
+     */
+    public startColor: string = "#19caad";
+    /**
+     * 色带终止色
+     */
+    public endColor: string = "#f4606c";
     /**
      * 聚合数量文本
      * @remarks
@@ -657,9 +672,8 @@ export class ClusterSymbol extends PointSymbol {
      * 采用色带，色带可自定义扩展
      */
     get innerFillStyle(): string {
-        //const colors = Color.ramp(new Color(0, 255, 0), new Color(255,0,0), 16);
-        //const colors = Color.ramp(new Color(22,198,227), new Color(255, 0, 255), 16);
-        const colors = Color.ramp(new Color(25,202,173), new Color(244, 96, 108), 16);
+        //TODO 优化 setter hex, getter color
+        const colors = Color.ramp(Color.fromHex(this.startColor), Color.fromHex(this.endColor), 16);
         return colors[this._count <= 15 ? this._count : 15].toString();
     }
 

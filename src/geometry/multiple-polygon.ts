@@ -3,29 +3,40 @@ import {Bound} from "../util/bound";
 import {Projection} from "../projection/projection";
 import {FillSymbol, SimpleFillSymbol, SimpleTextSymbol, Symbol} from "../symbol/symbol";
 import {WebMercator} from "../projection/web-mercator";
-//面
+/**
+ * 多个面
+ * @remarks
+ * 数据结构：[polygon[ring[point[xy]]]]：such as [[[[1,1],[2,2],[1,2]]], [[[3,3],[3,4],[4,4]]]]
+ */
 export class MultiplePolygon extends Geometry{
-    //[polygon[ring[point[xy]]]]
-    //such as [[[[1,1],[2,2],[1,2]]], [[[3,3],[3,4],[4,4]]]]
+
     //经纬度
     private _lnglats: number[][][][];
     //平面坐标
     private _coordinates: number[][][][];
     //屏幕坐标
     private _screen: number[][][][];
-
+    /**
+     * 创建多个面
+     * @param {number[][][][]} lnglats - 坐标集合，四维数组
+     */
     constructor(lnglats: number[][][][]) {
         super();
         this._lnglats = lnglats;
     };
-
+    /**
+     * 输出GeoJSON格式字符串
+     */
     toGeoJSON() {
         return {
             "type": "MultiPolygon",
             "coordinates": this._lnglats
         }
     }
-
+    /**
+     * 投影变换
+     * @param {Projection} projection - 坐标投影转换
+     */
     project(projection: Projection) {
         this._projection = projection;
         this._coordinates = this._lnglats.map((polygon: any) => polygon.map((ring:any) => ring.map((point: any) => this._projection.project(point))));
@@ -41,7 +52,13 @@ export class MultiplePolygon extends Geometry{
         })});
         this._bound = new Bound(xmin, ymin, xmax, ymax);
     }
-
+    /**
+     * 绘制面
+     * @param {CanvasRenderingContext2D} ctx - 绘图上下文
+     * @param {Projection} projection - 坐标投影转换
+     * @param {Bound} extent - 当前可视范围
+     * @param {Symbol} symbol - 渲染符号
+     */
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: FillSymbol = new SimpleFillSymbol()) {
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
@@ -54,33 +71,47 @@ export class MultiplePolygon extends Geometry{
             symbol.draw(ctx, polygon);
         });
     }
-
+    /**
+     * 是否包含传入坐标
+     * @remarks
+     * 点是不是落在面内
+     * from https://github.com/substack/point-in-polygon
+     * ray-casting algorithm based on
+     * http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+     * @param {number} screenX - 鼠标屏幕坐标X
+     * @param {number} screenX - 鼠标屏幕坐标Y
+     * @return {boolean} 是否落入
+     */
     contain(screenX: number, screenY: number): boolean {
+        //first ring contained && others no contained
+        const _pointInPolygon = (point, vs) => {
+            let x = point[0], y = point[1];
+
+            let inside = false;
+            for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+                let xi = vs[i][0], yi = vs[i][1];
+                let xj = vs[j][0], yj = vs[j][1];
+
+                let intersect = ((yi > y) != (yj > y))
+                    && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+
+            return inside;
+        };
         //TODO: only test first polygon, ring is not supported
-        return this._screen.some(polygon => this._pointInPolygon([screenX, screenY], polygon[0]));
+        return this._screen.some(polygon => _pointInPolygon([screenX, screenY], polygon[0]));
     }
 
-    //from https://github.com/substack/point-in-polygon
-    // ray-casting algorithm based on
-    // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-    _pointInPolygon (point, vs) {
-        let x = point[0], y = point[1];
-
-        let inside = false;
-        for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-            let xi = vs[i][0], yi = vs[i][1];
-            let xj = vs[j][0], yj = vs[j][1];
-
-            let intersect = ((yi > y) != (yj > y))
-                && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-            if (intersect) inside = !inside;
-        }
-
-        return inside;
-    };
-
-    //from Leaflet
-    //TODO: now return first polygon center
+    /**
+     * 获取面的中心点
+     * @remarks
+     * from Leaflet
+     * TODO: now return first polygon center
+     * @param {CoordinateType} type - 坐标类型
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number[]} 中心点坐标
+     */
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {
         if (!this._projected) this.project(projection);
         let i, j, p1, p2, f, area, x, y, center,

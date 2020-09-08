@@ -19,7 +19,11 @@ export enum EditorActionType {
     Create = 1,
     Edit = 2
 }
-
+/**
+ * Editor
+ * 相对于Viewer，管理所有编辑状态下的图层
+ * 优化的产物
+ */
 export class Editor extends Subject{
     private _canvas: HTMLCanvasElement;
     private _ctx: CanvasRenderingContext2D;
@@ -85,7 +89,11 @@ export class Editor extends Subject{
     set defaultPolygonSymbol(value: Symbol) {
         this._defaultPolygonSymbol = value;
     }
-
+    /**
+     * 创建Editor
+     * 不应自主创建，map内部创建
+     * @param {Map} map - 地图容器
+     */
     constructor(map: Map) {
         super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit", "create", "delete"]); //when mouseover feature or vertex
         this._map = map;
