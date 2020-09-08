@@ -1,6 +1,6 @@
-import { Point } from "../geometry/Point";
+import { Point } from "../geometry/point";
 import { Projection } from "../projection/projection";
-import { Polyline } from "../geometry/Polyline";
+import { Polyline } from "../geometry/polyline";
 /**
  * 动画效果基类
  * @remarks

@@ -1,8 +1,7 @@
-import {Geometry} from "../geometry/Geometry";
-import {Point} from "../geometry/Point";
+import {Point} from "../geometry/point";
 import {WebMercator} from "../projection/web-mercator";
 import {Projection} from "../projection/projection";
-import {Polyline} from "../geometry/Polyline";
+import {Polyline} from "../geometry/polyline";
 import {LineSymbol, SimpleLineSymbol} from "../symbol/symbol";
 import {Bound} from "../util/bound";
 /**
