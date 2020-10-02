@@ -135,7 +135,7 @@ export class Point extends Geometry{
         this._screenX = (matrix.a * this._x + matrix.e);
         this._screenY = (matrix.d * this._y + matrix.f);
         this._symbol = symbol;
-        this._symbol.draw(ctx, this._screenX, this._screenY);
+        await this._symbol.draw(ctx, this._screenX, this._screenY);
     };
 
     /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, animation: Animation) {

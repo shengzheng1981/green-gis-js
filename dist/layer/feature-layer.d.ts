@@ -34,12 +34,6 @@ export declare class FeatureLayer extends Layer {
      */
     editing: boolean;
     /**
-     * 图层顺序（z-index）
-     * @remarks
-     * TODO: marker的异步加载，会影响绘制顺序
-     */
-    private _index;
-    /**
      * 矢量要素类（数据源）
      */
     get featureClass(): FeatureClass;
@@ -59,14 +53,6 @@ export declare class FeatureLayer extends Layer {
      * 图层可见缩放级别设置
      */
     set zoom(value: number[]);
-    /**
-     * 图层顺序
-     */
-    get index(): number;
-    /**
-     * 图层顺序设置
-     */
-    set index(value: number);
     /**
      * 重写事件注册监听
      * @remarks

@@ -12,6 +12,13 @@ import {Viewer} from "./viewer";
 import {Subject} from "./util/subject";
 import {Tooltip} from "./tooltip/tooltip";
 import {Animator} from "./animator";
+import {Point} from "./geometry/point";
+import {MultiplePoint} from "./geometry/multiple-point";
+import {Polyline} from "./geometry/polyline";
+import {MultiplePolyline} from "./geometry/multiple-polyline";
+import {SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol} from "./symbol/symbol";
+import {MultiplePolygon} from "./geometry/multiple-polygon";
+import {Polygon} from "./geometry/polygon";
 
 /**
  * 地图
@@ -53,6 +60,14 @@ export class Map extends Subject{
 
     //默认图形图层
     private _defaultGraphicLayer: GraphicLayer = new GraphicLayer();
+    //选择图层
+    private _selectionLayer: GraphicLayer = new GraphicLayer();
+    //点选中符号
+    private _selectionPointSymbol: SimplePointSymbol;
+    //线选中符号
+    private _selectionLineSymbol: SimpleLineSymbol;
+    //面选中符号
+    private _selectionPolygonSymbol: SimpleFillSymbol;
     //视图
     private _viewer: Viewer;
     //编辑器
@@ -113,7 +128,24 @@ export class Map extends Subject{
     get projection(): Projection {
         return this._projection;
     }
-
+    /**
+     * 点选中符号
+     */
+    get selectionPointSymbol(): SimplePointSymbol {
+        return this._selectionPointSymbol;
+    }
+    /**
+     * 线选中符号
+     */
+    get selectionLineSymbol(): SimpleLineSymbol {
+        return this._selectionLineSymbol;
+    }
+    /**
+     * 面选中符号
+     */
+    get selectionPolygonSymbol(): SimpleFillSymbol {
+        return this._selectionPolygonSymbol;
+    }
     /**
      * 创建地图
      * @param {string | HTMLDivElement} id - HTMLDivElement | id
@@ -188,6 +220,20 @@ export class Map extends Subject{
         this.setView([0,0], 10);
         this._onResize = this._onResize.bind(this);
         window.addEventListener("resize", this._onResize);
+
+        //selection
+        this._selectionPointSymbol = new SimplePointSymbol();
+        this._selectionPointSymbol.strokeStyle = "#00ffff";
+        this._selectionPointSymbol.fillStyle = "#00ffff88";
+
+        this._selectionLineSymbol = new SimpleLineSymbol();
+        this._selectionLineSymbol.lineWidth = 3;
+        this._selectionLineSymbol.strokeStyle = "#00ffff";
+
+        this._selectionPolygonSymbol = new SimpleFillSymbol();
+        this._selectionPolygonSymbol.lineWidth = 3;
+        this._selectionPolygonSymbol.strokeStyle = "#00ffff";
+        this._selectionPolygonSymbol.fillStyle = "#00ffff33";
     }
 
     /**
@@ -350,6 +396,28 @@ export class Map extends Subject{
     }
 
     /**
+     * 添加选中
+     * @param {Geometry} geometry - 图形
+     */
+    addSelection(geometry: Geometry) {
+        if (geometry instanceof Point || geometry instanceof MultiplePoint) {
+            this._selectionLayer.add(new Graphic(geometry, this._selectionPointSymbol));
+        } else if (geometry instanceof Polyline || geometry instanceof MultiplePolyline) {
+            this._selectionLayer.add(new Graphic(geometry, this._selectionLineSymbol));
+        } else if (geometry instanceof Polygon || geometry instanceof MultiplePolygon) {
+            this._selectionLayer.add(new Graphic(geometry, this._selectionPolygonSymbol));
+        }
+        this._selectionLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
+    }
+    /**
+     * 清除选中
+     */
+    clearSelection() {
+        this._selectionLayer.clear();
+        this._selectionLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
+    }
+
+    /**
      * 更新地图视图范围以及中心点
      */
     updateExtent() {
@@ -370,6 +438,7 @@ export class Map extends Subject{
         this._ctx.restore();
         this.updateExtent();
         this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
+        this._selectionLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
         this.hideTooltip();
     }
     /**

@@ -1,9 +1,9 @@
 
-import {Map, Graphic, SimpleMarkerSymbol, Point, Polyline, SimpleLineSymbol, BD09, GCJ02, LatLngType} from "../dist";
+import {Map, Graphic, SimpleMarkerSymbol, Point, Polyline, Polygon, SimpleLineSymbol, BD09, GCJ02, LatLngType} from "../dist";
 
 window.load = async () => {
     const amap = new AMap.Map("amap", {
-        navigationMode: 'classic',
+        animateEnable: true,
         zooms: [1, 20],
         mapStyle: 'amap://styles/normal',
         features: ['road', 'point', 'bg'],
@@ -26,35 +26,15 @@ window.load = async () => {
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
     map.setView([116.397411,39.909186], 12.5);
-    map.setProjection(new GCJ02(LatLngType.GPS));
-    const marker = new SimpleMarkerSymbol();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    await marker.load();
+    //map.setProjection(new GCJ02(LatLngType.GPS));
     const point = new Point(116.397411,39.909186);
-    const graphic = new Graphic(point, marker);
-    map.addGraphic(graphic);
+    map.addSelection(point);
 
-    const start = 115.397411, end = 116.397411;
-    const polyline1 = new Polyline([[start,39.909186],[end, 39.909186]]);
-    const symbol1 = new SimpleLineSymbol();
-    symbol1.strokeStyle = "#ff00ff";
-    const graphic1 = new Graphic(polyline1, symbol1);
-    map.addGraphic(graphic1);
+    const polyline = new Polyline([[115.397411,39.909186],[116.397411, 39.909186]]);
+    map.addSelection(polyline);
 
-    const lnglats = [];
-    for (let lng = start; lng <= end; lng = lng + 0.01) {
-        lnglats.push([lng, 39.909186]);
-    }
-    lnglats.push([end, 39.909186]);
-    const polyline2 = new Polyline(lnglats);
-    const symbol2 = new SimpleLineSymbol();
-    symbol2.strokeStyle = "#22cc22";
-    const graphic2 = new Graphic(polyline2, symbol2);
-    map.addGraphic(graphic2);
+    const polygon = new Polygon([[[115.397411, 39.909186],[115.397411, 40.5],[116.397411, 40.5],[116.397411,  39.909186]]]);
+    map.addSelection(polygon);
 }
 
 //cause typescript tsc forget js suffix for geometry.js

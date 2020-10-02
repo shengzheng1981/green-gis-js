@@ -95,4 +95,12 @@ export declare class Polyline extends Geometry {
      * @return {number[]} 中心点坐标
      */
     getCenter(type?: CoordinateType, projection?: Projection): any;
+    /**
+     * 获取线的长度
+     * @remarks
+     * from Leaflet
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number} 长度
+     */
+    getLength(projection?: Projection): number;
 }

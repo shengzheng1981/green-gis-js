@@ -68,7 +68,7 @@ export class GCJ02 extends Projection{
      * @remarks https://github.com/wandergis/coordtransform
      * @param lng
      * @param lat
-     * @returns {*[]}
+     * @returns {number[]}
      */
     static wgs84togcj02(lng, lat) {
         var dlat = this._transformlat(lng - 105.0, lat - 35.0);
@@ -89,7 +89,7 @@ export class GCJ02 extends Projection{
      * @remarks https://github.com/wandergis/coordtransform
      * @param lng
      * @param lat
-     * @returns {*[]}
+     * @returns {number[]}
      */
     static gcj02towgs84(lng, lat) {
         var dlat = this._transformlat(lng - 105.0, lat - 35.0);

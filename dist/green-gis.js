@@ -2513,7 +2513,7 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             this._screenX = (matrix.a * this._x + matrix.e);
             this._screenY = (matrix.d * this._y + matrix.f);
             this._symbol = symbol;
-            this._symbol.draw(ctx, this._screenX, this._screenY);
+            yield this._symbol.draw(ctx, this._screenX, this._screenY);
         });
     }
     ;
@@ -3926,12 +3926,28 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./util/bound */ "./util/bound.js");
 /* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./projection/web-mercator */ "./projection/web-mercator.js");
 /* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./layer/graphic-layer */ "./layer/graphic-layer.js");
-/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./util/utility */ "./util/utility.js");
-/* harmony import */ var _editor_editor__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./editor/editor */ "./editor/editor.js");
-/* harmony import */ var _viewer__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./viewer */ "./viewer.js");
-/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./util/subject */ "./util/subject.js");
-/* harmony import */ var _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./tooltip/tooltip */ "./tooltip/tooltip.js");
-/* harmony import */ var _animator__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./animator */ "./animator.js");
+/* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./element/graphic */ "./element/graphic.js");
+/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./util/utility */ "./util/utility.js");
+/* harmony import */ var _editor_editor__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./editor/editor */ "./editor/editor.js");
+/* harmony import */ var _viewer__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./viewer */ "./viewer.js");
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./util/subject */ "./util/subject.js");
+/* harmony import */ var _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./tooltip/tooltip */ "./tooltip/tooltip.js");
+/* harmony import */ var _animator__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./animator */ "./animator.js");
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./geometry/point */ "./geometry/point.js");
+/* harmony import */ var _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./geometry/multiple-point */ "./geometry/multiple-point.js");
+/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./geometry/polyline */ "./geometry/polyline.js");
+/* harmony import */ var _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./geometry/multiple-polyline */ "./geometry/multiple-polyline.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./symbol/symbol */ "./symbol/symbol.js");
+/* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./geometry/multiple-polygon */ "./geometry/multiple-polygon.js");
+/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./geometry/polygon */ "./geometry/polygon.js");
+
+
+
+
+
+
+
+
 
 
 
@@ -3946,7 +3962,7 @@ __webpack_require__.r(__webpack_exports__);
  * 地图
  * 容器: 1 viewer 1 editor 1 animator 1 tooltip
  */
-class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
+class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
     /**
      * 创建地图
      * @param {string | HTMLDivElement} id - HTMLDivElement | id
@@ -3986,6 +4002,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._center = [0, 0];
         //默认图形图层
         this._defaultGraphicLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_3__["GraphicLayer"]();
+        //选择图层
+        this._selectionLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_3__["GraphicLayer"]();
         //option
         this._option.disableDoubleClick = option && option.hasOwnProperty('disableDoubleClick') ? option.disableDoubleClick : false;
         this._container = id instanceof HTMLDivElement ? id : document.getElementById(id);
@@ -4015,19 +4033,19 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._canvas.addEventListener("touchmove", this._onTouchMove, false);
         this._canvas.addEventListener("touchend", this._onTouchEnd, false);
         //viewer
-        this._viewer = new _viewer__WEBPACK_IMPORTED_MODULE_6__["Viewer"](this);
-        this._viewer.on("mouseover", () => { _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._canvas, "green-hover"); });
-        this._viewer.on("mouseout", () => { _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].removeClass(this._canvas, "green-hover"); });
+        this._viewer = new _viewer__WEBPACK_IMPORTED_MODULE_7__["Viewer"](this);
+        this._viewer.on("mouseover", () => { _util_utility__WEBPACK_IMPORTED_MODULE_5__["Utility"].addClass(this._canvas, "green-hover"); });
+        this._viewer.on("mouseout", () => { _util_utility__WEBPACK_IMPORTED_MODULE_5__["Utility"].removeClass(this._canvas, "green-hover"); });
         //editor
-        this._editor = new _editor_editor__WEBPACK_IMPORTED_MODULE_5__["Editor"](this);
-        this._editor.on("mouseover", () => { _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].addClass(this._canvas, "green-hover"); });
-        this._editor.on("mouseout", () => { _util_utility__WEBPACK_IMPORTED_MODULE_4__["Utility"].removeClass(this._canvas, "green-hover"); });
+        this._editor = new _editor_editor__WEBPACK_IMPORTED_MODULE_6__["Editor"](this);
+        this._editor.on("mouseover", () => { _util_utility__WEBPACK_IMPORTED_MODULE_5__["Utility"].addClass(this._canvas, "green-hover"); });
+        this._editor.on("mouseout", () => { _util_utility__WEBPACK_IMPORTED_MODULE_5__["Utility"].removeClass(this._canvas, "green-hover"); });
         this._editor.on("startedit", () => { this._viewer.redraw(); });
         this._editor.on("stopedit", () => { this._viewer.redraw(); });
         //animator
-        this._animator = new _animator__WEBPACK_IMPORTED_MODULE_9__["Animator"](this);
+        this._animator = new _animator__WEBPACK_IMPORTED_MODULE_10__["Animator"](this);
         //tooltip
-        this._tooltip = new _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_8__["Tooltip"](this);
+        this._tooltip = new _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_9__["Tooltip"](this);
         this._projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_2__["WebMercator"]();
         //this._center = [0, 0];
         //this._zoom = 10;
@@ -4039,6 +4057,17 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this.setView([0, 0], 10);
         this._onResize = this._onResize.bind(this);
         window.addEventListener("resize", this._onResize);
+        //selection
+        this._selectionPointSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__["SimplePointSymbol"]();
+        this._selectionPointSymbol.strokeStyle = "#00ffff";
+        this._selectionPointSymbol.fillStyle = "#00ffff88";
+        this._selectionLineSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__["SimpleLineSymbol"]();
+        this._selectionLineSymbol.lineWidth = 3;
+        this._selectionLineSymbol.strokeStyle = "#00ffff";
+        this._selectionPolygonSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__["SimpleFillSymbol"]();
+        this._selectionPolygonSymbol.lineWidth = 3;
+        this._selectionPolygonSymbol.strokeStyle = "#00ffff";
+        this._selectionPolygonSymbol.fillStyle = "#00ffff33";
     }
     /**
      * DIV容器
@@ -4090,6 +4119,24 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
      */
     get projection() {
         return this._projection;
+    }
+    /**
+     * 点选中符号
+     */
+    get selectionPointSymbol() {
+        return this._selectionPointSymbol;
+    }
+    /**
+     * 线选中符号
+     */
+    get selectionLineSymbol() {
+        return this._selectionLineSymbol;
+    }
+    /**
+     * 面选中符号
+     */
+    get selectionPolygonSymbol() {
+        return this._selectionPolygonSymbol;
     }
     /**
      * 禁用双击交互
@@ -4245,6 +4292,29 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
     }
     /**
+     * 添加选中
+     * @param {Geometry} geometry - 图形
+     */
+    addSelection(geometry) {
+        if (geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_11__["Point"] || geometry instanceof _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_12__["MultiplePoint"]) {
+            this._selectionLayer.add(new _element_graphic__WEBPACK_IMPORTED_MODULE_4__["Graphic"](geometry, this._selectionPointSymbol));
+        }
+        else if (geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_13__["Polyline"] || geometry instanceof _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_14__["MultiplePolyline"]) {
+            this._selectionLayer.add(new _element_graphic__WEBPACK_IMPORTED_MODULE_4__["Graphic"](geometry, this._selectionLineSymbol));
+        }
+        else if (geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_17__["Polygon"] || geometry instanceof _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_16__["MultiplePolygon"]) {
+            this._selectionLayer.add(new _element_graphic__WEBPACK_IMPORTED_MODULE_4__["Graphic"](geometry, this._selectionPolygonSymbol));
+        }
+        this._selectionLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
+    }
+    /**
+     * 清除选中
+     */
+    clearSelection() {
+        this._selectionLayer.clear();
+        this._selectionLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
+    }
+    /**
      * 更新地图视图范围以及中心点
      */
     updateExtent() {
@@ -4265,6 +4335,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_7__["Subject"] {
         this._ctx.restore();
         this.updateExtent();
         this._defaultGraphicLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
+        this._selectionLayer.draw(this._ctx, this._projection, this._extent, this._zoom);
         this.hideTooltip();
     }
     /**
@@ -4718,7 +4789,7 @@ class GCJ02 extends _projection__WEBPACK_IMPORTED_MODULE_1__["Projection"] {
      * @remarks https://github.com/wandergis/coordtransform
      * @param lng
      * @param lat
-     * @returns {*[]}
+     * @returns {number[]}
      */
     static wgs84togcj02(lng, lat) {
         var dlat = this._transformlat(lng - 105.0, lat - 35.0);
@@ -4739,7 +4810,7 @@ class GCJ02 extends _projection__WEBPACK_IMPORTED_MODULE_1__["Projection"] {
      * @remarks https://github.com/wandergis/coordtransform
      * @param lng
      * @param lat
-     * @returns {*[]}
+     * @returns {number[]}
      */
     static gcj02towgs84(lng, lat) {
         var dlat = this._transformlat(lng - 105.0, lat - 35.0);

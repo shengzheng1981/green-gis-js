@@ -17,6 +17,12 @@ export class Layer extends Subject {
          * 图层可交互设置
          */
         this._interactive = true;
+        /**
+         * 图层顺序（z-index）
+         * @remarks
+         * TODO: marker的异步加载，会影响绘制顺序
+         */
+        this._index = 0; //z-index
     }
     /**
      * 图层是否可见
@@ -41,6 +47,18 @@ export class Layer extends Subject {
      */
     set interactive(value) {
         this._interactive = value;
+    }
+    /**
+     * 图层顺序
+     */
+    get index() {
+        return this._index;
+    }
+    /**
+     * 图层顺序设置
+     */
+    set index(value) {
+        this._index = value;
     }
     /**
      * 绘制图层

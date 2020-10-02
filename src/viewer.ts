@@ -19,7 +19,7 @@ export class Viewer extends Subject{
 
     private _map: Map;
     //图层列表
-    private _layers: FeatureLayer[] = [];
+    private _layers: Layer[] = [];
     /**
      * 创建Viewer
      * 不应自主创建，map内部创建
@@ -66,18 +66,18 @@ export class Viewer extends Subject{
     //接管click事件
     _onClick(event) {
         const layers = [...this._layers];
-        layers.filter(layer => layer.interactive && !layer.editing).reverse().some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom,"click"));
+        layers.filter(layer => layer instanceof FeatureLayer && layer.interactive && !layer.editing).reverse().some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom,"click"));
     }
     //接管doubleclick事件
     _onDoubleClick(event) {
         const layers = [...this._layers];
-        layers.filter(layer => layer.interactive && !layer.editing).reverse().some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom,"dblclick"));
+        layers.filter(layer => layer instanceof FeatureLayer && layer.interactive && !layer.editing).reverse().some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom,"dblclick"));
     }
     //接管mousemove事件
     _onMouseMove(event) {
         //if call Array.some, maybe abort mouseout last feature which mouseover!!! but filter maybe cause slow!!!no choice
         //const flag = this._layers.filter(layer => (layer instanceof FeatureLayer) && layer.interactive).some((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._projection, this._extent, "mousemove"));
-        const layers = this._layers.filter(layer => layer.interactive && !layer.editing).filter((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove"));
+        const layers = this._layers.filter(layer => layer instanceof FeatureLayer && layer.interactive && !layer.editing).filter((layer: FeatureLayer) => layer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "mousemove"));
         if (layers.length > 0) {
             this.emit("mouseover", event);
         } else {
@@ -131,10 +131,10 @@ export class Viewer extends Subject{
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
         this._ctx.restore();
 
-        this._layers.sort((a, b) => a.index - b.index).filter(layer => !layer.editing).forEach(layer => {
+        this._layers.sort((a, b) => a.index - b.index).filter(layer => (layer instanceof FeatureLayer && !layer.editing) || !(layer instanceof FeatureLayer)).forEach(layer => {
             layer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         });
-        this._layers.filter(layer => layer.labeled && !layer.editing).forEach((layer: FeatureLayer) => {
+        this._layers.filter(layer => layer instanceof FeatureLayer && layer.labeled && !layer.editing).forEach((layer: FeatureLayer) => {
             layer.drawLabel(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         });
     }

@@ -25,12 +25,6 @@ export class FeatureLayer extends Layer {
          * 是否正在编辑
          */
         this.editing = false;
-        /**
-         * 图层顺序（z-index）
-         * @remarks
-         * TODO: marker的异步加载，会影响绘制顺序
-         */
-        this._index = 0; //z-index
     }
     /**
      * 矢量要素类（数据源）
@@ -61,18 +55,6 @@ export class FeatureLayer extends Layer {
      */
     set zoom(value) {
         this._zoom = value;
-    }
-    /**
-     * 图层顺序
-     */
-    get index() {
-        return this._index;
-    }
-    /**
-     * 图层顺序设置
-     */
-    set index(value) {
-        this._index = value;
     }
     /**
      * 重写事件注册监听

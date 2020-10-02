@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./symbol-arrow.js",
+    entry: "./idw.js",
     output: {
         filename: "bundle.js"
     },

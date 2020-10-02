@@ -1,3 +1,4 @@
+import { Geometry } from "./geometry/geometry";
 import { Bound } from "./util/bound";
 import { Projection } from "./projection/projection";
 import { Layer } from "./layer/layer";
@@ -6,6 +7,7 @@ import { Editor } from "./editor/editor";
 import { Viewer } from "./viewer";
 import { Subject } from "./util/subject";
 import { Tooltip } from "./tooltip/tooltip";
+import { SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol } from "./symbol/symbol";
 /**
  * 地图
  * 容器: 1 viewer 1 editor 1 animator 1 tooltip
@@ -24,6 +26,10 @@ export declare class Map extends Subject {
     private _extent;
     private _projection;
     private _defaultGraphicLayer;
+    private _selectionLayer;
+    private _selectionPointSymbol;
+    private _selectionLineSymbol;
+    private _selectionPolygonSymbol;
     private _viewer;
     private _editor;
     private _animator;
@@ -61,6 +67,18 @@ export declare class Map extends Subject {
      * 坐标投影变换
      */
     get projection(): Projection;
+    /**
+     * 点选中符号
+     */
+    get selectionPointSymbol(): SimplePointSymbol;
+    /**
+     * 线选中符号
+     */
+    get selectionLineSymbol(): SimpleLineSymbol;
+    /**
+     * 面选中符号
+     */
+    get selectionPolygonSymbol(): SimpleFillSymbol;
     /**
      * 创建地图
      * @param {string | HTMLDivElement} id - HTMLDivElement | id
@@ -146,6 +164,15 @@ export declare class Map extends Subject {
      * shortcut
      */
     clearGraphics(): void;
+    /**
+     * 添加选中
+     * @param {Geometry} geometry - 图形
+     */
+    addSelection(geometry: Geometry): void;
+    /**
+     * 清除选中
+     */
+    clearSelection(): void;
     /**
      * 更新地图视图范围以及中心点
      */

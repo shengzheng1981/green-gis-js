@@ -84,4 +84,20 @@ export declare class Polygon extends Geometry {
      * @return {number[]} 中心点坐标
      */
     getCenter(type?: CoordinateType, projection?: Projection): any;
+    /**
+     * 获取面的周长
+     * @remarks
+     * from Leaflet
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number} 周长
+     */
+    getLength(projection?: Projection): number;
+    /**
+     * 获取面的面积
+     * @remarks
+     * from Leaflet
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number} 面积
+     */
+    getArea(projection?: Projection): number;
 }

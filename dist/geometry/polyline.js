@@ -205,6 +205,24 @@ export class Polyline extends Geometry {
             return center;
         }
     }
+    /**
+     * 获取线的长度
+     * @remarks
+     * from Leaflet
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number} 长度
+     */
+    getLength(projection = new WebMercator()) {
+        if (!this._projected)
+            this.project(projection);
+        let sum = 0;
+        this._coordinates.forEach((point, index) => {
+            if (index > 0) {
+                sum += Math.sqrt(Math.pow(point[0] - this._coordinates[index - 1][0], 2) + Math.pow(point[1] - this._coordinates[index - 1][1], 2));
+            }
+        });
+        return sum;
+    }
 }
 /**
  * 容差

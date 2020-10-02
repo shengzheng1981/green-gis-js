@@ -13,6 +13,7 @@ import {Tooltip} from "../tooltip/tooltip";
 import {GeometryType, CoordinateType} from "../geometry/geometry";
 import {Point} from "../geometry/point";
 import {ClusterSymbol} from "../symbol/symbol";
+import {Field} from "../data/field";
 
 export class FeatureLayer extends Layer{
     /**
@@ -43,12 +44,6 @@ export class FeatureLayer extends Layer{
      * 是否正在编辑
      */
     public editing: boolean = false;
-    /**
-     * 图层顺序（z-index）
-     * @remarks
-     * TODO: marker的异步加载，会影响绘制顺序
-     */
-    private _index: number = 0; //z-index
 
     /**
      * 矢量要素类（数据源）
@@ -80,18 +75,7 @@ export class FeatureLayer extends Layer{
     set zoom(value: number[]) {
         this._zoom = value;
     }
-    /**
-     * 图层顺序
-     */
-    get index(): number {
-        return this._index;
-    }
-    /**
-     * 图层顺序设置
-     */
-    set index(value: number) {
-        this._index = value;
-    }
+
 
     /**
      * 重写事件注册监听

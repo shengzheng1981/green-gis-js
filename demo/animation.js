@@ -40,7 +40,7 @@ window.load = async () => {
     /*const animation = new PointAnimation(point);
     animation.limit = 21;
     animation.velocity = 7;*/
-    const animation = new ParticleAnimation(point);
+    const animation = new PointAnimation(point);
     animation.radius = 40;
     animation.speed = 4;
     animation.alpha = 0.8;

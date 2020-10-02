@@ -176,4 +176,50 @@ export class Polygon extends Geometry {
             return center;
         }
     }
+    /**
+     * 获取面的周长
+     * @remarks
+     * from Leaflet
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number} 周长
+     */
+    getLength(projection = new WebMercator()) {
+        if (!this._projected)
+            this.project(projection);
+        let sum = 0;
+        this._coordinates.forEach((ring, index) => {
+            if (index == 0) {
+                ring.forEach((point, index) => {
+                    if (index > 0) {
+                        sum += Math.sqrt(Math.pow(point[0] - ring[index - 1][0], 2) + Math.pow(point[1] - ring[index - 1][1], 2));
+                    }
+                });
+            }
+        });
+        return sum;
+    }
+    /**
+     * 获取面的面积
+     * @remarks
+     * from Leaflet
+     * @param {Projection} projection - 坐标投影转换
+     * @return {number} 面积
+     */
+    getArea(projection = new WebMercator()) {
+        if (!this._projected)
+            this.project(projection);
+        let sum = 0;
+        this._coordinates.forEach((ring, index) => {
+            if (index == 0) {
+                ring.forEach((point, index) => {
+                    if (index > 0) {
+                        //梯形面积
+                        sum += 1 / 2 * (point[0] - ring[index - 1][0]) * (point[1] + ring[index - 1][1]);
+                    }
+                });
+            }
+        });
+        //顺时针为正，逆时针为负
+        return Math.abs(sum);
+    }
 }

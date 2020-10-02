@@ -50,6 +50,24 @@ export class Layer extends Subject{
     }
 
     /**
+     * 图层顺序（z-index）
+     * @remarks
+     * TODO: marker的异步加载，会影响绘制顺序
+     */
+    private _index: number = 0; //z-index
+    /**
+     * 图层顺序
+     */
+    get index(): number {
+        return this._index;
+    }
+    /**
+     * 图层顺序设置
+     */
+    set index(value: number) {
+        this._index = value;
+    }
+    /**
      * 创建图层
      */
     constructor() {

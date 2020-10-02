@@ -38,6 +38,20 @@ export declare class Layer extends Subject {
      */
     set interactive(value: boolean);
     /**
+     * 图层顺序（z-index）
+     * @remarks
+     * TODO: marker的异步加载，会影响绘制顺序
+     */
+    private _index;
+    /**
+     * 图层顺序
+     */
+    get index(): number;
+    /**
+     * 图层顺序设置
+     */
+    set index(value: number);
+    /**
      * 创建图层
      */
     constructor();

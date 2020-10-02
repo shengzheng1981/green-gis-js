@@ -34,3 +34,8 @@ export * from './util/color';
 export * from './util/subject';
 export * from './animation/animation';
 export * from './animation/particle-animation';
+export * from './element/raster';
+export * from './layer/raster-layer';
+export * from './analysis/interpolation/kriging';
+export * from './analysis/heat/heat';
+export * from './analysis/interpolation/inverse-distance-weight';
