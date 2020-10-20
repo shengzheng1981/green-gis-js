@@ -57,6 +57,10 @@ export class InverseDistanceWeight extends Raster {
     */
     public honeySide: number = 10;
     /*
+    * 蜂窝颜色
+    */
+    public honeyColor: string = "#ffffff88";
+    /*
     * 动态栅格（实时渲染）
     */
     get dynamic(): boolean {
@@ -149,11 +153,14 @@ export class InverseDistanceWeight extends Raster {
         if (this.honey) {
             ctx.save();
             ctx.setTransform(1,0,0,1,0,0);
-            ctx.strokeStyle = "#ffffff88";
+            ctx.strokeStyle = this.honeyColor;
             ctx.lineWidth = 1;
             let flag = 0; //奇偶标志
+            //循环y轴
             for (let y = 0; y <= ctx.canvas.height; y = Math.floor(y + this.honeySide * 1.732 / 2)) {
+                //循环x轴
                 for (let x = 0 + flag * (3 / 2 * this.honeySide); x <= ctx.canvas.width; x = x + 3 * this.honeySide) {
+                    //通过蜂窝网格中心点(x,y)，计算该点的反距离插值
                     let values = 0, weights = 0;
                     valueData.forEach(item => {
                         let distance = Math.sqrt( (item[0] - x) * (item[0] - x) + (item[1] - y) * (item[1] - y) );
@@ -163,9 +170,11 @@ export class InverseDistanceWeight extends Raster {
                         weights += weight;
                     });
                     if (weights) {
+                        //插值对比色带，找到填充色，填充整个网格
                         const alpha = Math.floor(values / weights * 255);
                         ctx.fillStyle = "rgba(" + colorData[4 * alpha] + "," + colorData[4 * alpha + 1] + "," + colorData[4 * alpha + 2] + "," + alpha/255 + ")";
                         ctx.beginPath();
+                        //绘制蜂窝网格
                         ctx.moveTo(x - this.honeySide, y);
                         ctx.lineTo(x - 1/2 * this.honeySide, Math.floor(y - this.honeySide * 1.732 / 2));
                         ctx.lineTo(x + 1/2 * this.honeySide, Math.floor(y - this.honeySide * 1.732 / 2));
@@ -178,6 +187,7 @@ export class InverseDistanceWeight extends Raster {
                         ctx.stroke();
                     }
                 }
+                //奇偶行换位
                 flag = flag === 0 ? 1 : 0;
             }
             ctx.restore();

@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./idw.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./honey.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -186,7 +186,7 @@ class Heat extends _element_raster__WEBPACK_IMPORTED_MODULE_0__["Raster"] {
      * @param {number} zoom - 当前缩放级别
      */
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_2__["WebMercator"](), extent = projection.bound, zoom = 10) {
-        //alpha通道图，类似灰度图
+        //绘制alpha通道图，类似灰度图
         const canvas = document.createElement("canvas");
         canvas.width = ctx.canvas.width;
         canvas.height = ctx.canvas.height;
@@ -337,6 +337,10 @@ class InverseDistanceWeight extends _element_raster__WEBPACK_IMPORTED_MODULE_2__
         * 蜂窝边长
         */
         this.honeySide = 10;
+        /*
+        * 蜂窝颜色
+        */
+        this.honeyColor = "#ffffff88";
     }
     /*
     * 动态栅格（实时渲染）
@@ -404,6 +408,9 @@ class InverseDistanceWeight extends _element_raster__WEBPACK_IMPORTED_MODULE_2__
                 return acc;
             }
         }, []);*/
+        //生成(x,y,value),
+        //1.如x,y地理平面坐标，则可放到初始化代码中；
+        //2.如x,y屏幕平面坐标，则放在此处，每次重绘重新坐标变换；
         this._featureClass.features.forEach((feature) => {
             const value = feature.properties[this._field.name];
             if (value != undefined) {
@@ -416,10 +423,11 @@ class InverseDistanceWeight extends _element_raster__WEBPACK_IMPORTED_MODULE_2__
         });
         //根据alpha值找到色带中对应颜色
         const colorData = this._ramp.getContext("2d").getImageData(0, 0, 256, 1).data;
+        //是否采用蜂窝网格渲染
         if (this.honey) {
             ctx.save();
             ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.strokeStyle = "#ffffff88";
+            ctx.strokeStyle = this.honeyColor;
             ctx.lineWidth = 1;
             let flag = 0; //奇偶标志
             for (let y = 0; y <= ctx.canvas.height; y = Math.floor(y + this.honeySide * 1.732 / 2)) {
@@ -462,6 +470,7 @@ class InverseDistanceWeight extends _element_raster__WEBPACK_IMPORTED_MODULE_2__
             for (let i = 0; i < data.length; i = i + 4) {
                 const screenY = i / (4 * canvas.width) * this.resolution, screenX = i / 4 % canvas.width * this.resolution;
                 let values = 0, weights = 0;
+                //加权
                 valueData.forEach(item => {
                     let distance = Math.sqrt((item[0] - screenX) * (item[0] - screenX) + (item[1] - screenY) * (item[1] - screenY));
                     distance = distance < 1 ? 1 : distance;
@@ -469,6 +478,7 @@ class InverseDistanceWeight extends _element_raster__WEBPACK_IMPORTED_MODULE_2__
                     values += weight * item[2];
                     weights += weight;
                 });
+                //像素RGB赋值，赋值方式参考热力图
                 if (weights) {
                     const alpha = Math.floor(values / weights * 255);
                     data[i] = colorData[4 * alpha]; //R
@@ -7809,10 +7819,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./idw.js":
-/*!****************!*\
-  !*** ./idw.js ***!
-  \****************/
+/***/ "./honey.js":
+/*!******************!*\
+  !*** ./honey.js ***!
+  \******************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -7835,25 +7845,17 @@ window.load = () => {
         scrollWheel: false,
         expandZoomRange: true,
         zooms: [1, 20],
-        mapStyle: 'normal',
+        //mapStyle: 'normal',
+        mapStyle: 'amap://styles/1e65d329854a3cf61b568b7a4e2267fd',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
     });
+    //const satellite = new AMap.TileLayer.Satellite();
+    //satellite.setMap(amap);
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
         amap.setZoomAndCenter(event.zoom, event.center);
-        document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
-        document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
-        document.getElementById("zoom").value = event.zoom;
-        document.getElementById("x1").value = Math.round(event.extent.xmin * 1000)/1000;
-        document.getElementById("y1").value = Math.round(event.extent.ymin * 1000)/1000;
-        document.getElementById("x2").value = Math.round(event.extent.xmax * 1000)/1000;
-        document.getElementById("y2").value = Math.round(event.extent.ymax * 1000)/1000;
-        document.getElementById("a").value = Math.round(event.matrix.a * 1000)/1000;
-        document.getElementById("d").value = Math.round(event.matrix.d * 1000)/1000;
-        document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
-        document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
 
     var req = new XMLHttpRequest();
@@ -7869,11 +7871,13 @@ window.load = () => {
         const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
         field.name = "DEPTH";
         const idw = new _dist__WEBPACK_IMPORTED_MODULE_0__["InverseDistanceWeight"]();
-        idw.honey = false;
+        idw.honey = true;
+        idw.honeySide = 40;
+        idw.honeyColor = "#00ffff";
         idw.generate(featureClass, field);
         const rasterLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["RasterLayer"]();
         rasterLayer.raster = idw;
-        map.addLayer(rasterLayer);
+        //map.addLayer(rasterLayer);
 
         map.addLayer(featureLayer);
 
@@ -7881,8 +7885,6 @@ window.load = () => {
     };
     req.open("GET", "assets/geojson/sensor.json", true);
     req.send(null);
-
-    //map.setProjection(new GCJ02(LatLngType.GCJ02));
 
 }
 
