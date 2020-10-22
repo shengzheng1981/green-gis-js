@@ -33,6 +33,7 @@ export declare class Map extends Subject {
     private _viewer;
     private _editor;
     private _animator;
+    private _grid;
     private _tooltip;
     /**
      * DIV容器
@@ -144,6 +145,7 @@ export declare class Map extends Subject {
      * 清除动画
      */
     clearAnimations(): void;
+    setTileUrl(url: any): void;
     /**
      * 添加图形
      * 参考_defaultGraphicLayer定义处的说明

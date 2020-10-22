@@ -39,3 +39,4 @@ export * from './layer/raster-layer';
 export * from './analysis/interpolation/kriging';
 export * from './analysis/heat/heat';
 export * from './analysis/interpolation/inverse-distance-weight';
+export * from './grid';

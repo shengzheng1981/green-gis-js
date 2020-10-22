@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./honey.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./grid.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -430,8 +430,11 @@ class InverseDistanceWeight extends _element_raster__WEBPACK_IMPORTED_MODULE_2__
             ctx.strokeStyle = this.honeyColor;
             ctx.lineWidth = 1;
             let flag = 0; //奇偶标志
+            //循环y轴
             for (let y = 0; y <= ctx.canvas.height; y = Math.floor(y + this.honeySide * 1.732 / 2)) {
+                //循环x轴
                 for (let x = 0 + flag * (3 / 2 * this.honeySide); x <= ctx.canvas.width; x = x + 3 * this.honeySide) {
+                    //通过蜂窝网格中心点(x,y)，计算该点的反距离插值
                     let values = 0, weights = 0;
                     valueData.forEach(item => {
                         let distance = Math.sqrt((item[0] - x) * (item[0] - x) + (item[1] - y) * (item[1] - y));
@@ -441,9 +444,11 @@ class InverseDistanceWeight extends _element_raster__WEBPACK_IMPORTED_MODULE_2__
                         weights += weight;
                     });
                     if (weights) {
+                        //插值对比色带，找到填充色，填充整个网格
                         const alpha = Math.floor(values / weights * 255);
                         ctx.fillStyle = "rgba(" + colorData[4 * alpha] + "," + colorData[4 * alpha + 1] + "," + colorData[4 * alpha + 2] + "," + alpha / 255 + ")";
                         ctx.beginPath();
+                        //绘制蜂窝网格
                         ctx.moveTo(x - this.honeySide, y);
                         ctx.lineTo(x - 1 / 2 * this.honeySide, Math.floor(y - this.honeySide * 1.732 / 2));
                         ctx.lineTo(x + 1 / 2 * this.honeySide, Math.floor(y - this.honeySide * 1.732 / 2));
@@ -456,6 +461,7 @@ class InverseDistanceWeight extends _element_raster__WEBPACK_IMPORTED_MODULE_2__
                         ctx.stroke();
                     }
                 }
+                //奇偶行换位
                 flag = flag === 0 ? 1 : 0;
             }
             ctx.restore();
@@ -4077,11 +4083,123 @@ Polyline.TOLERANCE = 4;
 
 /***/ }),
 
+/***/ "../dist/grid.js":
+/*!***********************!*\
+  !*** ../dist/grid.js ***!
+  \***********************/
+/*! exports provided: Grid */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Grid", function() { return Grid; });
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
+
+/**
+ * 动画效果的管理器
+ * 已内置于map，可通过map的接口进行添加删除的维护操作
+ */
+class Grid extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
+    /**
+     * 创建Animator
+     * 不应自主创建，map内部创建
+     * @param {Map} map - 地图容器
+     */
+    constructor(map) {
+        super(["mouseover", "mouseout"]); //when mouseover feature
+        this._map = map;
+        const container = map.container;
+        //create canvas
+        this._container = document.createElement("div");
+        this._container.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 80";
+        container.appendChild(this._container);
+        this._extentChange = this._extentChange.bind(this);
+        this._map.on("extent", this._extentChange);
+    }
+    /**
+     * 图层url
+     */
+    get url() {
+        return this._url;
+    }
+    /**
+     * 图层url
+     */
+    set url(value) {
+        this._url = value;
+    }
+    //与主视图同步
+    _extentChange(event) {
+        this.redraw();
+    }
+    /**
+     * 重绘
+     */
+    redraw() {
+        if (!this._url)
+            return;
+        const lngLat2Tile = (lng, lat, z) => {
+            let tileX = Math.floor((lng + 180) / 360 * Math.pow(2, z));
+            let tileY = Math.floor((1 / 2 - (Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180))) / (2 * Math.PI)) * Math.pow(2, z));
+            return [tileX, tileY];
+        };
+        const lngLat2Pixel = (lng, lat, z) => {
+            let pixelX = Math.floor(((lng + 180) / 360 * Math.pow(2, z) * 256) % 256);
+            let pixelY = Math.floor(((1 - (Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180))) / (2 * Math.PI)) * Math.pow(2, z) * 256) % 256);
+            return [pixelX, pixelY];
+        };
+        const getUrl = (url, x, y, z) => {
+            return url.replace("{x}", x).replace("{y}", y).replace("{z}", z);
+        };
+        const projection = this._map.projection;
+        const extent = this._map.extent;
+        const zoom = this._map.zoom;
+        const [lng1, lat1] = projection.unproject([extent.xmin, extent.ymax]);
+        const [lng2, lat2] = projection.unproject([extent.xmax, extent.ymin]);
+        const [tileMinX, tileMinY] = lngLat2Tile(lng1, lat1, zoom);
+        const [tileMaxX, tileMaxY] = lngLat2Tile(lng2, lat2, zoom);
+        const [pixelX, pixelY] = lngLat2Pixel(lng1, lat1, zoom);
+        this._container.innerHTML = "";
+        for (let x = tileMinX; x <= tileMaxX; x++) {
+            for (let y = tileMinY; y <= tileMaxY; y++) {
+                const url = getUrl(this._url, x, y, zoom);
+                let tile = document.createElement('img');
+                /*
+                 Alt tag is set to empty string to keep screen readers from reading URL and for compliance reasons
+                 http://www.w3.org/TR/WCAG20-TECHS/H67
+                */
+                tile.alt = '';
+                /*
+                 Set role="presentation" to force screen readers to ignore this
+                 https://www.w3.org/TR/wai-aria/roles#textalternativecomputation
+                */
+                tile.setAttribute('role', 'presentation');
+                tile.style.width = '256px';
+                tile.style.height = '256px';
+                tile.style.position = 'absolute';
+                tile.src = url;
+                tile.style.left = (-pixelX + (x - tileMinX) * 256) + 'px';
+                tile.style.top = (-pixelY + (y - tileMinY) * 256) + 'px';
+                this._container.appendChild(tile);
+            }
+        }
+    }
+    /**
+     * 销毁
+     */
+    destroy() {
+        this._map.off("extent", this._extentChange);
+    }
+}
+
+
+/***/ }),
+
 /***/ "../dist/index.js":
 /*!************************!*\
   !*** ../dist/index.js ***!
   \************************/
-/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Collision, NullCollision, SimpleCollision, CoverCollision, Label, Tooltip, Symbol, PointSymbol, LineSymbol, FillSymbol, SimpleTextSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, LetterSymbol, ArrowSymbol, ClusterSymbol, VertexSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject, Animation, PointAnimation, LineAnimation, ParticleAnimation, Raster, RasterLayer, Kriging, Heat, InverseDistanceWeight */
+/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Collision, NullCollision, SimpleCollision, CoverCollision, Label, Tooltip, Symbol, PointSymbol, LineSymbol, FillSymbol, SimpleTextSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, LetterSymbol, ArrowSymbol, ClusterSymbol, VertexSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject, Animation, PointAnimation, LineAnimation, ParticleAnimation, Raster, RasterLayer, Kriging, Heat, InverseDistanceWeight, Grid */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4258,6 +4376,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /* harmony import */ var _analysis_interpolation_inverse_distance_weight__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./analysis/interpolation/inverse-distance-weight */ "../dist/analysis/interpolation/inverse-distance-weight.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "InverseDistanceWeight", function() { return _analysis_interpolation_inverse_distance_weight__WEBPACK_IMPORTED_MODULE_40__["InverseDistanceWeight"]; });
+
+/* harmony import */ var _grid__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./grid */ "../dist/grid.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Grid", function() { return _grid__WEBPACK_IMPORTED_MODULE_41__["Grid"]; });
+
 
 
 
@@ -5094,6 +5216,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/symbol/symbol.js");
 /* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./geometry/multiple-polygon */ "../dist/geometry/multiple-polygon.js");
 /* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/geometry/polygon.js");
+/* harmony import */ var _grid__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./grid */ "../dist/grid.js");
+
 
 
 
@@ -5198,6 +5322,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
         this._editor.on("stopedit", () => { this._viewer.redraw(); });
         //animator
         this._animator = new _animator__WEBPACK_IMPORTED_MODULE_10__["Animator"](this);
+        //grid
+        this._grid = new _grid__WEBPACK_IMPORTED_MODULE_18__["Grid"](this);
         //tooltip
         this._tooltip = new _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_9__["Tooltip"](this);
         this._projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_2__["WebMercator"]();
@@ -5415,6 +5541,9 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
      */
     clearAnimations() {
         this._animator.clearAnimations();
+    }
+    setTileUrl(url) {
+        this._grid.url = url;
     }
     /**
      * 添加图形
@@ -7819,10 +7948,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./honey.js":
-/*!******************!*\
-  !*** ./honey.js ***!
-  \******************/
+/***/ "./grid.js":
+/*!*****************!*\
+  !*** ./grid.js ***!
+  \*****************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -7831,63 +7960,47 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
-window.load = () => {
-    const amap = new AMap.Map("amap", {
-        fadeOnZoom: false,
+
+window.load = async () => {
+    /*const amap = new AMap.Map("amap", {
         navigationMode: 'classic',
-        optimizePanAnimation: false,
-        animateEnable: false,
-        dragEnable: false,
-        zoomEnable: false,
-        resizeEnable: true,
-        doubleClickZoom: false,
-        keyboardEnable: false,
-        scrollWheel: false,
-        expandZoomRange: true,
         zooms: [1, 20],
-        //mapStyle: 'normal',
-        mapStyle: 'amap://styles/1e65d329854a3cf61b568b7a4e2267fd',
+        mapStyle: 'amap://styles/normal',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
-    });
-    //const satellite = new AMap.TileLayer.Satellite();
-    //satellite.setMap(amap);
+    });*/
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center);
+        //amap.setZoomAndCenter(event.zoom, event.center, true);
+        document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
+        document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
+        document.getElementById("zoom").value = event.zoom;
+        document.getElementById("x1").value = Math.round(event.extent.xmin * 1000)/1000;
+        document.getElementById("y1").value = Math.round(event.extent.ymin * 1000)/1000;
+        document.getElementById("x2").value = Math.round(event.extent.xmax * 1000)/1000;
+        document.getElementById("y2").value = Math.round(event.extent.ymax * 1000)/1000;
+        document.getElementById("a").value = Math.round(event.matrix.a * 1000)/1000;
+        document.getElementById("d").value = Math.round(event.matrix.d * 1000)/1000;
+        document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
+        document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-
-    var req = new XMLHttpRequest();
-    req.onload = (event) => {
-        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
-        featureClass.loadGeoJSON(JSON.parse(req.responseText));
-        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-        featureLayer.featureClass = featureClass;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
-        featureLayer.renderer = renderer;
-        featureLayer.zoom = [10, 20];
-
-        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field.name = "DEPTH";
-        const idw = new _dist__WEBPACK_IMPORTED_MODULE_0__["InverseDistanceWeight"]();
-        idw.honey = true;
-        idw.honeySide = 40;
-        idw.honeyColor = "#00ffff";
-        idw.generate(featureClass, field);
-        const rasterLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["RasterLayer"]();
-        rasterLayer.raster = idw;
-        //map.addLayer(rasterLayer);
-
-        map.addLayer(featureLayer);
-
-        map.setView([109.519, 18.271], 13);
-    };
-    req.open("GET", "assets/geojson/sensor.json", true);
-    req.send(null);
-
+    map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
+    //map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
+    map.setView([116.397411,39.909186], 12);
+    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
+    marker.width = 32;
+    marker.height = 32;
+    marker.offsetX = -16;
+    marker.offsetY = -32;
+    marker.url = "assets/img/marker.svg";
+    await marker.load();
+    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
+    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, marker);
+    map.addGraphic(graphic);
 }
 
+//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 

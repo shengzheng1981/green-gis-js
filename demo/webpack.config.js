@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./honey.js",
+    entry: "./grid.js",
     output: {
         filename: "bundle.js"
     },

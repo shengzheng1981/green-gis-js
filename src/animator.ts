@@ -35,7 +35,6 @@ export class Animator extends Subject{
         this._ctx = this._canvas.getContext("2d");
         this._map.on("resize", this._onResize);
         this._map.on("extent", this._extentChange);
-
     }
     //与主视图同步
     _onResize(event) {
