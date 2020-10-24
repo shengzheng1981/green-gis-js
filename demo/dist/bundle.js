@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./grid.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./gaode.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -7948,10 +7948,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./grid.js":
-/*!*****************!*\
-  !*** ./grid.js ***!
-  \*****************/
+/***/ "./gaode.js":
+/*!******************!*\
+  !*** ./gaode.js ***!
+  \******************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -7962,17 +7962,23 @@ __webpack_require__.r(__webpack_exports__);
 
 
 window.load = async () => {
-    /*const amap = new AMap.Map("amap", {
+    //1.自定义样式
+    const amap = new AMap.Map("amap", {
         navigationMode: 'classic',
         zooms: [1, 20],
-        mapStyle: 'amap://styles/normal',
+        //mapStyle: 'normal',
+        mapStyle: 'amap://styles/1e65d329854a3cf61b568b7a4e2267fd',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
-    });*/
+    });
+
+    //2.加载高德影像
+    const satellite = new AMap.TileLayer.Satellite();
+    satellite.setMap(amap);
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
-        //amap.setZoomAndCenter(event.zoom, event.center, true);
+        amap.setZoomAndCenter(event.zoom, event.center, true);
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;
@@ -7985,9 +7991,8 @@ window.load = async () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
-    //map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
     map.setView([116.397411,39.909186], 12);
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GPS));
     const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
     marker.width = 32;
     marker.height = 32;
@@ -7998,6 +8003,7 @@ window.load = async () => {
     const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
     const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, marker);
     map.addGraphic(graphic);
+
 }
 
 //cause typescript tsc forget js suffix for geometry.js

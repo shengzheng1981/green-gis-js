@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./grid.js",
+    entry: "./gaode.js",
     output: {
         filename: "bundle.js"
     },
