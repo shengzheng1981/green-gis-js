@@ -1,5 +1,5 @@
 
-import {Map, Graphic, SimpleMarkerSymbol, Point, Polyline, SimpleLineSymbol, BD09, GCJ02, LatLngType, Grid} from "../dist";
+import {Map, Graphic, SimpleMarkerSymbol, Point, Polyline, SimpleLineSymbol, BD09, GCJ02, LatLngType, Tile} from "../dist";
 
 window.load = async () => {
     /*const amap = new AMap.Map("amap", {

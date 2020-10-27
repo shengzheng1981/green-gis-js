@@ -33,7 +33,7 @@ export declare class Map extends Subject {
     private _viewer;
     private _editor;
     private _animator;
-    private _grid;
+    private _tile;
     private _tooltip;
     /**
      * DIV容器

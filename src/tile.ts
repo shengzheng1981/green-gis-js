@@ -5,7 +5,7 @@ import {Animation} from "./animation/animation";
  * 动画效果的管理器
  * 已内置于map，可通过map的接口进行添加删除的维护操作
  */
-export class Grid extends Subject{
+export class Tile extends Subject{
     private _container: HTMLDivElement;
 
     private _map: Map;

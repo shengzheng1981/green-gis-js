@@ -19,7 +19,7 @@ import {MultiplePolyline} from "./geometry/multiple-polyline";
 import {SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol} from "./symbol/symbol";
 import {MultiplePolygon} from "./geometry/multiple-polygon";
 import {Polygon} from "./geometry/polygon";
-import {Grid} from "./grid";
+import {Tile} from "./tile";
 
 /**
  * 地图
@@ -75,8 +75,8 @@ export class Map extends Subject{
     private _editor: Editor;
     //动画控制
     private _animator: Animator;
-    //网格
-    private _grid: Grid;
+    //切片管理
+    private _tile: Tile;
     //提示框
     private _tooltip: Tooltip;
     /**
@@ -207,8 +207,8 @@ export class Map extends Subject{
 
         //animator
         this._animator = new Animator(this);
-        //grid
-        this._grid = new Grid(this);
+        //tile
+        this._tile = new Tile(this);
         //tooltip
         this._tooltip = new Tooltip(this);
 
@@ -369,7 +369,7 @@ export class Map extends Subject{
     }
 
     setTileUrl(url) {
-        this._grid.url = url;
+        this._tile.url = url;
     }
 
     /**

@@ -16,7 +16,7 @@ import { MultiplePolyline } from "./geometry/multiple-polyline";
 import { SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol } from "./symbol/symbol";
 import { MultiplePolygon } from "./geometry/multiple-polygon";
 import { Polygon } from "./geometry/polygon";
-import { Grid } from "./grid";
+import { Tile } from "./tile";
 /**
  * 地图
  * 容器: 1 viewer 1 editor 1 animator 1 tooltip
@@ -103,8 +103,8 @@ export class Map extends Subject {
         this._editor.on("stopedit", () => { this._viewer.redraw(); });
         //animator
         this._animator = new Animator(this);
-        //grid
-        this._grid = new Grid(this);
+        //tile
+        this._tile = new Tile(this);
         //tooltip
         this._tooltip = new Tooltip(this);
         this._projection = new WebMercator();
@@ -324,7 +324,7 @@ export class Map extends Subject {
         this._animator.clearAnimations();
     }
     setTileUrl(url) {
-        this._grid.url = url;
+        this._tile.url = url;
     }
     /**
      * 添加图形
