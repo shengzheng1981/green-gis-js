@@ -8,10 +8,6 @@ export declare class InverseDistanceWeight extends Raster {
     private _max;
     private _ramp;
     /**
-     * 衰减半径
-     */
-    radius: number;
-    /**
      * 分辨率
      */
     resolution: number;

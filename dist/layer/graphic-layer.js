@@ -11,6 +11,9 @@ export class GraphicLayer extends Layer {
          */
         this._graphics = [];
     }
+    get graphics() {
+        return this._graphics;
+    }
     /**
      * 重写事件注册监听
      * @remarks

@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./tile.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./measurer.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -298,10 +298,6 @@ class InverseDistanceWeight extends _element_raster__WEBPACK_IMPORTED_MODULE_2__
      */
     constructor() {
         super(0, 0, 0, 0);
-        /**
-         * 衰减半径
-         */
-        this.radius = 2000; //m 平面距离
         /**
          * 分辨率
          */
@@ -3822,6 +3818,7 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
                         sum += 1 / 2 * (point[0] - ring[index - 1][0]) * (point[1] + ring[index - 1][1]);
                     }
                 });
+                sum += 1 / 2 * (ring[0][0] - ring[ring.length - 1][0]) * (ring[ring.length - 1][1] + ring[0][1]);
             }
         });
         //顺时针为正，逆时针为负
@@ -4087,7 +4084,7 @@ Polyline.TOLERANCE = 4;
 /*!************************!*\
   !*** ../dist/index.js ***!
   \************************/
-/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Collision, NullCollision, SimpleCollision, CoverCollision, Label, Tooltip, Symbol, PointSymbol, LineSymbol, FillSymbol, SimpleTextSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, LetterSymbol, ArrowSymbol, ClusterSymbol, VertexSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject, Animation, PointAnimation, LineAnimation, ParticleAnimation, Raster, RasterLayer, Kriging, Heat, InverseDistanceWeight, Tile */
+/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Collision, NullCollision, SimpleCollision, CoverCollision, Label, Tooltip, Symbol, PointSymbol, LineSymbol, FillSymbol, SimpleTextSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, LetterSymbol, ArrowSymbol, ClusterSymbol, VertexSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject, Animation, PointAnimation, LineAnimation, ParticleAnimation, Raster, RasterLayer, Kriging, Heat, InverseDistanceWeight, Tile, MeasureActionType, Measurer */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4267,6 +4264,12 @@ __webpack_require__.r(__webpack_exports__);
 
 /* harmony import */ var _tile__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./tile */ "../dist/tile.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Tile", function() { return _tile__WEBPACK_IMPORTED_MODULE_41__["Tile"]; });
+
+/* harmony import */ var _measurer__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ./measurer */ "../dist/measurer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MeasureActionType", function() { return _measurer__WEBPACK_IMPORTED_MODULE_42__["MeasureActionType"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Measurer", function() { return _measurer__WEBPACK_IMPORTED_MODULE_42__["Measurer"]; });
+
 
 
 
@@ -4816,6 +4819,9 @@ class GraphicLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
          */
         this._graphics = [];
     }
+    get graphics() {
+        return this._graphics;
+    }
     /**
      * 重写事件注册监听
      * @remarks
@@ -5105,6 +5111,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./geometry/multiple-polygon */ "../dist/geometry/multiple-polygon.js");
 /* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/geometry/polygon.js");
 /* harmony import */ var _tile__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./tile */ "../dist/tile.js");
+/* harmony import */ var _measurer__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./measurer */ "../dist/measurer.js");
+
 
 
 
@@ -5208,6 +5216,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
         this._editor.on("mouseout", () => { _util_utility__WEBPACK_IMPORTED_MODULE_5__["Utility"].removeClass(this._canvas, "green-hover"); });
         this._editor.on("startedit", () => { this._viewer.redraw(); });
         this._editor.on("stopedit", () => { this._viewer.redraw(); });
+        //measurer
+        this._measurer = new _measurer__WEBPACK_IMPORTED_MODULE_19__["Measurer"](this);
         //animator
         this._animator = new _animator__WEBPACK_IMPORTED_MODULE_10__["Animator"](this);
         //tile
@@ -5263,6 +5273,12 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
     }
     set editor(value) {
         this._editor = value;
+    }
+    /**
+     * Measurer
+     */
+    get measurer() {
+        return this._measurer;
     }
     /**
      * 视图中心
@@ -5430,6 +5446,9 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
     clearAnimations() {
         this._animator.clearAnimations();
     }
+    /**
+     * 设置切片url
+     */
     setTileUrl(url) {
         this._tile.url = url;
     }
@@ -5543,6 +5562,10 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
             this._editor._onClick(event);
             return;
         }
+        if (this._measurer && this._measurer.measuring) {
+            this._measurer._onClick(event);
+            return;
+        }
         //this._handlers["click"].forEach(handler => handler(event));
         this.emit("click", event);
     }
@@ -5551,6 +5574,10 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
     _onDoubleClick(event) {
         if (this._editor.editing) {
             this._editor._onDoubleClick(event);
+            return;
+        }
+        if (this._measurer.measuring) {
+            this._measurer._onDoubleClick(event);
             return;
         }
         if (!this._option.disableDoubleClick) {
@@ -5587,6 +5614,14 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
             const y = (event.offsetY - matrix.f) / matrix.d;
             [event.lng, event.lat] = this._projection.unproject([x, y]);
             this._editor._onMouseMove(event);
+            return;
+        }
+        if (this._measurer.measuring) {
+            const matrix = this._ctx.getTransform();
+            const x = (event.offsetX - matrix.e) / matrix.a;
+            const y = (event.offsetY - matrix.f) / matrix.d;
+            [event.lng, event.lat] = this._projection.unproject([x, y]);
+            this._measurer._onMouseMove(event);
             return;
         }
         if (!this._drag.flag) {
@@ -5769,6 +5804,341 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
         this._canvas.removeEventListener("touchend", this._onTouchEnd);
         this._viewer = null;
         this._editor = null;
+    }
+}
+
+
+/***/ }),
+
+/***/ "../dist/measurer.js":
+/*!***************************!*\
+  !*** ../dist/measurer.js ***!
+  \***************************/
+/*! exports provided: MeasureActionType, Measurer */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MeasureActionType", function() { return MeasureActionType; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Measurer", function() { return Measurer; });
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./layer/graphic-layer */ "../dist/layer/graphic-layer.js");
+/* harmony import */ var _element_graphic__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./element/graphic */ "../dist/element/graphic.js");
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./geometry/point */ "../dist/geometry/point.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
+/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./geometry/polyline */ "../dist/geometry/polyline.js");
+/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/geometry/polygon.js");
+
+
+
+
+
+
+
+
+var MeasureActionType;
+(function (MeasureActionType) {
+    MeasureActionType[MeasureActionType["Default"] = 0] = "Default";
+    MeasureActionType[MeasureActionType["Polyline"] = 1] = "Polyline";
+    MeasureActionType[MeasureActionType["Polygon"] = 2] = "Polygon";
+})(MeasureActionType || (MeasureActionType = {}));
+/**
+ * Measurer
+ */
+class Measurer extends _util_subject__WEBPACK_IMPORTED_MODULE_5__["Subject"] {
+    /**
+     * 创建Editor
+     * 不应自主创建，map内部创建
+     * @param {Map} map - 地图容器
+     */
+    constructor(map) {
+        super(["mouseover", "mouseout", "startedit", "stopedit", "click", "update", "commit", "create", "delete"]); //when mouseover feature or vertex
+        this._create = {
+            click: 0,
+            graphic: null,
+            lnglats: []
+        };
+        this._action = MeasureActionType.Default;
+        this._defaultPointSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_4__["SimplePointSymbol"]();
+        this._defaultLineSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_4__["SimpleLineSymbol"]();
+        this._defaultPolygonSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_4__["SimpleFillSymbol"]();
+        this._map = map;
+        const container = map.container;
+        //create canvas
+        this._canvas = document.createElement("canvas");
+        this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 90";
+        this._canvas.width = container.clientWidth;
+        this._canvas.height = container.clientHeight;
+        container.appendChild(this._canvas);
+        this._ctx = this._canvas.getContext("2d");
+        this._onResize = this._onResize.bind(this);
+        this._extentChange = this._extentChange.bind(this);
+        this._map.on("resize", this._onResize);
+        this._map.on("extent", this._extentChange);
+        this._measureLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__["GraphicLayer"]();
+    }
+    get measuring() {
+        return this._measuring;
+    }
+    get action() {
+        return this._action;
+    }
+    set action(value) {
+        this._action = value;
+    }
+    get defaultPointSymbol() {
+        return this._defaultPointSymbol;
+    }
+    set defaultPointSymbol(value) {
+        this._defaultPointSymbol = value;
+    }
+    get defaultLineSymbol() {
+        return this._defaultLineSymbol;
+    }
+    set defaultLineSymbol(value) {
+        this._defaultLineSymbol = value;
+    }
+    get defaultPolygonSymbol() {
+        return this._defaultPolygonSymbol;
+    }
+    set defaultPolygonSymbol(value) {
+        this._defaultPolygonSymbol = value;
+    }
+    measurePolyLine() {
+        this._measuring = true;
+        this._action = MeasureActionType.Polyline;
+        this._createLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__["GraphicLayer"]();
+    }
+    measurePolygon() {
+        this._measuring = true;
+        this._action = MeasureActionType.Polygon;
+        this._createLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__["GraphicLayer"]();
+    }
+    clear() {
+        this._measuring = false;
+        this._action = MeasureActionType.Default;
+        this._create = {
+            click: 0,
+            graphic: null,
+            lnglats: []
+        };
+        this._measureLayer.clear();
+        this._ctx.save();
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
+    }
+    addGraphic(g) {
+        this._measureLayer.add(g);
+        this.redraw();
+    }
+    removeGraphic(g) {
+        this._measureLayer.remove(g);
+        this.redraw();
+    }
+    _onResize(event) {
+        this._canvas.width = this._map.container.clientWidth;
+        this._canvas.height = this._map.container.clientHeight;
+    }
+    _extentChange(event) {
+        this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
+        this.redraw();
+    }
+    redraw() {
+        this._ctx.save();
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
+        this._createLayer && this._createLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this._measureLayer && this._measureLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this._measureLayer.graphics.forEach(graphic => this._label(graphic.geometry));
+    }
+    _onClick(event) {
+        if (!this._measuring)
+            return;
+        if (event.detail > 1)
+            return;
+        if (this._action === MeasureActionType.Polygon) {
+            if (this._create.click == 0) {
+                this._createLayer.clear();
+                const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, this._defaultPointSymbol);
+                this._createLayer.add(graphic);
+                this._create.click += 1;
+                this._create.lnglats.push([event.lng, event.lat]);
+            }
+            else if (this._create.click == 1) {
+                const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](second, this._defaultPointSymbol);
+                this._createLayer.add(graphic1);
+                if (this._create.graphic)
+                    this._createLayer.remove(this._create.graphic);
+                this._create.lnglats.push([event.lng, event.lat]);
+                const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"](this._create.lnglats);
+                this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
+                this._createLayer.add(this._create.graphic);
+                this._create.click += 1;
+            }
+            else {
+                const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](second, this._defaultPointSymbol);
+                this._createLayer.add(graphic1);
+                if (this._create.graphic)
+                    this._createLayer.remove(this._create.graphic);
+                this._create.lnglats.push([event.lng, event.lat]);
+                const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_7__["Polygon"]([this._create.lnglats]);
+                this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](polygon, this._defaultPolygonSymbol);
+                this._createLayer.add(this._create.graphic);
+                this._create.click += 1;
+            }
+        }
+        else if (this._action === MeasureActionType.Polyline) {
+            if (this._create.click == 0) {
+                this._createLayer.clear();
+                const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, this._defaultPointSymbol);
+                this._createLayer.add(graphic);
+                this._create.click += 1;
+                this._create.lnglats.push([event.lng, event.lat]);
+            }
+            else {
+                const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](second, this._defaultPointSymbol);
+                this._createLayer.add(graphic1);
+                if (this._create.graphic)
+                    this._createLayer.remove(this._create.graphic);
+                this._create.lnglats.push([event.lng, event.lat]);
+                const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"](this._create.lnglats);
+                this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
+                this._createLayer.add(this._create.graphic);
+                this._create.click += 1;
+            }
+        }
+    }
+    _onDoubleClick(event) {
+        if (!this._measuring)
+            return;
+        if (this._action === MeasureActionType.Polygon) {
+            if (this._create.click > 1) {
+                if (this._create.graphic)
+                    this._createLayer.remove(this._create.graphic);
+                const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_7__["Polygon"]([this._create.lnglats]);
+                const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](polygon, this._defaultPolygonSymbol);
+                this._create = {
+                    click: 0,
+                    graphic: null,
+                    lnglats: []
+                };
+                this._createLayer.clear();
+                this.addGraphic(graphic);
+                //this._label(polygon);
+            }
+        }
+        else if (this._action === MeasureActionType.Polyline) {
+            if (this._create.click > 0) {
+                if (this._create.graphic)
+                    this._createLayer.remove(this._create.graphic);
+                const polyline = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"](this._create.lnglats);
+                const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](polyline, this._defaultLineSymbol);
+                this._create = {
+                    click: 0,
+                    graphic: null,
+                    lnglats: []
+                };
+                this._createLayer.clear();
+                this.addGraphic(graphic);
+                //this._label(polyline);
+            }
+        }
+    }
+    _label(geometry) {
+        let projection = this._map.projection;
+        geometry.project(projection);
+        let ctx = this._canvas.getContext("2d");
+        ctx.save();
+        let symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_4__["SimpleTextSymbol"]();
+        ctx.strokeStyle = symbol.strokeStyle;
+        ctx.fillStyle = symbol.fillStyle;
+        ctx.lineWidth = symbol.lineWidth;
+        ctx.lineJoin = "round";
+        ctx.font = symbol.fontSize + "px/1 " + symbol.fontFamily + " " + symbol.fontWeight;
+        const matrix = ctx.getTransform();
+        //keep pixel
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        let text = "";
+        let center = geometry.getCenter(_geometry_geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Projection, projection);
+        if (geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"]) {
+            const length = geometry.getLength(projection);
+            text = length > 1000 ? Math.round(length / 1000 * 10) / 10 + "公里" : Math.round(length) + "米";
+            center = geometry.coordinates[geometry.coordinates.length - 1];
+        }
+        else if (geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_7__["Polygon"]) {
+            const area = geometry.getArea(projection);
+            text = area > 1000 ? Math.round(area / 10000 * 10) / 10 + "公顷" : Math.round(area) + "平方米";
+        }
+        else {
+            return;
+        }
+        let width = ctx.measureText(text).width + symbol.padding * 2;
+        let height = symbol.fontSize + symbol.padding * 2;
+        const screenX = (matrix.a * center[0] + matrix.e);
+        const screenY = (matrix.d * center[1] + matrix.f);
+        let totalX, totalY;
+        totalX = -width / 2;
+        totalY = symbol.pointSymbolHeight / 2;
+        ctx.strokeRect(screenX + totalX, screenY + totalY, width, height);
+        ctx.fillRect(screenX + totalX, screenY + totalY, width, height);
+        ctx.textBaseline = "top";
+        ctx.fillStyle = symbol.fontColor;
+        ctx.fillText(text, screenX + totalX + symbol.padding, screenY + totalY + symbol.padding);
+        ctx.restore();
+    }
+    ;
+    _onMouseDown(event) {
+    }
+    _onMouseMove(event) {
+        if (!this._measuring)
+            return;
+        if (this._action === MeasureActionType.Polygon) {
+            if (this._create.click == 1) {
+                if (this._create.graphic)
+                    this._createLayer.remove(this._create.graphic);
+                const lnglats = [...this._create.lnglats];
+                lnglats.push([event.lng, event.lat]);
+                const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"](lnglats);
+                this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
+                this._createLayer.add(this._create.graphic);
+            }
+            else if (this._create.click > 1) {
+                if (this._create.graphic)
+                    this._createLayer.remove(this._create.graphic);
+                const lnglats = [...this._create.lnglats];
+                lnglats.push([event.lng, event.lat]);
+                const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_7__["Polygon"]([lnglats]);
+                this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](polygon, this._defaultPolygonSymbol);
+                this._createLayer.add(this._create.graphic);
+            }
+        }
+        else if (this._action === MeasureActionType.Polyline) {
+            if (this._create.click > 0) {
+                if (this._create.graphic)
+                    this._createLayer.remove(this._create.graphic);
+                const lnglats = [...this._create.lnglats];
+                lnglats.push([event.lng, event.lat]);
+                const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"](lnglats);
+                this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
+                this._createLayer.add(this._create.graphic);
+            }
+        }
+        this.redraw();
+    }
+    _onMouseUp(event) {
+    }
+    destroy() {
+        this._measureLayer = null;
+        this._map.off("resize", this._onResize);
+        this._map.off("extent", this._extentChange);
     }
 }
 
@@ -7948,10 +8318,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./tile.js":
-/*!*****************!*\
-  !*** ./tile.js ***!
-  \*****************/
+/***/ "./measurer.js":
+/*!*********************!*\
+  !*** ./measurer.js ***!
+  \*********************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -7960,19 +8330,28 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
-
-window.load = async () => {
-    /*const amap = new AMap.Map("amap", {
+window.load = () => {
+    const amap = new AMap.Map("amap", {
+        fadeOnZoom: false,
         navigationMode: 'classic',
+        optimizePanAnimation: false,
+        animateEnable: false,
+        dragEnable: false,
+        zoomEnable: false,
+        resizeEnable: true,
+        doubleClickZoom: false,
+        keyboardEnable: false,
+        scrollWheel: false,
+        expandZoomRange: true,
         zooms: [1, 20],
-        mapStyle: 'amap://styles/normal',
+        mapStyle: 'normal',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
-    });*/
+    });
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
-        //amap.setZoomAndCenter(event.zoom, event.center, true);
+        amap.setZoomAndCenter(event.zoom, event.center);
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;
@@ -7985,22 +8364,26 @@ window.load = async () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
-    //map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
-    map.setView([116.397411,39.909186], 12);
-    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    await marker.load();
-    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
-    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, marker);
-    map.addGraphic(graphic);
+
+    const measurer = map.measurer;
+
+    window.measurePolygon = () => {
+        measurer.measurePolygon();
+    };
+
+    window.measurePolyLine = () => {
+        measurer.measurePolyLine();
+    };
+
+    window.clearMeasure = () => {
+        measurer.clear();
+    };
+
+    map.setView([109.519, 18.271], 13);
+
+
 }
 
-//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 

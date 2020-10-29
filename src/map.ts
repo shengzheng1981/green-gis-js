@@ -20,6 +20,7 @@ import {SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol} from "./symbol/sy
 import {MultiplePolygon} from "./geometry/multiple-polygon";
 import {Polygon} from "./geometry/polygon";
 import {Tile} from "./tile";
+import {Measurer} from "./measurer";
 
 /**
  * 地图
@@ -73,6 +74,8 @@ export class Map extends Subject{
     private _viewer: Viewer;
     //编辑器
     private _editor: Editor;
+    //量算工具
+    private _measurer: Measurer;
     //动画控制
     private _animator: Animator;
     //切片管理
@@ -105,6 +108,12 @@ export class Map extends Subject{
     }
     set editor(value: Editor) {
         this._editor = value;
+    }
+    /**
+     * Measurer
+     */
+    get measurer(): Measurer {
+        return this._measurer;
     }
     /**
      * 视图中心
@@ -204,6 +213,9 @@ export class Map extends Subject{
         this._editor.on("mouseout", () => { Utility.removeClass(this._canvas, "green-hover");});
         this._editor.on("startedit", () => {this._viewer.redraw();});
         this._editor.on("stopedit", () => {this._viewer.redraw();});
+
+        //measurer
+        this._measurer = new Measurer(this);
 
         //animator
         this._animator = new Animator(this);
@@ -367,7 +379,9 @@ export class Map extends Subject{
     clearAnimations() {
         this._animator.clearAnimations();
     }
-
+    /**
+     * 设置切片url
+     */
     setTileUrl(url) {
         this._tile.url = url;
     }
@@ -482,6 +496,10 @@ export class Map extends Subject{
             this._editor._onClick(event);
             return;
         }
+        if (this._measurer && this._measurer.measuring) {
+            this._measurer._onClick(event);
+            return;
+        }
         //this._handlers["click"].forEach(handler => handler(event));
         this.emit("click", event);
     }
@@ -490,6 +508,10 @@ export class Map extends Subject{
     _onDoubleClick(event) {
         if (this._editor.editing) {
             this._editor._onDoubleClick(event);
+            return;
+        }
+        if (this._measurer.measuring) {
+            this._measurer._onDoubleClick(event);
             return;
         }
         if (!this._option.disableDoubleClick) {
@@ -526,6 +548,14 @@ export class Map extends Subject{
             const y = (event.offsetY - matrix.f) / matrix.d;
             [event.lng, event.lat] = this._projection.unproject([x, y]);
             this._editor._onMouseMove(event);
+            return;
+        }
+        if (this._measurer.measuring) {
+            const matrix = (this._ctx as any).getTransform();
+            const x = (event.offsetX - matrix.e) / matrix.a;
+            const y = (event.offsetY - matrix.f) / matrix.d;
+            [event.lng, event.lat] = this._projection.unproject([x, y]);
+            this._measurer._onMouseMove(event);
             return;
         }
         if (!this._drag.flag) {

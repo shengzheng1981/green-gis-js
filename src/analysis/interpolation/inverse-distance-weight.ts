@@ -17,10 +17,7 @@ export class InverseDistanceWeight extends Raster {
     private _min: number;
     private _max: number;
     private _ramp: HTMLCanvasElement;
-    /**
-     * 衰减半径
-     */
-    public radius: number = 2000;  //m 平面距离
+
     /**
      * 分辨率
      */

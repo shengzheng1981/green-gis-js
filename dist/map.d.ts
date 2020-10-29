@@ -8,6 +8,7 @@ import { Viewer } from "./viewer";
 import { Subject } from "./util/subject";
 import { Tooltip } from "./tooltip/tooltip";
 import { SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol } from "./symbol/symbol";
+import { Measurer } from "./measurer";
 /**
  * 地图
  * 容器: 1 viewer 1 editor 1 animator 1 tooltip
@@ -32,6 +33,7 @@ export declare class Map extends Subject {
     private _selectionPolygonSymbol;
     private _viewer;
     private _editor;
+    private _measurer;
     private _animator;
     private _tile;
     private _tooltip;
@@ -52,6 +54,10 @@ export declare class Map extends Subject {
      */
     get editor(): Editor;
     set editor(value: Editor);
+    /**
+     * Measurer
+     */
+    get measurer(): Measurer;
     /**
      * 视图中心
      */
@@ -145,6 +151,9 @@ export declare class Map extends Subject {
      * 清除动画
      */
     clearAnimations(): void;
+    /**
+     * 设置切片url
+     */
     setTileUrl(url: any): void;
     /**
      * 添加图形

@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./tile.js",
+    entry: "./measurer.js",
     output: {
         filename: "bundle.js"
     },

@@ -10,6 +10,7 @@ export declare class GraphicLayer extends Layer {
      * 图形要素集合
      */
     private _graphics;
+    get graphics(): Graphic[];
     /**
      * 重写事件注册监听
      * @remarks

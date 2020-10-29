@@ -13,6 +13,10 @@ export class GraphicLayer extends Layer{
      */
     private _graphics: Graphic[] = [];
 
+    get graphics(): Graphic[] {
+        return this._graphics;
+    }
+
     /**
      * 重写事件注册监听
      * @remarks

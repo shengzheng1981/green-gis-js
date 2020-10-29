@@ -11,10 +11,6 @@ export class InverseDistanceWeight extends Raster {
     constructor() {
         super(0, 0, 0, 0);
         /**
-         * 衰减半径
-         */
-        this.radius = 2000; //m 平面距离
-        /**
          * 分辨率
          */
         this.resolution = 10; //

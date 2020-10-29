@@ -217,6 +217,7 @@ export class Polygon extends Geometry {
                         sum += 1 / 2 * (point[0] - ring[index - 1][0]) * (point[1] + ring[index - 1][1]);
                     }
                 });
+                sum += 1 / 2 * (ring[0][0] - ring[ring.length - 1][0]) * (ring[ring.length - 1][1] + ring[0][1]);
             }
         });
         //顺时针为正，逆时针为负
