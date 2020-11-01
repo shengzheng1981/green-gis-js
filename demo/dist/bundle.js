@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./measurer.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./tile.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -8318,10 +8318,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./measurer.js":
-/*!*********************!*\
-  !*** ./measurer.js ***!
-  \*********************/
+/***/ "./tile.js":
+/*!*****************!*\
+  !*** ./tile.js ***!
+  \*****************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -8330,28 +8330,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
-window.load = () => {
-    const amap = new AMap.Map("amap", {
-        fadeOnZoom: false,
+
+window.load = async () => {
+    /*const amap = new AMap.Map("amap", {
         navigationMode: 'classic',
-        optimizePanAnimation: false,
-        animateEnable: false,
-        dragEnable: false,
-        zoomEnable: false,
-        resizeEnable: true,
-        doubleClickZoom: false,
-        keyboardEnable: false,
-        scrollWheel: false,
-        expandZoomRange: true,
         zooms: [1, 20],
-        mapStyle: 'normal',
+        mapStyle: 'amap://styles/normal',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
-    });
+    });*/
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center);
+        //amap.setZoomAndCenter(event.zoom, event.center, true);
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;
@@ -8364,26 +8355,22 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-
-    const measurer = map.measurer;
-
-    window.measurePolygon = () => {
-        measurer.measurePolygon();
-    };
-
-    window.measurePolyLine = () => {
-        measurer.measurePolyLine();
-    };
-
-    window.clearMeasure = () => {
-        measurer.clear();
-    };
-
-    map.setView([109.519, 18.271], 13);
-
-
+    //map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
+    map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
+    map.setView([116.397411,39.909186], 12);
+    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
+    marker.width = 32;
+    marker.height = 32;
+    marker.offsetX = -16;
+    marker.offsetY = -32;
+    marker.url = "assets/img/marker.svg";
+    await marker.load();
+    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
+    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, marker);
+    map.addGraphic(graphic);
 }
 
+//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 

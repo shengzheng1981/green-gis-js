@@ -25,8 +25,8 @@ window.load = async () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
-    //map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
+    //map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
+    map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
     map.setView([116.397411,39.909186], 12);
     const marker = new SimpleMarkerSymbol();
     marker.width = 32;

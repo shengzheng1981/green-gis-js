@@ -1,15 +1,12 @@
 import {Map} from "./map";
 import {Subject} from "./util/subject";
-import {Animation} from "./animation/animation";
 /**
  * 动画效果的管理器
  * 已内置于map，可通过map的接口进行添加删除的维护操作
  */
 export class Tile extends Subject{
     private _container: HTMLDivElement;
-
     private _map: Map;
-
     /**
      * 图层url
      */
@@ -26,7 +23,6 @@ export class Tile extends Subject{
     set url(value: string) {
         this._url = value;
     }
-
     /**
      * 创建Animator
      * 不应自主创建，map内部创建
@@ -82,15 +78,7 @@ export class Tile extends Subject{
             for(let y = tileMinY; y <= tileMaxY; y++) {
                 const url = getUrl(this._url, x, y, zoom);
                 let tile: any = document.createElement('img');
-                /*
-                 Alt tag is set to empty string to keep screen readers from reading URL and for compliance reasons
-                 http://www.w3.org/TR/WCAG20-TECHS/H67
-                */
                 tile.alt = '';
-                /*
-                 Set role="presentation" to force screen readers to ignore this
-                 https://www.w3.org/TR/wai-aria/roles#textalternativecomputation
-                */
                 tile.setAttribute('role', 'presentation');
                 tile.style.width = '256px';
                 tile.style.height = '256px';
@@ -108,6 +96,5 @@ export class Tile extends Subject{
      */
     destroy() {
         this._map.off("extent", this._extentChange);
-
     }
 }
