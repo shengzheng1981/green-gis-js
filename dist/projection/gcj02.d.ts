@@ -40,9 +40,10 @@ export declare class GCJ02 extends Projection {
      * @remarks 地理平面坐标 单位米
      * @param {number} x - 地理平面坐标x
      * @param {number} y - 地理平面坐标y
+     * @param {boolean} original - 是否转换回偏移前经纬度坐标
      * @return {number[]} 经纬度
      */
-    unproject([x, y]: [any, any]): number[];
+    unproject([x, y]: [any, any], original?: boolean): number[];
     /**
      * WGS-84 转 GCJ-02
      * @remarks https://github.com/wandergis/coordtransform

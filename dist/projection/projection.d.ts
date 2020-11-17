@@ -41,7 +41,7 @@ export declare class Projection {
      * @param {number} y - 地理平面坐标y
      * @return {number[]} 经纬度
      */
-    unproject([x, y]: [any, any]): number[];
+    unproject([x, y]: [any, any], original?: boolean): number[];
     /**
      * 投影后的平面坐标范围
      */

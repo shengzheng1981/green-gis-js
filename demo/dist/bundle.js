@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./tile.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./fit-bound.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -5382,7 +5382,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
      */
     fitBound(bound) {
         const origin = bound.getCenter();
-        const center = this._projection.unproject(origin);
+        const center = this._projection.unproject(origin, true);
         bound.scale(2);
         const x_mpp = (bound.xmax - bound.xmin) / this._canvas.width; //x  meter per pixel
         const y_mpp = (bound.ymax - bound.ymin) / this._canvas.height; //y  meter per pixel
@@ -6212,12 +6212,20 @@ class BD09 extends _projection__WEBPACK_IMPORTED_MODULE_1__["Projection"] {
      * @param {number} y - 地理平面坐标y
      * @return {number[]} 经纬度
      */
-    unproject([x, y]) {
+    unproject([x, y], original = false) {
         const projection = new BMap.MercatorProjection();
         const point = projection.pointToLngLat(new BMap.Pixel(x, y));
-        return [point.lng, point.lat];
-        /*const d = 180 / Math.PI;
-        return  [x * d / WebMercator.R, (2 * Math.atan(Math.exp(y / WebMercator.R)) - (Math.PI / 2)) * d];*/
+        let [lng, lat] = [point.lng, point.lat];
+        if (original) {
+            if (this._type == _projection__WEBPACK_IMPORTED_MODULE_1__["LatLngType"].GPS) {
+                [lng, lat] = BD09.bd09togcj02(lng, lat);
+                [lng, lat] = _gcj02__WEBPACK_IMPORTED_MODULE_2__["GCJ02"].gcj02towgs84(lng, lat);
+            }
+            else if (this._type == _projection__WEBPACK_IMPORTED_MODULE_1__["LatLngType"].GCJ02) {
+                [lng, lat] = BD09.bd09togcj02(lng, lat);
+            }
+        }
+        return [lng, lat];
     }
     /**
      * 百度坐标系 (BD-09) 与 火星坐标系 (GCJ-02) 的转换
@@ -6319,11 +6327,18 @@ class GCJ02 extends _projection__WEBPACK_IMPORTED_MODULE_1__["Projection"] {
      * @remarks 地理平面坐标 单位米
      * @param {number} x - 地理平面坐标x
      * @param {number} y - 地理平面坐标y
+     * @param {boolean} original - 是否转换回偏移前经纬度坐标
      * @return {number[]} 经纬度
      */
-    unproject([x, y]) {
+    unproject([x, y], original = false) {
         const d = 180 / Math.PI;
-        return [x * d / GCJ02.R, (2 * Math.atan(Math.exp(y / GCJ02.R)) - (Math.PI / 2)) * d];
+        let [lng, lat] = [x * d / GCJ02.R, (2 * Math.atan(Math.exp(y / GCJ02.R)) - (Math.PI / 2)) * d];
+        if (original) {
+            if (this._type == _projection__WEBPACK_IMPORTED_MODULE_1__["LatLngType"].GPS) {
+                [lng, lat] = GCJ02.gcj02towgs84(lng, lat);
+            }
+        }
+        return [lng, lat];
     }
     /**
      * WGS-84 转 GCJ-02
@@ -6465,7 +6480,7 @@ class Projection {
      * @param {number} y - 地理平面坐标y
      * @return {number[]} 经纬度
      */
-    unproject([x, y]) { return []; }
+    unproject([x, y], original = false) { return []; }
     ;
     /**
      * 投影后的平面坐标范围
@@ -6520,7 +6535,7 @@ class WebMercator extends _projection__WEBPACK_IMPORTED_MODULE_1__["Projection"]
      * @param {number} y - 地理平面坐标y
      * @return {number[]} 经纬度
      */
-    unproject([x, y]) {
+    unproject([x, y], original = false) {
         const d = 180 / Math.PI;
         return [x * d / WebMercator.R, (2 * Math.atan(Math.exp(y / WebMercator.R)) - (Math.PI / 2)) * d];
     }
@@ -7597,7 +7612,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
 
 /**
- * 动画效果的管理器
+ * 切片管理器
  * 已内置于map，可通过map的接口进行添加删除的维护操作
  */
 class Tile extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
@@ -7610,7 +7625,7 @@ class Tile extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
         super(["mouseover", "mouseout"]); //when mouseover feature
         this._map = map;
         const container = map.container;
-        //create canvas
+        //create div
         this._container = document.createElement("div");
         this._container.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 80";
         container.appendChild(this._container);
@@ -7665,15 +7680,7 @@ class Tile extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
             for (let y = tileMinY; y <= tileMaxY; y++) {
                 const url = getUrl(this._url, x, y, zoom);
                 let tile = document.createElement('img');
-                /*
-                 Alt tag is set to empty string to keep screen readers from reading URL and for compliance reasons
-                 http://www.w3.org/TR/WCAG20-TECHS/H67
-                */
                 tile.alt = '';
-                /*
-                 Set role="presentation" to force screen readers to ignore this
-                 https://www.w3.org/TR/wai-aria/roles#textalternativecomputation
-                */
                 tile.setAttribute('role', 'presentation');
                 tile.style.width = '256px';
                 tile.style.height = '256px';
@@ -8318,10 +8325,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./tile.js":
-/*!*****************!*\
-  !*** ./tile.js ***!
-  \*****************/
+/***/ "./fit-bound.js":
+/*!**********************!*\
+  !*** ./fit-bound.js ***!
+  \**********************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -8330,19 +8337,31 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
+var AMap = window.AMap;
 
-window.load = async () => {
-    /*const amap = new AMap.Map("amap", {
+window.load = () => {
+
+    const amap = new AMap.Map("amap", {
+        fadeOnZoom: false,
         navigationMode: 'classic',
+        optimizePanAnimation: false,
+        animateEnable: false,
+        dragEnable: false,
+        zoomEnable: false,
+        resizeEnable: true,
+        doubleClickZoom: false,
+        keyboardEnable: false,
+        scrollWheel: false,
+        expandZoomRange: true,
         zooms: [1, 20],
-        mapStyle: 'amap://styles/normal',
+        mapStyle: 'normal',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
-    });*/
+    });
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
-        //amap.setZoomAndCenter(event.zoom, event.center, true);
+        amap.setZoomAndCenter(event.zoom, event.center);
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;
@@ -8355,22 +8374,18 @@ window.load = async () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    //map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
-    map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
-    map.setView([116.397411,39.909186], 12);
-    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleMarkerSymbol"]();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    await marker.load();
-    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](116.397411,39.909186);
-    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, marker);
+
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GPS));
+
+    const polygon = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polygon"]([[[116.397411,39.909186], [116.397311,39.909186], [116.397211,39.909086], [116.397291,39.908586], [116.397351,39.908786]]]);
+    const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleFillSymbol"]();
+    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](polygon, symbol);
     map.addGraphic(graphic);
+
+    map.fitBound(polygon.bound);
+
 }
 
-//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 

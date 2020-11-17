@@ -61,12 +61,19 @@ export class BD09 extends Projection{
      * @param {number} y - 地理平面坐标y
      * @return {number[]} 经纬度
      */
-    unproject([x, y]): number[] {
+    unproject([x, y], original = false): number[] {
         const projection =  new BMap.MercatorProjection();
         const point = projection.pointToLngLat(new BMap.Pixel(x, y));
-        return [point.lng, point.lat];
-        /*const d = 180 / Math.PI;
-        return  [x * d / WebMercator.R, (2 * Math.atan(Math.exp(y / WebMercator.R)) - (Math.PI / 2)) * d];*/
+        let [lng, lat] = [point.lng, point.lat];
+        if (original) {
+            if (this._type == LatLngType.GPS) {
+                [lng, lat] = BD09.bd09togcj02(lng, lat);
+                [lng, lat] = GCJ02.gcj02towgs84(lng, lat);
+            } else if (this._type == LatLngType.GCJ02) {
+                [lng, lat] = BD09.bd09togcj02(lng, lat);
+            }
+        }
+        return [lng, lat];
     }
 
     /**

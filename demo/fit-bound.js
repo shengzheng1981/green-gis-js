@@ -1,4 +1,4 @@
-import {Map, Point, Polyline, Polygon, Graphic, SimpleLineSymbol, SimplePointSymbol, SimpleMarkerSymbol, SimpleFillSymbol, GraphicLayer, GeometryType} from "../dist";
+import {Map, Point, Polyline, Polygon, Graphic, SimpleLineSymbol, SimplePointSymbol, SimpleMarkerSymbol, SimpleFillSymbol, GraphicLayer, GeometryType, LatLngType, GCJ02} from "../dist";
 
 var AMap = window.AMap;
 
@@ -37,6 +37,8 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
+
+    map.setProjection(new GCJ02(LatLngType.GPS));
 
     const polygon = new Polygon([[[116.397411,39.909186], [116.397311,39.909186], [116.397211,39.909086], [116.397291,39.908586], [116.397351,39.908786]]]);
     const symbol = new SimpleFillSymbol();

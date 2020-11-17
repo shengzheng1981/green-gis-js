@@ -1,7 +1,7 @@
 import { Map } from "./map";
 import { Subject } from "./util/subject";
 /**
- * 动画效果的管理器
+ * 切片管理器
  * 已内置于map，可通过map的接口进行添加删除的维护操作
  */
 export declare class Tile extends Subject {

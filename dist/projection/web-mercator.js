@@ -29,7 +29,7 @@ export class WebMercator extends Projection {
      * @param {number} y - 地理平面坐标y
      * @return {number[]} 经纬度
      */
-    unproject([x, y]) {
+    unproject([x, y], original = false) {
         const d = 180 / Math.PI;
         return [x * d / WebMercator.R, (2 * Math.atan(Math.exp(y / WebMercator.R)) - (Math.PI / 2)) * d];
     }

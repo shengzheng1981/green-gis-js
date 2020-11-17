@@ -314,7 +314,7 @@ export class Map extends Subject{
      */
     fitBound(bound: Bound) {
         const origin = bound.getCenter();
-        const center = this._projection.unproject(origin as any);
+        const center = this._projection.unproject(origin as any, true);
         bound.scale(2);
         const x_mpp = (bound.xmax - bound.xmin) / this._canvas.width; //x  meter per pixel
         const y_mpp = (bound.ymax - bound.ymin) / this._canvas.height; //y  meter per pixel

@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./tile.js",
+    entry: "./fit-bound.js",
     output: {
         filename: "bundle.js"
     },

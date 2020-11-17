@@ -56,11 +56,18 @@ export class GCJ02 extends Projection{
      * @remarks 地理平面坐标 单位米
      * @param {number} x - 地理平面坐标x
      * @param {number} y - 地理平面坐标y
+     * @param {boolean} original - 是否转换回偏移前经纬度坐标
      * @return {number[]} 经纬度
      */
-    unproject([x, y]): number[] {
+    unproject([x, y], original = false): number[] {
         const d = 180 / Math.PI;
-        return  [x * d / GCJ02.R, (2 * Math.atan(Math.exp(y / GCJ02.R)) - (Math.PI / 2)) * d];
+        let [lng, lat] = [x * d / GCJ02.R, (2 * Math.atan(Math.exp(y / GCJ02.R)) - (Math.PI / 2)) * d];
+        if (original) {
+            if (this._type == LatLngType.GPS) {
+                [lng, lat] = GCJ02.gcj02towgs84(lng, lat);
+            }
+        }
+        return [lng, lat];
     }
 
     /**

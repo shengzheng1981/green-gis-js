@@ -37,7 +37,7 @@ export declare class BD09 extends Projection {
      * @param {number} y - 地理平面坐标y
      * @return {number[]} 经纬度
      */
-    unproject([x, y]: [any, any]): number[];
+    unproject([x, y]: [any, any], original?: boolean): number[];
     /**
      * 百度坐标系 (BD-09) 与 火星坐标系 (GCJ-02) 的转换
      * @remarks

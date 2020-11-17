@@ -1,7 +1,7 @@
 import {Map} from "./map";
 import {Subject} from "./util/subject";
 /**
- * 动画效果的管理器
+ * 切片管理器
  * 已内置于map，可通过map的接口进行添加删除的维护操作
  */
 export class Tile extends Subject{
@@ -32,7 +32,7 @@ export class Tile extends Subject{
         super(["mouseover", "mouseout"]); //when mouseover feature
         this._map = map;
         const container = map.container;
-        //create canvas
+        //create div
         this._container = document.createElement("div");
         this._container.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 80";
         container.appendChild(this._container);
