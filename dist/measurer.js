@@ -131,31 +131,31 @@ export class Measurer extends Subject {
         if (this._action === MeasureActionType.Polygon) {
             if (this._create.click == 0) {
                 this._createLayer.clear();
-                const point = new Point(event.lng, event.lat);
+                const point = new Point(event.originalLng, event.originalLat);
                 const graphic = new Graphic(point, this._defaultPointSymbol);
                 this._createLayer.add(graphic);
                 this._create.click += 1;
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
             }
             else if (this._create.click == 1) {
-                const second = new Point(event.lng, event.lat);
+                const second = new Point(event.originalLng, event.originalLat);
                 const graphic1 = new Graphic(second, this._defaultPointSymbol);
                 this._createLayer.add(graphic1);
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
                 const line = new Polyline(this._create.lnglats);
                 this._create.graphic = new Graphic(line, this._defaultLineSymbol);
                 this._createLayer.add(this._create.graphic);
                 this._create.click += 1;
             }
             else {
-                const second = new Point(event.lng, event.lat);
+                const second = new Point(event.originalLng, event.originalLat);
                 const graphic1 = new Graphic(second, this._defaultPointSymbol);
                 this._createLayer.add(graphic1);
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
                 const polygon = new Polygon([this._create.lnglats]);
                 this._create.graphic = new Graphic(polygon, this._defaultPolygonSymbol);
                 this._createLayer.add(this._create.graphic);
@@ -165,19 +165,19 @@ export class Measurer extends Subject {
         else if (this._action === MeasureActionType.Polyline) {
             if (this._create.click == 0) {
                 this._createLayer.clear();
-                const point = new Point(event.lng, event.lat);
+                const point = new Point(event.originalLng, event.originalLat);
                 const graphic = new Graphic(point, this._defaultPointSymbol);
                 this._createLayer.add(graphic);
                 this._create.click += 1;
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
             }
             else {
-                const second = new Point(event.lng, event.lat);
+                const second = new Point(event.originalLng, event.originalLat);
                 const graphic1 = new Graphic(second, this._defaultPointSymbol);
                 this._createLayer.add(graphic1);
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
                 const line = new Polyline(this._create.lnglats);
                 this._create.graphic = new Graphic(line, this._defaultLineSymbol);
                 this._createLayer.add(this._create.graphic);
@@ -274,7 +274,7 @@ export class Measurer extends Subject {
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
                 const lnglats = [...this._create.lnglats];
-                lnglats.push([event.lng, event.lat]);
+                lnglats.push([event.originalLng, event.originalLat]);
                 const line = new Polyline(lnglats);
                 this._create.graphic = new Graphic(line, this._defaultLineSymbol);
                 this._createLayer.add(this._create.graphic);
@@ -283,7 +283,7 @@ export class Measurer extends Subject {
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
                 const lnglats = [...this._create.lnglats];
-                lnglats.push([event.lng, event.lat]);
+                lnglats.push([event.originalLng, event.originalLat]);
                 const polygon = new Polygon([lnglats]);
                 this._create.graphic = new Graphic(polygon, this._defaultPolygonSymbol);
                 this._createLayer.add(this._create.graphic);
@@ -294,7 +294,7 @@ export class Measurer extends Subject {
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
                 const lnglats = [...this._create.lnglats];
-                lnglats.push([event.lng, event.lat]);
+                lnglats.push([event.originalLng, event.originalLat]);
                 const line = new Polyline(lnglats);
                 this._create.graphic = new Graphic(line, this._defaultLineSymbol);
                 this._createLayer.add(this._create.graphic);

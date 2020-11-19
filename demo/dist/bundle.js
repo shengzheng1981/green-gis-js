@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./fit-bound.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./editor-polyline-create.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -5558,6 +5558,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
         const x = (event.offsetX - matrix.e) / matrix.a;
         const y = (event.offsetY - matrix.f) / matrix.d;
         [event.lng, event.lat] = this._projection.unproject([x, y]);
+        [event.originalLng, event.originalLat] = this._projection.unproject([x, y], true);
         if (this._editor && this._editor.editing) {
             this._editor._onClick(event);
             return;
@@ -5613,6 +5614,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
             const x = (event.offsetX - matrix.e) / matrix.a;
             const y = (event.offsetY - matrix.f) / matrix.d;
             [event.lng, event.lat] = this._projection.unproject([x, y]);
+            [event.originalLng, event.originalLat] = this._projection.unproject([x, y], true);
             this._editor._onMouseMove(event);
             return;
         }
@@ -5621,6 +5623,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
             const x = (event.offsetX - matrix.e) / matrix.a;
             const y = (event.offsetY - matrix.f) / matrix.d;
             [event.lng, event.lat] = this._projection.unproject([x, y]);
+            [event.originalLng, event.originalLat] = this._projection.unproject([x, y], true);
             this._measurer._onMouseMove(event);
             return;
         }
@@ -5962,31 +5965,31 @@ class Measurer extends _util_subject__WEBPACK_IMPORTED_MODULE_5__["Subject"] {
         if (this._action === MeasureActionType.Polygon) {
             if (this._create.click == 0) {
                 this._createLayer.clear();
-                const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.originalLng, event.originalLat);
                 const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, this._defaultPointSymbol);
                 this._createLayer.add(graphic);
                 this._create.click += 1;
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
             }
             else if (this._create.click == 1) {
-                const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.originalLng, event.originalLat);
                 const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](second, this._defaultPointSymbol);
                 this._createLayer.add(graphic1);
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
                 const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"](this._create.lnglats);
                 this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
                 this._createLayer.add(this._create.graphic);
                 this._create.click += 1;
             }
             else {
-                const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.originalLng, event.originalLat);
                 const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](second, this._defaultPointSymbol);
                 this._createLayer.add(graphic1);
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
                 const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_7__["Polygon"]([this._create.lnglats]);
                 this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](polygon, this._defaultPolygonSymbol);
                 this._createLayer.add(this._create.graphic);
@@ -5996,19 +5999,19 @@ class Measurer extends _util_subject__WEBPACK_IMPORTED_MODULE_5__["Subject"] {
         else if (this._action === MeasureActionType.Polyline) {
             if (this._create.click == 0) {
                 this._createLayer.clear();
-                const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.originalLng, event.originalLat);
                 const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](point, this._defaultPointSymbol);
                 this._createLayer.add(graphic);
                 this._create.click += 1;
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
             }
             else {
-                const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.lng, event.lat);
+                const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"](event.originalLng, event.originalLat);
                 const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](second, this._defaultPointSymbol);
                 this._createLayer.add(graphic1);
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
-                this._create.lnglats.push([event.lng, event.lat]);
+                this._create.lnglats.push([event.originalLng, event.originalLat]);
                 const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"](this._create.lnglats);
                 this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
                 this._createLayer.add(this._create.graphic);
@@ -6105,7 +6108,7 @@ class Measurer extends _util_subject__WEBPACK_IMPORTED_MODULE_5__["Subject"] {
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
                 const lnglats = [...this._create.lnglats];
-                lnglats.push([event.lng, event.lat]);
+                lnglats.push([event.originalLng, event.originalLat]);
                 const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"](lnglats);
                 this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
                 this._createLayer.add(this._create.graphic);
@@ -6114,7 +6117,7 @@ class Measurer extends _util_subject__WEBPACK_IMPORTED_MODULE_5__["Subject"] {
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
                 const lnglats = [...this._create.lnglats];
-                lnglats.push([event.lng, event.lat]);
+                lnglats.push([event.originalLng, event.originalLat]);
                 const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_7__["Polygon"]([lnglats]);
                 this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](polygon, this._defaultPolygonSymbol);
                 this._createLayer.add(this._create.graphic);
@@ -6125,7 +6128,7 @@ class Measurer extends _util_subject__WEBPACK_IMPORTED_MODULE_5__["Subject"] {
                 if (this._create.graphic)
                     this._createLayer.remove(this._create.graphic);
                 const lnglats = [...this._create.lnglats];
-                lnglats.push([event.lng, event.lat]);
+                lnglats.push([event.originalLng, event.originalLat]);
                 const line = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_6__["Polyline"](lnglats);
                 this._create.graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__["Graphic"](line, this._defaultLineSymbol);
                 this._createLayer.add(this._create.graphic);
@@ -8325,10 +8328,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./fit-bound.js":
-/*!**********************!*\
-  !*** ./fit-bound.js ***!
-  \**********************/
+/***/ "./editor-polyline-create.js":
+/*!***********************************!*\
+  !*** ./editor-polyline-create.js ***!
+  \***********************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -8337,10 +8340,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
-var AMap = window.AMap;
-
 window.load = () => {
-
     const amap = new AMap.Map("amap", {
         fadeOnZoom: false,
         navigationMode: 'classic',
@@ -8375,14 +8375,47 @@ window.load = () => {
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
 
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GPS));
+    var req = new XMLHttpRequest();
+    req.onload = (event) => {
+        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
+        featureClass.loadGeoJSON(JSON.parse(req.responseText));
+        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
+        featureLayer.featureClass = featureClass;
+        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
+        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleLineSymbol"]();
+        symbol.strokeStyle = "#008888";
+        renderer.symbol = symbol;
+        featureLayer.renderer = renderer;
+        featureLayer.zoom = [13, 20];
+        map.addLayer(featureLayer);
 
-    const polygon = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polygon"]([[[116.397411,39.909186], [116.397311,39.909186], [116.397211,39.909086], [116.397291,39.908586], [116.397351,39.908786]]]);
-    const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleFillSymbol"]();
-    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](polygon, symbol);
-    map.addGraphic(graphic);
+        const editor = map.editor;
+        editor.start();
+        editor.setFeatureLayer(featureLayer);
+        document.getElementById("status").value = "editor is started";
 
-    map.fitBound(polygon.bound);
+        window.start = () => {
+            editor.start();
+            editor.setFeatureLayer(featureLayer);
+            document.getElementById("status").value = "editor is started";
+        };
+
+        window.stop = () => {
+            editor.stop();
+            document.getElementById("status").value = "editor is stopped";
+        };
+
+        window.create = () => {
+            editor.create();
+        };
+
+        map.setView([109.519, 18.271], 13);
+    };
+    req.open("GET", "assets/geojson/pipe.json", true);
+    req.send(null);
+
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
+
 
 }
 

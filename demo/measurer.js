@@ -48,7 +48,7 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-
+    map.setProjection(new GCJ02(LatLngType.GPS));
     const measurer = map.measurer;
 
     window.measurePolygon = () => {
