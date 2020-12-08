@@ -2,8 +2,6 @@ import {Bound} from "../util/bound";
 import {SimplePointSymbol, SimpleTextSymbol, Symbol} from "../symbol/symbol";
 import {Projection} from "../projection/projection";
 import {WebMercator} from "../projection/web-mercator";
-import {Point} from "./point";
-import {Animation} from "../animation/animation";
 
 /**
  * 坐标类型
@@ -246,4 +244,100 @@ export class Geometry {
         }
     }
 
+    simplify(points, tolerance = 2.0) {
+        let sqTolerance = tolerance * tolerance;
+        // stage 1: vertex reduction
+        points = this._reducePoints(points, sqTolerance);
+        // stage 2: Douglas-Peucker simplification
+        // points = this._simplifyDP(points, sqTolerance);
+        return points;
+    }
+
+    // reduce points that are too close to each other to a single point
+    // sqTolerance = tolerance * tolerance
+    _reducePoints(points, sqTolerance = 1.0) {
+        const reducedPoints = [points[0]];
+        let prev = 0;
+        for (let i = 1; i < points.length; i++) {
+            if ((points[i][0]-points[prev][0]) * (points[i][0]-points[prev][0]) + (points[i][1]-points[prev][1]) * (points[i][1]-points[prev][1])> sqTolerance) {
+                reducedPoints.push(points[i]);
+                prev = i;
+            }
+        }
+        if (prev < points.length - 1) {
+            reducedPoints.push(points[points.length - 1]);
+        }
+        return reducedPoints;
+    }
+
+    // Douglas-Peucker simplification, see http://en.wikipedia.org/wiki/Douglas-Peucker_algorithm
+    _simplifyDP(points, sqTolerance = 1.0) {
+        let len = points.length,
+            ArrayConstructor = typeof Uint8Array !== undefined + '' ? Uint8Array : Array,
+            markers = new ArrayConstructor(len);
+
+        markers[0] = markers[len - 1] = 1;
+
+        this._simplifyDPStep(points, markers, sqTolerance, 0, len - 1);
+
+        let i,
+            newPoints = [];
+
+        for (i = 0; i < len; i++) {
+            if (markers[i]) {
+                newPoints.push(points[i]);
+            }
+        }
+
+        return newPoints;
+    }
+
+    _simplifyDPStep(points, markers, sqTolerance, first, last) {
+
+        let maxSqDist = 0,
+            index, i, sqDist;
+
+        for (i = first + 1; i <= last - 1; i++) {
+            sqDist = this._sqClosestPointOnSegment(points[i], points[first], points[last]);
+
+            if (sqDist > maxSqDist) {
+                index = i;
+                maxSqDist = sqDist;
+            }
+        }
+
+        if (maxSqDist > sqTolerance) {
+            markers[index] = 1;
+
+            this._simplifyDPStep(points, markers, sqTolerance, first, index);
+            this._simplifyDPStep(points, markers, sqTolerance, index, last);
+        }
+    }
+
+    // return closest point on segment or distance to that point
+    _sqClosestPointOnSegment(p, p1, p2) {
+        let x = p1[0],
+            y = p1[1],
+            dx = p2[0] - x,
+            dy = p2[1] - y,
+            dot = dx * dx + dy * dy,
+            t;
+
+        if (dot > 0) {
+            t = ((p[0] - x) * dx + (p[1] - y) * dy) / dot;
+
+            if (t > 1) {
+                x = p2[0];
+                y = p2[1];
+            } else if (t > 0) {
+                x += dx * t;
+                y += dy * t;
+            }
+        }
+
+        dx = p[0] - x;
+        dy = p[1] - y;
+
+        return dx * dx + dy * dy;
+    }
 }

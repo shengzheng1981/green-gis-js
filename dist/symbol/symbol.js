@@ -286,6 +286,8 @@ export class SimpleLineSymbol extends LineSymbol {
      * @param {number[][]} screen - 线对应坐标点的屏幕坐标集合
      */
     draw(ctx, screen) {
+        if (screen.length < 2)
+            return;
         ctx.save();
         ctx.strokeStyle = this.strokeStyle;
         ctx.lineWidth = this.lineWidth;
@@ -336,6 +338,8 @@ export class SimpleFillSymbol extends Symbol {
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         ctx.beginPath();
         screen.forEach(ring => {
+            if (ring.length < 3)
+                return;
             ring.forEach((point, index) => {
                 const screenX = point[0], screenY = point[1];
                 if (index === 0) {

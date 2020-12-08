@@ -52,6 +52,7 @@ export class MultiplePoint extends Geometry{
             ymax = Math.max(ymax, point[1]);
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 绘制点

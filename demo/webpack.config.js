@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./fit-bound.js",
+    entry: "./tooltip.js",
     output: {
         filename: "bundle.js"
     },

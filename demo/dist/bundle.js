@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./editor-polyline-create.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./tooltip.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -2948,6 +2948,76 @@ class Geometry {
             return Math.sqrt((point[0] - center[0]) * (point[0] - center[0]) + (point[1] - center[1]) * (point[1] - center[1]));
         }
     }
+    simplify(points, tolerance = 2.0) {
+        let sqTolerance = tolerance * tolerance;
+        // stage 1: vertex reduction
+        points = this._reducePoints(points, sqTolerance);
+        // stage 2: Douglas-Peucker simplification
+        // points = this._simplifyDP(points, sqTolerance);
+        return points;
+    }
+    // reduce points that are too close to each other to a single point
+    // sqTolerance = tolerance * tolerance
+    _reducePoints(points, sqTolerance = 1.0) {
+        const reducedPoints = [points[0]];
+        let prev = 0;
+        for (let i = 1; i < points.length; i++) {
+            if ((points[i][0] - points[prev][0]) * (points[i][0] - points[prev][0]) + (points[i][1] - points[prev][1]) * (points[i][1] - points[prev][1]) > sqTolerance) {
+                reducedPoints.push(points[i]);
+                prev = i;
+            }
+        }
+        if (prev < points.length - 1) {
+            reducedPoints.push(points[points.length - 1]);
+        }
+        return reducedPoints;
+    }
+    // Douglas-Peucker simplification, see http://en.wikipedia.org/wiki/Douglas-Peucker_algorithm
+    _simplifyDP(points, sqTolerance = 1.0) {
+        let len = points.length, ArrayConstructor = typeof Uint8Array !== undefined + '' ? Uint8Array : Array, markers = new ArrayConstructor(len);
+        markers[0] = markers[len - 1] = 1;
+        this._simplifyDPStep(points, markers, sqTolerance, 0, len - 1);
+        let i, newPoints = [];
+        for (i = 0; i < len; i++) {
+            if (markers[i]) {
+                newPoints.push(points[i]);
+            }
+        }
+        return newPoints;
+    }
+    _simplifyDPStep(points, markers, sqTolerance, first, last) {
+        let maxSqDist = 0, index, i, sqDist;
+        for (i = first + 1; i <= last - 1; i++) {
+            sqDist = this._sqClosestPointOnSegment(points[i], points[first], points[last]);
+            if (sqDist > maxSqDist) {
+                index = i;
+                maxSqDist = sqDist;
+            }
+        }
+        if (maxSqDist > sqTolerance) {
+            markers[index] = 1;
+            this._simplifyDPStep(points, markers, sqTolerance, first, index);
+            this._simplifyDPStep(points, markers, sqTolerance, index, last);
+        }
+    }
+    // return closest point on segment or distance to that point
+    _sqClosestPointOnSegment(p, p1, p2) {
+        let x = p1[0], y = p1[1], dx = p2[0] - x, dy = p2[1] - y, dot = dx * dx + dy * dy, t;
+        if (dot > 0) {
+            t = ((p[0] - x) * dx + (p[1] - y) * dy) / dot;
+            if (t > 1) {
+                x = p2[0];
+                y = p2[1];
+            }
+            else if (t > 0) {
+                x += dx * t;
+                y += dy * t;
+            }
+        }
+        dx = p[0] - x;
+        dy = p[1] - y;
+        return dx * dx + dy * dy;
+    }
 }
 
 
@@ -3019,6 +3089,7 @@ class MultiplePoint extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             ymax = Math.max(ymax, point[1]);
         });
         this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 绘制点
@@ -3145,6 +3216,7 @@ class MultiplePolygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"]
             });
         });
         this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 绘制面
@@ -3159,10 +3231,13 @@ class MultiplePolygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"]
         if (!extent.intersect(this._bound))
             return;
         const matrix = ctx.getTransform();
-        this._screen = this._coordinates.map(polygon => polygon.map(ring => ring.map((point, index) => {
-            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            return [screenX, screenY];
-        })));
+        this._screen = this._coordinates.map(polygon => polygon.map(ring => {
+            const points = ring.map((point, index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                return [screenX, screenY];
+            });
+            return this.simplify(points);
+        }));
         this._screen.forEach(polygon => {
             symbol.draw(ctx, polygon);
         });
@@ -3208,7 +3283,17 @@ class MultiplePolygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"]
     getCenter(type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_3__["WebMercator"]()) {
         if (!this._projected)
             this.project(projection);
-        let i, j, p1, p2, f, area, x, y, center, points = this._coordinates[0], len = points.length;
+        let i, j, p1, p2, f, area, x, y, center;
+        // get more points polygon
+        const counts = this._coordinates.map(polygon => {
+            let count = 0;
+            polygon.forEach(ring => {
+                count = count + ring.length;
+            });
+            return count;
+        });
+        let index = counts.indexOf(Math.max(...counts));
+        let points = this._coordinates[index][0], len = points.length;
         if (!len) {
             return null;
         }
@@ -3229,7 +3314,7 @@ class MultiplePolygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"]
         else {
             center = [x / area, y / area];
         }
-        if (type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
+        if (type === _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
             return projection.unproject(center);
         }
         else {
@@ -3304,6 +3389,7 @@ class MultiplePolyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"
             });
         });
         this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 绘制线
@@ -3319,10 +3405,13 @@ class MultiplePolyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"
             return;
         this._tolerance = _polyline__WEBPACK_IMPORTED_MODULE_4__["Polyline"].TOLERANCE + symbol.lineWidth;
         const matrix = ctx.getTransform();
-        this._screen = this._coordinates.map(polyline => polyline.map((point, index) => {
-            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            return [screenX, screenY];
-        }));
+        this._screen = this._coordinates.map(polyline => {
+            const points = polyline.map((point, index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                return [screenX, screenY];
+            });
+            return this.simplify(points);
+        });
         this._screen.forEach(polyline => {
             symbol.draw(ctx, polyline);
         });
@@ -3407,7 +3496,7 @@ class MultiplePolyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"
                 ];
             }
         }
-        if (type = _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
+        if (type === _geometry__WEBPACK_IMPORTED_MODULE_0__["CoordinateType"].Latlng) {
             return projection.unproject(center);
         }
         else {
@@ -3656,6 +3745,7 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             });
         });
         this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 编辑面
@@ -3700,11 +3790,33 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             return;
         const matrix = ctx.getTransform();
         this._screen = this._coordinates.map(ring => {
-            return ring.map((point, index) => {
+            const points = ring.map((point, index) => {
                 const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
                 return [screenX, screenY];
             });
+            return this.simplify(points);
         });
+        //减少一次循环的优化，效果并不显著，不如增加可读性，见上！
+        /*this._screen = this._coordinates.map( ring => {
+            const points = [];
+            const reducedPoints = [];
+            let prev = 0;
+            for (let i = 0; i < ring.length; i++) {
+                const screenX = (matrix.a * ring[i][0] + matrix.e), screenY = (matrix.d * ring[i][1] + matrix.f);
+                points.push([screenX, screenY]);
+                if (i == 0) {
+                    reducedPoints.push([screenX, screenY]);
+                }
+                if ((points[i][0]-points[prev][0]) * (points[i][0]-points[prev][0]) + (points[i][1]-points[prev][1]) * (points[i][1]-points[prev][1])> 1.0) {
+                    reducedPoints.push([screenX, screenY]);
+                    prev = i;
+                }
+            }
+            if (prev < points.length - 1) {
+                reducedPoints.push(points[points.length - 1]);
+            }
+            return reducedPoints;
+        });*/
         symbol.draw(ctx, this._screen);
     }
     /**
@@ -3905,6 +4017,7 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             ymax = Math.max(ymax, point[1]);
         });
         this._bound = new _util_bound__WEBPACK_IMPORTED_MODULE_1__["Bound"](xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 编辑线
@@ -3949,6 +4062,7 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__["Geometry"] {
             const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
             return [screenX, screenY];
         });
+        this._screen = this.simplify(this._screen);
         symbol.draw(ctx, this._screen);
     }
     /*//已知 起点和终点  求沿线距起点定长的点
@@ -5558,6 +5672,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
         const x = (event.offsetX - matrix.e) / matrix.a;
         const y = (event.offsetY - matrix.f) / matrix.d;
         [event.lng, event.lat] = this._projection.unproject([x, y]);
+        //保存偏移前的坐标
         [event.originalLng, event.originalLat] = this._projection.unproject([x, y], true);
         if (this._editor && this._editor.editing) {
             this._editor._onClick(event);
@@ -5623,6 +5738,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
             const x = (event.offsetX - matrix.e) / matrix.a;
             const y = (event.offsetY - matrix.f) / matrix.d;
             [event.lng, event.lat] = this._projection.unproject([x, y]);
+            //保存偏移前的坐标
             [event.originalLng, event.originalLat] = this._projection.unproject([x, y], true);
             this._measurer._onMouseMove(event);
             return;
@@ -7110,6 +7226,8 @@ class SimpleLineSymbol extends LineSymbol {
      * @param {number[][]} screen - 线对应坐标点的屏幕坐标集合
      */
     draw(ctx, screen) {
+        if (screen.length < 2)
+            return;
         ctx.save();
         ctx.strokeStyle = this.strokeStyle;
         ctx.lineWidth = this.lineWidth;
@@ -7160,6 +7278,8 @@ class SimpleFillSymbol extends Symbol {
         //TODO:  exceeding the maximum extent(bound), best way is overlap by extent. find out: maximum is [-PI*R, PI*R]??
         ctx.beginPath();
         screen.forEach(ring => {
+            if (ring.length < 3)
+                return;
             ring.forEach((point, index) => {
                 const screenX = point[0], screenY = point[1];
                 if (index === 0) {
@@ -8293,6 +8413,7 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
      * 重绘
      */
     redraw() {
+        const t0 = performance.now();
         this._ctx.save();
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
@@ -8303,6 +8424,8 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
         this._layers.filter(layer => layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"] && layer.labeled && !layer.editing).forEach((layer) => {
             layer.drawLabel(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         });
+        const t1 = performance.now();
+        console.log(`Call to redraw took ${t1 - t0} milliseconds.`);
     }
     /**
      * 清空画布
@@ -8328,10 +8451,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./editor-polyline-create.js":
-/*!***********************************!*\
-  !*** ./editor-polyline-create.js ***!
-  \***********************************/
+/***/ "./tooltip.js":
+/*!********************!*\
+  !*** ./tooltip.js ***!
+  \********************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -8374,6 +8497,7 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
 
     var req = new XMLHttpRequest();
     req.onload = (event) => {
@@ -8381,41 +8505,25 @@ window.load = () => {
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
         const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
         featureLayer.featureClass = featureClass;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleRenderer"]();
-        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleLineSymbol"]();
-        symbol.strokeStyle = "#008888";
-        renderer.symbol = symbol;
+        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
+        //field.name = "name";
+        field.name = "省";
+        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
+        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
+        renderer.generate(featureClass, field);
         featureLayer.renderer = renderer;
-        featureLayer.zoom = [13, 20];
+        featureLayer.zoom = [3, 20];
+        featureLayer.on("mouseover", (event) => {
+            map.showTooltip(event.feature, field);
+        });
         map.addLayer(featureLayer);
 
-        const editor = map.editor;
-        editor.start();
-        editor.setFeatureLayer(featureLayer);
-        document.getElementById("status").value = "editor is started";
+        map.setView([107.411, 29.89], 5);
 
-        window.start = () => {
-            editor.start();
-            editor.setFeatureLayer(featureLayer);
-            document.getElementById("status").value = "editor is started";
-        };
-
-        window.stop = () => {
-            editor.stop();
-            document.getElementById("status").value = "editor is stopped";
-        };
-
-        window.create = () => {
-            editor.create();
-        };
-
-        map.setView([109.519, 18.271], 13);
     };
-    req.open("GET", "assets/geojson/pipe.json", true);
+    //req.open("GET", "assets/geojson/chongqing.json", true);
+    req.open("GET", "assets/geojson/province.json", true);
     req.send(null);
-
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-
 
 }
 

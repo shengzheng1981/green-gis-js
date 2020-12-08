@@ -68,6 +68,7 @@ export class Polygon extends Geometry{
             })
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 编辑面
@@ -109,11 +110,34 @@ export class Polygon extends Geometry{
         if (!extent.intersect(this._bound)) return;
         const matrix = (ctx as any).getTransform();
         this._screen = this._coordinates.map( ring => {
-            return ring.map((point: any,index) => {
+            const points =  ring.map((point: any,index) => {
                 const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
                 return [screenX, screenY];
             });
+            return this.simplify(points);
         });
+        //减少一次循环的优化，效果并不显著，不如增加可读性，见上！
+        /*this._screen = this._coordinates.map( ring => {
+            const points = [];
+            const reducedPoints = [];
+            let prev = 0;
+            for (let i = 0; i < ring.length; i++) {
+                const screenX = (matrix.a * ring[i][0] + matrix.e), screenY = (matrix.d * ring[i][1] + matrix.f);
+                points.push([screenX, screenY]);
+                if (i == 0) {
+                    reducedPoints.push([screenX, screenY]);
+                }
+                if ((points[i][0]-points[prev][0]) * (points[i][0]-points[prev][0]) + (points[i][1]-points[prev][1]) * (points[i][1]-points[prev][1])> 1.0) {
+                    reducedPoints.push([screenX, screenY]);
+                    prev = i;
+                }
+            }
+            if (prev < points.length - 1) {
+                reducedPoints.push(points[points.length - 1]);
+            }
+            return reducedPoints;
+        });*/
+
         symbol.draw(ctx, this._screen);
     }
 

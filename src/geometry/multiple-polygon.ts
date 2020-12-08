@@ -51,6 +51,7 @@ export class MultiplePolygon extends Geometry{
             })
         })});
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 绘制面
@@ -63,10 +64,13 @@ export class MultiplePolygon extends Geometry{
         if (!this._projected) this.project(projection);
         if (!extent.intersect(this._bound)) return;
         const matrix = (ctx as any).getTransform();
-        this._screen = this._coordinates.map( polygon => polygon.map( ring => ring.map( (point: any,index) => {
-            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            return [screenX, screenY];
-        })));
+        this._screen = this._coordinates.map( polygon => polygon.map( ring => {
+            const points = ring.map((point: any, index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                return [screenX, screenY];
+            });
+            return this.simplify(points);
+        }));
         this._screen.forEach( polygon => {
             symbol.draw(ctx, polygon);
         });
@@ -114,10 +118,18 @@ export class MultiplePolygon extends Geometry{
      */
     getCenter(type: CoordinateType = CoordinateType.Latlng, projection: Projection = new WebMercator()) {
         if (!this._projected) this.project(projection);
-        let i, j, p1, p2, f, area, x, y, center,
-            points = this._coordinates[0],
+        let i, j, p1, p2, f, area, x, y, center;
+        // get more points polygon
+        const counts: any = this._coordinates.map( polygon => {
+            let count = 0;
+            polygon.forEach( ring => {
+                count = count + ring.length;
+            })
+            return count;
+        });
+        let index = counts.indexOf(Math.max(...counts));
+        let points = this._coordinates[index][0],
             len = points.length;
-
         if (!len) { return null; }
 
         // polygon centroid algorithm; only uses the first ring if there are multiple
@@ -141,7 +153,7 @@ export class MultiplePolygon extends Geometry{
             center = [x / area, y / area];
         }
 
-        if (type = CoordinateType.Latlng) {
+        if (type === CoordinateType.Latlng) {
             return projection.unproject(center);
         } else {
             return center;

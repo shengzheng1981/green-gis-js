@@ -56,6 +56,7 @@ export class MultiplePolyline extends Geometry{
             });
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 绘制线
@@ -69,10 +70,13 @@ export class MultiplePolyline extends Geometry{
         if (!extent.intersect(this._bound)) return;
         this._tolerance = Polyline.TOLERANCE + symbol.lineWidth;
         const matrix = (ctx as any).getTransform();
-        this._screen = this._coordinates.map( polyline => polyline.map( (point: any,index) => {
-            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            return [screenX, screenY];
-        }));
+        this._screen = this._coordinates.map( polyline => {
+            const points = polyline.map( (point: any,index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                return [screenX, screenY];
+            });
+            return this.simplify(points);
+        });
         this._screen.forEach( polyline => {
             symbol.draw(ctx, polyline);
         });
@@ -171,7 +175,7 @@ export class MultiplePolyline extends Geometry{
             }
         }
 
-        if (type = CoordinateType.Latlng) {
+        if (type === CoordinateType.Latlng) {
             return projection.unproject(center);
         } else {
             return center;

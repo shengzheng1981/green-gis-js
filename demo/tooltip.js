@@ -57,20 +57,23 @@ window.load = () => {
         const featureLayer = new FeatureLayer();
         featureLayer.featureClass = featureClass;
         const field = new Field();
-        field.name = "name";
+        //field.name = "name";
+        field.name = "省";
         field.type = FieldType.String;
         const renderer = new CategoryRenderer();
         renderer.generate(featureClass, field);
         featureLayer.renderer = renderer;
-        featureLayer.zoom = [5, 20];
+        featureLayer.zoom = [3, 20];
         featureLayer.on("mouseover", (event) => {
             map.showTooltip(event.feature, field);
         });
         map.addLayer(featureLayer);
 
-        map.setView([107.411, 29.89], 7);
+        map.setView([107.411, 29.89], 5);
+
     };
-    req.open("GET", "assets/geojson/chongqing.json", true);
+    //req.open("GET", "assets/geojson/chongqing.json", true);
+    req.open("GET", "assets/geojson/province.json", true);
     req.send(null);
 
 }

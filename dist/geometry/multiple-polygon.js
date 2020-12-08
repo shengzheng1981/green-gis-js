@@ -45,6 +45,7 @@ export class MultiplePolygon extends Geometry {
             });
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 绘制面
@@ -59,10 +60,13 @@ export class MultiplePolygon extends Geometry {
         if (!extent.intersect(this._bound))
             return;
         const matrix = ctx.getTransform();
-        this._screen = this._coordinates.map(polygon => polygon.map(ring => ring.map((point, index) => {
-            const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
-            return [screenX, screenY];
-        })));
+        this._screen = this._coordinates.map(polygon => polygon.map(ring => {
+            const points = ring.map((point, index) => {
+                const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
+                return [screenX, screenY];
+            });
+            return this.simplify(points);
+        }));
         this._screen.forEach(polygon => {
             symbol.draw(ctx, polygon);
         });
@@ -108,7 +112,17 @@ export class MultiplePolygon extends Geometry {
     getCenter(type = CoordinateType.Latlng, projection = new WebMercator()) {
         if (!this._projected)
             this.project(projection);
-        let i, j, p1, p2, f, area, x, y, center, points = this._coordinates[0], len = points.length;
+        let i, j, p1, p2, f, area, x, y, center;
+        // get more points polygon
+        const counts = this._coordinates.map(polygon => {
+            let count = 0;
+            polygon.forEach(ring => {
+                count = count + ring.length;
+            });
+            return count;
+        });
+        let index = counts.indexOf(Math.max(...counts));
+        let points = this._coordinates[index][0], len = points.length;
         if (!len) {
             return null;
         }
@@ -129,7 +143,7 @@ export class MultiplePolygon extends Geometry {
         else {
             center = [x / area, y / area];
         }
-        if (type = CoordinateType.Latlng) {
+        if (type === CoordinateType.Latlng) {
             return projection.unproject(center);
         }
         else {

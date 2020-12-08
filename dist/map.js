@@ -444,6 +444,7 @@ export class Map extends Subject {
         const x = (event.offsetX - matrix.e) / matrix.a;
         const y = (event.offsetY - matrix.f) / matrix.d;
         [event.lng, event.lat] = this._projection.unproject([x, y]);
+        //保存偏移前的坐标
         [event.originalLng, event.originalLat] = this._projection.unproject([x, y], true);
         if (this._editor && this._editor.editing) {
             this._editor._onClick(event);
@@ -509,6 +510,7 @@ export class Map extends Subject {
             const x = (event.offsetX - matrix.e) / matrix.a;
             const y = (event.offsetY - matrix.f) / matrix.d;
             [event.lng, event.lat] = this._projection.unproject([x, y]);
+            //保存偏移前的坐标
             [event.originalLng, event.originalLat] = this._projection.unproject([x, y], true);
             this._measurer._onMouseMove(event);
             return;

@@ -60,6 +60,7 @@ export class Polyline extends Geometry {
             ymax = Math.max(ymax, point[1]);
         });
         this._bound = new Bound(xmin, ymin, xmax, ymax);
+        this._projected = true;
     }
     /**
      * 编辑线
@@ -104,6 +105,7 @@ export class Polyline extends Geometry {
             const screenX = (matrix.a * point[0] + matrix.e), screenY = (matrix.d * point[1] + matrix.f);
             return [screenX, screenY];
         });
+        this._screen = this.simplify(this._screen);
         symbol.draw(ctx, this._screen);
     }
     /*//已知 起点和终点  求沿线距起点定长的点

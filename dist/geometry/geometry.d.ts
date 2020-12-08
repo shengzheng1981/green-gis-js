@@ -120,4 +120,9 @@ export declare class Geometry {
      * @return {number} 距离
      */
     distance(geometry: Geometry, type: CoordinateType, ctx: CanvasRenderingContext2D, projection?: Projection): number;
+    simplify(points: any, tolerance?: number): any;
+    _reducePoints(points: any, sqTolerance?: number): any[];
+    _simplifyDP(points: any, sqTolerance?: number): any[];
+    _simplifyDPStep(points: any, markers: any, sqTolerance: any, first: any, last: any): void;
+    _sqClosestPointOnSegment(p: any, p1: any, p2: any): number;
 }
