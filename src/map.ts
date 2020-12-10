@@ -20,6 +20,7 @@ import {SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol} from "./symbol/sy
 import {MultiplePolygon} from "./geometry/multiple-polygon";
 import {Polygon} from "./geometry/polygon";
 import {Tile} from "./tile";
+import {Grid} from "./grid";
 import {Measurer} from "./measurer";
 
 /**
@@ -78,8 +79,10 @@ export class Map extends Subject{
     private _measurer: Measurer;
     //动画控制
     private _animator: Animator;
-    //切片管理
+    //栅格切片管理
     private _tile: Tile;
+    //矢量切片管理
+    private _grid: Grid;
     //提示框
     private _tooltip: Tooltip;
     /**
@@ -108,6 +111,12 @@ export class Map extends Subject{
     }
     set editor(value: Editor) {
         this._editor = value;
+    }
+    get grid(): Grid {
+        return this._grid;
+    }
+    get tile(): Tile {
+        return this._tile;
     }
     /**
      * Measurer
@@ -221,6 +230,8 @@ export class Map extends Subject{
         this._animator = new Animator(this);
         //tile
         this._tile = new Tile(this);
+        //grid
+        this._grid = new Grid(this);
         //tooltip
         this._tooltip = new Tooltip(this);
 
@@ -716,7 +727,7 @@ export class Map extends Subject{
         const matrix = (this._ctx as any).getTransform();
         const screenX = (matrix.a * center[0] + matrix.e);
         const screenY = (matrix.d * center[1] + matrix.f);
-        this._tooltip.show(text, screenX, screenY)
+        this._tooltip.show(text, screenX, screenY);
     }
     /**
      * 隐藏Tooltip

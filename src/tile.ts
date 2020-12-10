@@ -1,7 +1,7 @@
 import {Map} from "./map";
 import {Subject} from "./util/subject";
 /**
- * 切片管理器
+ * 栅格切片管理器
  * 已内置于map，可通过map的接口进行添加删除的维护操作
  */
 export class Tile extends Subject{
@@ -24,7 +24,7 @@ export class Tile extends Subject{
         this._url = value;
     }
     /**
-     * 创建Animator
+     * 创建Tile
      * 不应自主创建，map内部创建
      * @param {Map} map - 地图容器
      */

@@ -17,6 +17,7 @@ import { SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol } from "./symbol/
 import { MultiplePolygon } from "./geometry/multiple-polygon";
 import { Polygon } from "./geometry/polygon";
 import { Tile } from "./tile";
+import { Grid } from "./grid";
 import { Measurer } from "./measurer";
 /**
  * 地图
@@ -108,6 +109,8 @@ export class Map extends Subject {
         this._animator = new Animator(this);
         //tile
         this._tile = new Tile(this);
+        //grid
+        this._grid = new Grid(this);
         //tooltip
         this._tooltip = new Tooltip(this);
         this._projection = new WebMercator();
@@ -159,6 +162,12 @@ export class Map extends Subject {
     }
     set editor(value) {
         this._editor = value;
+    }
+    get grid() {
+        return this._grid;
+    }
+    get tile() {
+        return this._tile;
     }
     /**
      * Measurer

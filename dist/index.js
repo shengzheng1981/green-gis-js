@@ -41,3 +41,4 @@ export * from './analysis/heat/heat';
 export * from './analysis/interpolation/inverse-distance-weight';
 export * from './tile';
 export * from './measurer';
+export * from './grid';

@@ -126,7 +126,7 @@ export class Viewer extends Subject{
      * 重绘
      */
     redraw() {
-        const t0 = performance.now();
+        //const t0 = performance.now();
 
         this._ctx.save();
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -140,8 +140,8 @@ export class Viewer extends Subject{
             layer.drawLabel(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         });
 
-        const t1 = performance.now();
-        console.log(`Call to redraw took ${t1 - t0} milliseconds.`);
+        //const t1 = performance.now();
+        //console.log(`Call to redraw took ${t1 - t0} milliseconds.`);
     }
     /**
      * 清空画布

@@ -8,6 +8,8 @@ import { Viewer } from "./viewer";
 import { Subject } from "./util/subject";
 import { Tooltip } from "./tooltip/tooltip";
 import { SimpleFillSymbol, SimpleLineSymbol, SimplePointSymbol } from "./symbol/symbol";
+import { Tile } from "./tile";
+import { Grid } from "./grid";
 import { Measurer } from "./measurer";
 /**
  * 地图
@@ -36,6 +38,7 @@ export declare class Map extends Subject {
     private _measurer;
     private _animator;
     private _tile;
+    private _grid;
     private _tooltip;
     /**
      * DIV容器
@@ -54,6 +57,8 @@ export declare class Map extends Subject {
      */
     get editor(): Editor;
     set editor(value: Editor);
+    get grid(): Grid;
+    get tile(): Tile;
     /**
      * Measurer
      */

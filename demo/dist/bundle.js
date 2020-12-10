@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./tooltip.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./grid.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -4194,11 +4194,187 @@ Polyline.TOLERANCE = 4;
 
 /***/ }),
 
+/***/ "../dist/grid.js":
+/*!***********************!*\
+  !*** ../dist/grid.js ***!
+  \***********************/
+/*! exports provided: Grid */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Grid", function() { return Grid; });
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
+/* harmony import */ var _geometry_polyline__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./geometry/polyline */ "../dist/geometry/polyline.js");
+/* harmony import */ var _element_feature__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./element/feature */ "../dist/element/feature.js");
+/* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/geometry/polygon.js");
+/* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./geometry/multiple-polygon */ "../dist/geometry/multiple-polygon.js");
+/* harmony import */ var _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./geometry/multiple-point */ "../dist/geometry/multiple-point.js");
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./geometry/point */ "../dist/geometry/point.js");
+/* harmony import */ var _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./geometry/multiple-polyline */ "../dist/geometry/multiple-polyline.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./symbol/symbol */ "../dist/symbol/symbol.js");
+
+
+
+
+
+
+
+
+
+/**
+ * 矢量切片管理器
+ * 已内置于map，可通过map的接口进行添加删除的维护操作
+ */
+class Grid extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
+    /**
+     * 创建Grid
+     * 不应自主创建，map内部创建
+     * @param {Map} map - 地图容器
+     */
+    constructor(map) {
+        super(["mouseover", "mouseout"]); //when mouseover feature
+        this._layers = [];
+        this._map = map;
+        const container = map.container;
+        this._canvas = document.createElement("canvas");
+        this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 80";
+        this._canvas.width = container.clientWidth;
+        this._canvas.height = container.clientHeight;
+        container.appendChild(this._canvas);
+        this._onResize = this._onResize.bind(this);
+        this._extentChange = this._extentChange.bind(this);
+        this._ctx = this._canvas.getContext("2d");
+        this._map.on("resize", this._onResize);
+        this._map.on("extent", this._extentChange);
+        this._layers = [];
+    }
+    /**
+     * server url
+     */
+    get url() {
+        return this._url;
+    }
+    /**
+     * server url
+     */
+    set url(value) {
+        this._url = value;
+    }
+    //与主视图同步
+    _onResize(event) {
+        this._canvas.width = this._map.container.clientWidth;
+        this._canvas.height = this._map.container.clientHeight;
+    }
+    //与主视图同步
+    _extentChange(event) {
+        this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
+        this.redraw();
+    }
+    //layer: green gis server layer
+    addLayer(layer) {
+        this._layers.push(layer);
+    }
+    removeLayer(layer) {
+        const index = this._layers.find(item => item._id == layer._id);
+        index && this._layers.splice(index, 1);
+    }
+    clearLayers() {
+        this._layers = [];
+    }
+    /**
+     * 重绘
+     */
+    redraw() {
+        if (!this._url)
+            return;
+        this._ctx.save();
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
+        const lngLat2Tile = (lng, lat, z) => {
+            let tileX = Math.floor((lng + 180) / 360 * Math.pow(2, z));
+            let tileY = Math.floor((1 / 2 - (Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180))) / (2 * Math.PI)) * Math.pow(2, z));
+            return [tileX, tileY];
+        };
+        const lngLat2Pixel = (lng, lat, z) => {
+            let pixelX = Math.floor(((lng + 180) / 360 * Math.pow(2, z) * 256) % 256);
+            let pixelY = Math.floor(((1 - (Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180))) / (2 * Math.PI)) * Math.pow(2, z) * 256) % 256);
+            return [pixelX, pixelY];
+        };
+        const getUrl = (url, id, x, y, z) => {
+            return url.replace("{id}", id).replace("{x}", x).replace("{y}", y).replace("{z}", z);
+        };
+        const projection = this._map.projection;
+        const extent = this._map.extent;
+        const zoom = this._map.zoom;
+        const [lng1, lat1] = projection.unproject([extent.xmin, extent.ymax]);
+        const [lng2, lat2] = projection.unproject([extent.xmax, extent.ymin]);
+        const [tileMinX, tileMinY] = lngLat2Tile(lng1, lat1, zoom);
+        const [tileMaxX, tileMaxY] = lngLat2Tile(lng2, lat2, zoom);
+        const me = this;
+        for (let x = tileMinX; x <= tileMaxX; x++) {
+            for (let y = tileMinY; y <= tileMaxY; y++) {
+                this._layers.forEach(layer => {
+                    const url = getUrl(this._url, layer._id, x, y, zoom);
+                    const req = new XMLHttpRequest();
+                    req.onload = (event) => {
+                        const array = JSON.parse(req.responseText);
+                        array.forEach(item => {
+                            let geometry, symbol;
+                            switch (item.geometry.type) {
+                                case "Point":
+                                    geometry = new _geometry_point__WEBPACK_IMPORTED_MODULE_6__["Point"](item.geometry.coordinates[0], item.geometry.coordinates[1]);
+                                    symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_8__["SimplePointSymbol"]();
+                                    break;
+                                case "LineString":
+                                    geometry = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_1__["Polyline"](item.geometry.coordinates);
+                                    symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_8__["SimpleLineSymbol"]();
+                                    break;
+                                case "Polygon":
+                                    geometry = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_3__["Polygon"](item.geometry.coordinates);
+                                    symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_8__["SimpleFillSymbol"]();
+                                    break;
+                                case "MultiPoint":
+                                    geometry = new _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_5__["MultiplePoint"](item.geometry.coordinates);
+                                    symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_8__["SimplePointSymbol"]();
+                                    break;
+                                case "MultiLineString":
+                                    geometry = new _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_7__["MultiplePolyline"](item.geometry.coordinates);
+                                    symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_8__["SimpleLineSymbol"]();
+                                    break;
+                                case "MultiPolygon":
+                                    geometry = new _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_4__["MultiplePolygon"](item.geometry.coordinates);
+                                    symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_8__["SimpleFillSymbol"]();
+                                    break;
+                            }
+                            const feature = new _element_feature__WEBPACK_IMPORTED_MODULE_2__["Feature"](geometry, item.properties);
+                            feature.draw(me._ctx, me._map.projection, me._map.extent, symbol);
+                        });
+                    };
+                    req.open("GET", url, true);
+                    req.send(null);
+                });
+            }
+        }
+    }
+    /**
+     * 销毁
+     */
+    destroy() {
+        this._map.off("resize", this._onResize);
+        this._map.off("extent", this._extentChange);
+    }
+}
+
+
+/***/ }),
+
 /***/ "../dist/index.js":
 /*!************************!*\
   !*** ../dist/index.js ***!
   \************************/
-/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Collision, NullCollision, SimpleCollision, CoverCollision, Label, Tooltip, Symbol, PointSymbol, LineSymbol, FillSymbol, SimpleTextSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, LetterSymbol, ArrowSymbol, ClusterSymbol, VertexSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject, Animation, PointAnimation, LineAnimation, ParticleAnimation, Raster, RasterLayer, Kriging, Heat, InverseDistanceWeight, Tile, MeasureActionType, Measurer */
+/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Collision, NullCollision, SimpleCollision, CoverCollision, Label, Tooltip, Symbol, PointSymbol, LineSymbol, FillSymbol, SimpleTextSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, LetterSymbol, ArrowSymbol, ClusterSymbol, VertexSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject, Animation, PointAnimation, LineAnimation, ParticleAnimation, Raster, RasterLayer, Kriging, Heat, InverseDistanceWeight, Tile, MeasureActionType, Measurer, Grid */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4383,6 +4559,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MeasureActionType", function() { return _measurer__WEBPACK_IMPORTED_MODULE_42__["MeasureActionType"]; });
 
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Measurer", function() { return _measurer__WEBPACK_IMPORTED_MODULE_42__["Measurer"]; });
+
+/* harmony import */ var _grid__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ./grid */ "../dist/grid.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Grid", function() { return _grid__WEBPACK_IMPORTED_MODULE_43__["Grid"]; });
+
 
 
 
@@ -5225,7 +5405,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./geometry/multiple-polygon */ "../dist/geometry/multiple-polygon.js");
 /* harmony import */ var _geometry_polygon__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./geometry/polygon */ "../dist/geometry/polygon.js");
 /* harmony import */ var _tile__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./tile */ "../dist/tile.js");
-/* harmony import */ var _measurer__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./measurer */ "../dist/measurer.js");
+/* harmony import */ var _grid__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./grid */ "../dist/grid.js");
+/* harmony import */ var _measurer__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./measurer */ "../dist/measurer.js");
+
 
 
 
@@ -5331,11 +5513,13 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
         this._editor.on("startedit", () => { this._viewer.redraw(); });
         this._editor.on("stopedit", () => { this._viewer.redraw(); });
         //measurer
-        this._measurer = new _measurer__WEBPACK_IMPORTED_MODULE_19__["Measurer"](this);
+        this._measurer = new _measurer__WEBPACK_IMPORTED_MODULE_20__["Measurer"](this);
         //animator
         this._animator = new _animator__WEBPACK_IMPORTED_MODULE_10__["Animator"](this);
         //tile
         this._tile = new _tile__WEBPACK_IMPORTED_MODULE_18__["Tile"](this);
+        //grid
+        this._grid = new _grid__WEBPACK_IMPORTED_MODULE_19__["Grid"](this);
         //tooltip
         this._tooltip = new _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_9__["Tooltip"](this);
         this._projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_2__["WebMercator"]();
@@ -5387,6 +5571,12 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
     }
     set editor(value) {
         this._editor = value;
+    }
+    get grid() {
+        return this._grid;
+    }
+    get tile() {
+        return this._tile;
     }
     /**
      * Measurer
@@ -7735,12 +7925,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
 
 /**
- * 切片管理器
+ * 栅格切片管理器
  * 已内置于map，可通过map的接口进行添加删除的维护操作
  */
 class Tile extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
     /**
-     * 创建Animator
+     * 创建Tile
      * 不应自主创建，map内部创建
      * @param {Map} map - 地图容器
      */
@@ -8413,7 +8603,7 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
      * 重绘
      */
     redraw() {
-        const t0 = performance.now();
+        //const t0 = performance.now();
         this._ctx.save();
         this._ctx.setTransform(1, 0, 0, 1, 0, 0);
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
@@ -8424,8 +8614,8 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
         this._layers.filter(layer => layer instanceof _layer_feature_layer__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"] && layer.labeled && !layer.editing).forEach((layer) => {
             layer.drawLabel(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
         });
-        const t1 = performance.now();
-        console.log(`Call to redraw took ${t1 - t0} milliseconds.`);
+        //const t1 = performance.now();
+        //console.log(`Call to redraw took ${t1 - t0} milliseconds.`);
     }
     /**
      * 清空画布
@@ -8451,10 +8641,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./tooltip.js":
-/*!********************!*\
-  !*** ./tooltip.js ***!
-  \********************/
+/***/ "./grid.js":
+/*!*****************!*\
+  !*** ./grid.js ***!
+  \*****************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -8463,28 +8653,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
-window.load = () => {
+
+window.load = async () => {
     const amap = new AMap.Map("amap", {
-        fadeOnZoom: false,
         navigationMode: 'classic',
-        optimizePanAnimation: false,
-        animateEnable: false,
-        dragEnable: false,
-        zoomEnable: false,
-        resizeEnable: true,
-        doubleClickZoom: false,
-        keyboardEnable: false,
-        scrollWheel: false,
-        expandZoomRange: true,
         zooms: [1, 20],
-        mapStyle: 'normal',
+        mapStyle: 'amap://styles/normal',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
     });
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
     map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center);
+        amap.setZoomAndCenter(event.zoom, event.center, true);
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;
@@ -8497,36 +8678,21 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["GCJ02"](_dist__WEBPACK_IMPORTED_MODULE_0__["LatLngType"].GCJ02));
-
-    var req = new XMLHttpRequest();
-    req.onload = (event) => {
-        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"]();
-        featureClass.loadGeoJSON(JSON.parse(req.responseText));
-        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-        featureLayer.featureClass = featureClass;
-        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        //field.name = "name";
-        field.name = "省";
-        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].String;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["CategoryRenderer"]();
-        renderer.generate(featureClass, field);
-        featureLayer.renderer = renderer;
-        featureLayer.zoom = [3, 20];
-        featureLayer.on("mouseover", (event) => {
-            map.showTooltip(event.feature, field);
-        });
-        map.addLayer(featureLayer);
-
-        map.setView([107.411, 29.89], 5);
-
-    };
-    //req.open("GET", "assets/geojson/chongqing.json", true);
-    req.open("GET", "assets/geojson/province.json", true);
-    req.send(null);
+    //map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
+    map.grid.url = "http://localhost:4000/tiles/vector/{id}/{x}/{y}/{z}";
+    map.grid.addLayer({
+        _id: "5fcef06f48c22b33787185e9",
+        name : "province",
+        class: {
+            name: "province",
+            geotype: 3
+        }
+    });
+    map.setView([109.519, 18.271], 13);
 
 }
 
+//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 
