@@ -27,12 +27,20 @@ window.load = async () => {
     });
     //map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
     map.grid.url = "http://localhost:4000/tiles/vector/{id}/{x}/{y}/{z}";
-    map.grid.addLayer({
+    /*map.grid.addLayer({
         _id: "5fcef06f48c22b33787185e9",
         name : "province",
         class: {
             name: "province",
             geotype: 3
+        }
+    });*/
+    map.grid.addLayer({
+        _id: "5faa43ffabe6782ae0ed01b4",
+        name : "pipe",
+        class: {
+            name: "pipe",
+            geotype: 2
         }
     });
     map.setView([109.519, 18.271], 13);

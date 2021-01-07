@@ -28,6 +28,7 @@ export * from './projection/projection';
 export * from './projection/web-mercator';
 export * from './projection/bd09';
 export * from './projection/gcj02';
+export * from './projection/noop-projection';
 export * from './util/utility';
 export * from './util/bound';
 export * from './util/color';

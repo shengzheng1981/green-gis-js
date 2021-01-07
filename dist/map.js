@@ -37,7 +37,8 @@ export class Map extends Subject {
         //resize: 视图容器尺寸调整时
         super(["extent", "click", "dblclick", "mousemove", "resize"]);
         this._option = {
-            disableDoubleClick: false
+            disableDoubleClick: false,
+            disableInteractive: false
         };
         this._drag = {
             flag: false,
@@ -67,6 +68,9 @@ export class Map extends Subject {
         this._selectionLayer = new GraphicLayer();
         //option
         this._option.disableDoubleClick = option && option.hasOwnProperty('disableDoubleClick') ? option.disableDoubleClick : false;
+        this._option.disableInteractive = option && option.hasOwnProperty('disableInteractive') ? option.disableInteractive : false;
+        this.minZoom = option && option.hasOwnProperty('minZoom') ? option.minZoom : 3;
+        this.maxZoom = option && option.hasOwnProperty('minZoom') ? option.minZoom : 20;
         this._container = id instanceof HTMLDivElement ? id : document.getElementById(id);
         //create canvas
         this._canvas = document.createElement("canvas");
@@ -85,14 +89,16 @@ export class Map extends Subject {
         this._onTouchEnd = this._onTouchEnd.bind(this);
         this._ctx = this._canvas.getContext("2d");
         this._canvas.addEventListener("click", this._onClick);
-        this._canvas.addEventListener("dblclick", this._onDoubleClick);
-        this._canvas.addEventListener("mousedown", this._onMouseDown);
-        this._canvas.addEventListener("mousemove", this._onMouseMove, false);
-        this._canvas.addEventListener("mouseup", this._onMouseUp);
-        this._canvas.addEventListener("wheel", this._onWheel);
-        this._canvas.addEventListener("touchstart", this._onTouchStart, false);
-        this._canvas.addEventListener("touchmove", this._onTouchMove, false);
-        this._canvas.addEventListener("touchend", this._onTouchEnd, false);
+        if (!this._option.disableInteractive) {
+            this._canvas.addEventListener("dblclick", this._onDoubleClick);
+            this._canvas.addEventListener("mousedown", this._onMouseDown);
+            this._canvas.addEventListener("mousemove", this._onMouseMove, false);
+            this._canvas.addEventListener("mouseup", this._onMouseUp);
+            this._canvas.addEventListener("wheel", this._onWheel);
+            this._canvas.addEventListener("touchstart", this._onTouchStart, false);
+            this._canvas.addEventListener("touchmove", this._onTouchMove, false);
+            this._canvas.addEventListener("touchend", this._onTouchEnd, false);
+        }
         //viewer
         this._viewer = new Viewer(this);
         this._viewer.on("mouseover", () => { Utility.addClass(this._canvas, "green-hover"); });
@@ -694,14 +700,16 @@ export class Map extends Subject {
     destroy() {
         window.removeEventListener("resize", this._onResize);
         this._canvas.removeEventListener("click", this._onClick);
-        this._canvas.removeEventListener("dblclick", this._onDoubleClick);
-        this._canvas.removeEventListener("mousedown", this._onMouseDown);
-        this._canvas.removeEventListener("mousemove", this._onMouseMove);
-        this._canvas.removeEventListener("mouseup", this._onMouseUp);
-        this._canvas.removeEventListener("wheel", this._onWheel);
-        this._canvas.removeEventListener("touchstart", this._onTouchStart);
-        this._canvas.removeEventListener("touchmove", this._onTouchMove);
-        this._canvas.removeEventListener("touchend", this._onTouchEnd);
+        if (!this._option.disableInteractive) {
+            this._canvas.removeEventListener("dblclick", this._onDoubleClick);
+            this._canvas.removeEventListener("mousedown", this._onMouseDown);
+            this._canvas.removeEventListener("mousemove", this._onMouseMove);
+            this._canvas.removeEventListener("mouseup", this._onMouseUp);
+            this._canvas.removeEventListener("wheel", this._onWheel);
+            this._canvas.removeEventListener("touchstart", this._onTouchStart);
+            this._canvas.removeEventListener("touchmove", this._onTouchMove);
+            this._canvas.removeEventListener("touchend", this._onTouchEnd);
+        }
         this._viewer = null;
         this._editor = null;
     }

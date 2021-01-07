@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./grid.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./noop-proj.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -4374,7 +4374,7 @@ class Grid extends _util_subject__WEBPACK_IMPORTED_MODULE_0__["Subject"] {
 /*!************************!*\
   !*** ../dist/index.js ***!
   \************************/
-/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Collision, NullCollision, SimpleCollision, CoverCollision, Label, Tooltip, Symbol, PointSymbol, LineSymbol, FillSymbol, SimpleTextSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, LetterSymbol, ArrowSymbol, ClusterSymbol, VertexSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, Utility, Bound, Color, Subject, Animation, PointAnimation, LineAnimation, ParticleAnimation, Raster, RasterLayer, Kriging, Heat, InverseDistanceWeight, Tile, MeasureActionType, Measurer, Grid */
+/*! exports provided: Map, Viewer, Entity, FeatureClass, FieldType, Field, EditorActionType, Editor, Graphic, Feature, CoordinateType, GeometryType, Geometry, Point, Polyline, Polygon, MultiplePoint, MultiplePolyline, MultiplePolygon, Layer, GraphicLayer, FeatureLayer, Collision, NullCollision, SimpleCollision, CoverCollision, Label, Tooltip, Symbol, PointSymbol, LineSymbol, FillSymbol, SimpleTextSymbol, SimplePointSymbol, GradientPointSymbol, SimpleLineSymbol, SimpleFillSymbol, SimpleMarkerSymbol, LetterSymbol, ArrowSymbol, ClusterSymbol, VertexSymbol, Renderer, SimpleRenderer, CategoryRendererItem, CategoryRenderer, ClassRendererItem, ClassRenderer, LatLngType, Projection, WebMercator, BD09, GCJ02, NoopProjection, Utility, Bound, Color, Subject, Animation, PointAnimation, LineAnimation, ParticleAnimation, Raster, RasterLayer, Kriging, Heat, InverseDistanceWeight, Tile, MeasureActionType, Measurer, Grid */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4515,53 +4515,57 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _projection_gcj02__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./projection/gcj02 */ "../dist/projection/gcj02.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "GCJ02", function() { return _projection_gcj02__WEBPACK_IMPORTED_MODULE_29__["GCJ02"]; });
 
-/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ./util/utility */ "../dist/util/utility.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Utility", function() { return _util_utility__WEBPACK_IMPORTED_MODULE_30__["Utility"]; });
+/* harmony import */ var _projection_noop_projection__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ./projection/noop-projection */ "../dist/projection/noop-projection.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "NoopProjection", function() { return _projection_noop_projection__WEBPACK_IMPORTED_MODULE_30__["NoopProjection"]; });
 
-/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Bound", function() { return _util_bound__WEBPACK_IMPORTED_MODULE_31__["Bound"]; });
+/* harmony import */ var _util_utility__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ./util/utility */ "../dist/util/utility.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Utility", function() { return _util_utility__WEBPACK_IMPORTED_MODULE_31__["Utility"]; });
 
-/* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ./util/color */ "../dist/util/color.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Color", function() { return _util_color__WEBPACK_IMPORTED_MODULE_32__["Color"]; });
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ./util/bound */ "../dist/util/bound.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Bound", function() { return _util_bound__WEBPACK_IMPORTED_MODULE_32__["Bound"]; });
 
-/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Subject", function() { return _util_subject__WEBPACK_IMPORTED_MODULE_33__["Subject"]; });
+/* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ./util/color */ "../dist/util/color.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Color", function() { return _util_color__WEBPACK_IMPORTED_MODULE_33__["Color"]; });
 
-/* harmony import */ var _animation_animation__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ./animation/animation */ "../dist/animation/animation.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Animation", function() { return _animation_animation__WEBPACK_IMPORTED_MODULE_34__["Animation"]; });
+/* harmony import */ var _util_subject__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ./util/subject */ "../dist/util/subject.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Subject", function() { return _util_subject__WEBPACK_IMPORTED_MODULE_34__["Subject"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "PointAnimation", function() { return _animation_animation__WEBPACK_IMPORTED_MODULE_34__["PointAnimation"]; });
+/* harmony import */ var _animation_animation__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ./animation/animation */ "../dist/animation/animation.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Animation", function() { return _animation_animation__WEBPACK_IMPORTED_MODULE_35__["Animation"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "LineAnimation", function() { return _animation_animation__WEBPACK_IMPORTED_MODULE_34__["LineAnimation"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "PointAnimation", function() { return _animation_animation__WEBPACK_IMPORTED_MODULE_35__["PointAnimation"]; });
 
-/* harmony import */ var _animation_particle_animation__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ./animation/particle-animation */ "../dist/animation/particle-animation.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ParticleAnimation", function() { return _animation_particle_animation__WEBPACK_IMPORTED_MODULE_35__["ParticleAnimation"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "LineAnimation", function() { return _animation_animation__WEBPACK_IMPORTED_MODULE_35__["LineAnimation"]; });
 
-/* harmony import */ var _element_raster__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ./element/raster */ "../dist/element/raster.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Raster", function() { return _element_raster__WEBPACK_IMPORTED_MODULE_36__["Raster"]; });
+/* harmony import */ var _animation_particle_animation__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ./animation/particle-animation */ "../dist/animation/particle-animation.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ParticleAnimation", function() { return _animation_particle_animation__WEBPACK_IMPORTED_MODULE_36__["ParticleAnimation"]; });
 
-/* harmony import */ var _layer_raster_layer__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ./layer/raster-layer */ "../dist/layer/raster-layer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "RasterLayer", function() { return _layer_raster_layer__WEBPACK_IMPORTED_MODULE_37__["RasterLayer"]; });
+/* harmony import */ var _element_raster__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ./element/raster */ "../dist/element/raster.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Raster", function() { return _element_raster__WEBPACK_IMPORTED_MODULE_37__["Raster"]; });
 
-/* harmony import */ var _analysis_interpolation_kriging__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ./analysis/interpolation/kriging */ "../dist/analysis/interpolation/kriging.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Kriging", function() { return _analysis_interpolation_kriging__WEBPACK_IMPORTED_MODULE_38__["Kriging"]; });
+/* harmony import */ var _layer_raster_layer__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ./layer/raster-layer */ "../dist/layer/raster-layer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "RasterLayer", function() { return _layer_raster_layer__WEBPACK_IMPORTED_MODULE_38__["RasterLayer"]; });
 
-/* harmony import */ var _analysis_heat_heat__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ./analysis/heat/heat */ "../dist/analysis/heat/heat.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Heat", function() { return _analysis_heat_heat__WEBPACK_IMPORTED_MODULE_39__["Heat"]; });
+/* harmony import */ var _analysis_interpolation_kriging__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ./analysis/interpolation/kriging */ "../dist/analysis/interpolation/kriging.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Kriging", function() { return _analysis_interpolation_kriging__WEBPACK_IMPORTED_MODULE_39__["Kriging"]; });
 
-/* harmony import */ var _analysis_interpolation_inverse_distance_weight__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./analysis/interpolation/inverse-distance-weight */ "../dist/analysis/interpolation/inverse-distance-weight.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "InverseDistanceWeight", function() { return _analysis_interpolation_inverse_distance_weight__WEBPACK_IMPORTED_MODULE_40__["InverseDistanceWeight"]; });
+/* harmony import */ var _analysis_heat_heat__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./analysis/heat/heat */ "../dist/analysis/heat/heat.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Heat", function() { return _analysis_heat_heat__WEBPACK_IMPORTED_MODULE_40__["Heat"]; });
 
-/* harmony import */ var _tile__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./tile */ "../dist/tile.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Tile", function() { return _tile__WEBPACK_IMPORTED_MODULE_41__["Tile"]; });
+/* harmony import */ var _analysis_interpolation_inverse_distance_weight__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./analysis/interpolation/inverse-distance-weight */ "../dist/analysis/interpolation/inverse-distance-weight.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "InverseDistanceWeight", function() { return _analysis_interpolation_inverse_distance_weight__WEBPACK_IMPORTED_MODULE_41__["InverseDistanceWeight"]; });
 
-/* harmony import */ var _measurer__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ./measurer */ "../dist/measurer.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MeasureActionType", function() { return _measurer__WEBPACK_IMPORTED_MODULE_42__["MeasureActionType"]; });
+/* harmony import */ var _tile__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ./tile */ "../dist/tile.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Tile", function() { return _tile__WEBPACK_IMPORTED_MODULE_42__["Tile"]; });
 
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Measurer", function() { return _measurer__WEBPACK_IMPORTED_MODULE_42__["Measurer"]; });
+/* harmony import */ var _measurer__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ./measurer */ "../dist/measurer.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "MeasureActionType", function() { return _measurer__WEBPACK_IMPORTED_MODULE_43__["MeasureActionType"]; });
 
-/* harmony import */ var _grid__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ./grid */ "../dist/grid.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Grid", function() { return _grid__WEBPACK_IMPORTED_MODULE_43__["Grid"]; });
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Measurer", function() { return _measurer__WEBPACK_IMPORTED_MODULE_43__["Measurer"]; });
+
+/* harmony import */ var _grid__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ./grid */ "../dist/grid.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Grid", function() { return _grid__WEBPACK_IMPORTED_MODULE_44__["Grid"]; });
+
 
 
 
@@ -5446,7 +5450,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
         //resize: 视图容器尺寸调整时
         super(["extent", "click", "dblclick", "mousemove", "resize"]);
         this._option = {
-            disableDoubleClick: false
+            disableDoubleClick: false,
+            disableInteractive: false
         };
         this._drag = {
             flag: false,
@@ -5476,6 +5481,9 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
         this._selectionLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_3__["GraphicLayer"]();
         //option
         this._option.disableDoubleClick = option && option.hasOwnProperty('disableDoubleClick') ? option.disableDoubleClick : false;
+        this._option.disableInteractive = option && option.hasOwnProperty('disableInteractive') ? option.disableInteractive : false;
+        this.minZoom = option && option.hasOwnProperty('minZoom') ? option.minZoom : 3;
+        this.maxZoom = option && option.hasOwnProperty('minZoom') ? option.minZoom : 20;
         this._container = id instanceof HTMLDivElement ? id : document.getElementById(id);
         //create canvas
         this._canvas = document.createElement("canvas");
@@ -5494,14 +5502,16 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
         this._onTouchEnd = this._onTouchEnd.bind(this);
         this._ctx = this._canvas.getContext("2d");
         this._canvas.addEventListener("click", this._onClick);
-        this._canvas.addEventListener("dblclick", this._onDoubleClick);
-        this._canvas.addEventListener("mousedown", this._onMouseDown);
-        this._canvas.addEventListener("mousemove", this._onMouseMove, false);
-        this._canvas.addEventListener("mouseup", this._onMouseUp);
-        this._canvas.addEventListener("wheel", this._onWheel);
-        this._canvas.addEventListener("touchstart", this._onTouchStart, false);
-        this._canvas.addEventListener("touchmove", this._onTouchMove, false);
-        this._canvas.addEventListener("touchend", this._onTouchEnd, false);
+        if (!this._option.disableInteractive) {
+            this._canvas.addEventListener("dblclick", this._onDoubleClick);
+            this._canvas.addEventListener("mousedown", this._onMouseDown);
+            this._canvas.addEventListener("mousemove", this._onMouseMove, false);
+            this._canvas.addEventListener("mouseup", this._onMouseUp);
+            this._canvas.addEventListener("wheel", this._onWheel);
+            this._canvas.addEventListener("touchstart", this._onTouchStart, false);
+            this._canvas.addEventListener("touchmove", this._onTouchMove, false);
+            this._canvas.addEventListener("touchend", this._onTouchEnd, false);
+        }
         //viewer
         this._viewer = new _viewer__WEBPACK_IMPORTED_MODULE_7__["Viewer"](this);
         this._viewer.on("mouseover", () => { _util_utility__WEBPACK_IMPORTED_MODULE_5__["Utility"].addClass(this._canvas, "green-hover"); });
@@ -6103,14 +6113,16 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__["Subject"] {
     destroy() {
         window.removeEventListener("resize", this._onResize);
         this._canvas.removeEventListener("click", this._onClick);
-        this._canvas.removeEventListener("dblclick", this._onDoubleClick);
-        this._canvas.removeEventListener("mousedown", this._onMouseDown);
-        this._canvas.removeEventListener("mousemove", this._onMouseMove);
-        this._canvas.removeEventListener("mouseup", this._onMouseUp);
-        this._canvas.removeEventListener("wheel", this._onWheel);
-        this._canvas.removeEventListener("touchstart", this._onTouchStart);
-        this._canvas.removeEventListener("touchmove", this._onTouchMove);
-        this._canvas.removeEventListener("touchend", this._onTouchEnd);
+        if (!this._option.disableInteractive) {
+            this._canvas.removeEventListener("dblclick", this._onDoubleClick);
+            this._canvas.removeEventListener("mousedown", this._onMouseDown);
+            this._canvas.removeEventListener("mousemove", this._onMouseMove);
+            this._canvas.removeEventListener("mouseup", this._onMouseUp);
+            this._canvas.removeEventListener("wheel", this._onWheel);
+            this._canvas.removeEventListener("touchstart", this._onTouchStart);
+            this._canvas.removeEventListener("touchmove", this._onTouchMove);
+            this._canvas.removeEventListener("touchend", this._onTouchEnd);
+        }
         this._viewer = null;
         this._editor = null;
     }
@@ -6730,6 +6742,52 @@ GCJ02.R = 6378137.0;
  * 不知含义的常数，用于WGS-84 与 GCJ-02 之间的转换
  */
 GCJ02.ee = 0.00669342162296594323;
+
+
+/***/ }),
+
+/***/ "../dist/projection/noop-projection.js":
+/*!*********************************************!*\
+  !*** ../dist/projection/noop-projection.js ***!
+  \*********************************************/
+/*! exports provided: NoopProjection */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "NoopProjection", function() { return NoopProjection; });
+/* harmony import */ var _util_bound__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/bound */ "../dist/util/bound.js");
+
+/**
+ * 坐标投影转换
+ * @remarks
+ * TODO: only support web mecator
+ */
+class NoopProjection {
+    /**
+     * 经纬度转平面坐标
+     * @remarks 地理平面坐标 单位米
+     * @param {number} lng - 经度
+     * @param {number} lat - 纬度
+     * @return {number[]} 地理平面坐标
+     */
+    project([lng, lat]) { return [lng, lat]; }
+    ;
+    /**
+     * 平面坐标转经纬度
+     * @remarks 地理平面坐标 单位米
+     * @param {number} x - 地理平面坐标x
+     * @param {number} y - 地理平面坐标y
+     * @return {number[]} 经纬度
+     */
+    unproject([x, y], original = false) { return [x, y]; }
+    ;
+    /**
+     * 投影后的平面坐标范围
+     */
+    get bound() { return new _util_bound__WEBPACK_IMPORTED_MODULE_0__["Bound"](0, 0, 256 * Math.pow(2, 3), 256 * Math.pow(2, 3)); }
+    ;
+}
 
 
 /***/ }),
@@ -8641,10 +8699,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./grid.js":
-/*!*****************!*\
-  !*** ./grid.js ***!
-  \*****************/
+/***/ "./noop-proj.js":
+/*!**********************!*\
+  !*** ./noop-proj.js ***!
+  \**********************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -8653,19 +8711,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
+window.load = () => {
 
-window.load = async () => {
-    const amap = new AMap.Map("amap", {
-        navigationMode: 'classic',
-        zooms: [1, 20],
-        mapStyle: 'amap://styles/normal',
-        features: ['road', 'point', 'bg'],
-        viewMode: '2D'
-    });
 
-    const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
+    const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo", {disableInteractive: true, minZoom: 3});
     map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center, true);
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;
@@ -8678,21 +8728,94 @@ window.load = async () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-    //map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
-    map.grid.url = "http://localhost:4000/tiles/vector/{id}/{x}/{y}/{z}";
-    map.grid.addLayer({
-        _id: "5fcef06f48c22b33787185e9",
-        name : "province",
-        class: {
-            name: "province",
-            geotype: 3
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["NoopProjection"]());
+    //画经线
+    const lngLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+    map.addLayer(lngLayer);
+    const lngSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleLineSymbol"]();
+    lngSymbol.strokeStyle = "#0000ff";
+    for (let i = -900; i <= 900; i = i + 100){
+        const line = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polyline"]([[i, -500], [i, 500]]);
+        const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](line, lngSymbol);
+        lngLayer.add(graphic);
+    }
+    //画纬线
+    const latLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+    map.addLayer(latLayer);
+    const latSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleLineSymbol"]();
+    latSymbol.strokeStyle = "#4d9221";
+    for (let j = -500; j <= 500; j = j + 100){
+        const line = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polyline"]([[-900, j], [900, j]]);
+        const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](line, latSymbol);
+        latLayer.add(graphic);
+    }
+    //画经纬线交点
+    const pointLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+    map.addLayer(pointLayer);
+    const pointSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+    pointSymbol.radius = 5;
+    pointSymbol.fillStyle = "#de77ae";
+    pointSymbol.strokeStyle = "#c51b7d";
+    for (let i = -900; i <= 900; i = i + 100){
+        for (let j = -500; j <= 500; j = j + 100){
+            const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](i, j);
+            const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, pointSymbol);
+            pointLayer.add(graphic);
         }
+    }
+
+    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](300, -100);
+    const point2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](0, 200);
+    const transparentSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+    transparentSymbol.radius = 20;
+    transparentSymbol.fillStyle = "#00000000";
+    transparentSymbol.strokeStyle = "#00000000";
+    const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point, {data: "你好\n第一次见到你\n你的面容\n一种久违的感觉\n原来是\n镜子\n你好！"}, transparentSymbol);
+    const feature2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["Feature"](point2, {data: "等你\n一起\n建设社团\n建设自己\n莫愁前路无知己\n因为知己在这里\n你好！"}, transparentSymbol);
+    const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
+    featureLayer.featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"](_dist__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Point);
+    featureLayer.featureClass.addFeature(feature);
+    featureLayer.featureClass.addFeature(feature2);
+    let timer;
+    featureLayer.on("click", (event) => {
+        const popup = document.getElementById("popup");
+        popup.innerHTML = "";
+        map.tooltip.show(popup, event.screenX, event.screenY, 320);
+        const data = event.feature.properties["data"].split('');
+        timer && clearTimeout(timer);
+        const writing = (index) => {
+            if (index < data.length) {
+                if (data[index] == "\n") {
+                    popup.innerHTML += "<br/>";
+                } else {
+                    popup.innerHTML += data[index];
+                }
+                timer = setTimeout(writing, 200, ++index);
+            }
+        }
+        timer = writing(0);
     });
-    map.setView([109.519, 18.271], 13);
+
+    map.addLayer(featureLayer);
+    const animation = new _dist__WEBPACK_IMPORTED_MODULE_0__["PointAnimation"](point);
+    animation.radius = 40;
+    animation.speed = 4;
+    animation.color = "#ccc";
+    animation.lineWidth = 3;
+    animation.alpha = 0.8;
+    map.addAnimation(animation);
+    const animation2 = new _dist__WEBPACK_IMPORTED_MODULE_0__["PointAnimation"](point2);
+    animation2.radius = 40;
+    animation2.speed = 4;
+    animation2.color = "#ccc";
+    animation2.lineWidth = 3;
+    animation2.alpha = 0.8;
+    map.addAnimation(animation2);
+
+    map.setView([0, 0], 3);
 
 }
 
-//cause typescript tsc forget js suffix for geometry.js
 
 /***/ })
 
