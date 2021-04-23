@@ -15,7 +15,7 @@ import {
     Graphic, SimpleMarkerSymbol, Feature, SimpleTextSymbol, ArrowSymbol
 } from "../dist";
 
-window.load = () => {
+window.load = async () => {
     const amap = new AMap.Map("amap", {
         fadeOnZoom: false,
         navigationMode: 'classic',
@@ -42,7 +42,7 @@ window.load = () => {
         amap.setZoomAndCenter(event.zoom, event.center);
     });
 
-    var req = new XMLHttpRequest();
+/*    var req = new XMLHttpRequest();
     req.onload = (event) => {
         const featureClass = new FeatureClass();
         featureClass.loadGeoJSON(JSON.parse(req.responseText));
@@ -68,6 +68,36 @@ window.load = () => {
         map.setView([109.519, 18.271], 13);
     };
     req.open("GET", "assets/geojson/sensor.json", true);
-    req.send(null);
+    req.send(null);*/
+
+    try {
+        let response = await fetch("assets/geojson/sensor.json");
+        let data = await response.json();
+        const featureClass = new FeatureClass();
+        featureClass.loadGeoJSON(data);
+        const featureLayer = new FeatureLayer();
+        featureLayer.featureClass = featureClass;
+        const renderer = new SimpleRenderer();
+        featureLayer.renderer = renderer;
+        featureLayer.zoom = [10, 20];
+
+        const field = new Field();
+        field.name = "DEPTH";
+        const idw = new InverseDistanceWeight();
+        idw.honey = true;
+        idw.honeySide = 40;
+        idw.honeyColor = "#00ffff";
+        idw.generate(featureClass, field);
+        const rasterLayer = new RasterLayer();
+        rasterLayer.raster = idw;
+        map.addLayer(rasterLayer);
+
+        map.addLayer(featureLayer);
+
+        map.setView([109.519, 18.271], 13);
+        console.log(data);
+    } catch(e) {
+        console.log("Oops, error", e);
+    }
 
 }

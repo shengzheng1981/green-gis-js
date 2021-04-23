@@ -44,14 +44,20 @@ export declare class FeatureLayer extends Layer {
     /**
      * 图层标注设置
      */
+    get label(): Label;
     set label(value: Label);
     /**
      * 图层渲染方式设置
      */
+    get renderer(): Renderer;
     set renderer(value: Renderer);
     /**
      * 图层可见缩放级别设置
      */
+    get minZoom(): number;
+    get maxZoom(): number;
+    set minZoom(value: number);
+    set maxZoom(value: number);
     set zoom(value: number[]);
     /**
      * 重写事件注册监听

@@ -46,9 +46,9 @@ export class ClassRenderer {
         //获取该字段极值
         const stat = featureClass.features.map(feature => feature.properties[field.name]).reduce((stat, cur) => {
             stat.max = Math.max(cur, stat.max);
-            stat.min = Math.min(cur, stat.max);
+            stat.min = Math.min(cur, stat.min);
             return stat;
-        }, { min: 0, max: 0 });
+        }, { min: Number.MAX_VALUE, max: Number.MIN_VALUE });
         for (let i = 0; i < breaks; i++) {
             const item = new ClassRendererItem();
             switch (featureClass.type) {

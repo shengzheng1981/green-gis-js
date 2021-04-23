@@ -5,7 +5,8 @@ import { CategoryRenderer } from "../renderer/category-renderer";
 import { ClassRenderer } from "../renderer/class-renderer";
 import { GeometryType, CoordinateType } from "../geometry/geometry";
 import { Point } from "../geometry/point";
-import { ClusterSymbol } from "../symbol/symbol";
+import { ClusterSymbol, SimplePointSymbol } from "../symbol/symbol";
+import { DotRenderer } from "../renderer/dot-renderer";
 export class FeatureLayer extends Layer {
     constructor() {
         super(...arguments);
@@ -41,18 +42,36 @@ export class FeatureLayer extends Layer {
     /**
      * 图层标注设置
      */
+    get label() {
+        return this._label;
+    }
     set label(value) {
         this._label = value;
     }
     /**
      * 图层渲染方式设置
      */
+    get renderer() {
+        return this._renderer;
+    }
     set renderer(value) {
         this._renderer = value;
     }
     /**
      * 图层可见缩放级别设置
      */
+    get minZoom() {
+        return this._zoom[0];
+    }
+    get maxZoom() {
+        return this._zoom[1];
+    }
+    set minZoom(value) {
+        this._zoom[0] = value;
+    }
+    set maxZoom(value) {
+        this._zoom[1] = value;
+    }
     set zoom(value) {
         this._zoom = value;
     }
@@ -118,6 +137,12 @@ export class FeatureLayer extends Layer {
                     const item = renderer.items.find(item => item.low <= feature.properties[renderer.field.name] && item.high >= feature.properties[renderer.field.name]);
                     if (item)
                         return item.symbol;
+                }
+                else if (this._renderer instanceof DotRenderer) {
+                    const renderer = this._renderer;
+                    const symbol = new SimplePointSymbol();
+                    symbol.radius = Number(feature.properties[renderer.field.name] || 0);
+                    return symbol;
                 }
             };
             //如果是点图层，同时又设置为聚合显示时

@@ -24,6 +24,7 @@ export * from './renderer/renderer';
 export * from './renderer/simple-renderer';
 export * from './renderer/category-renderer';
 export * from './renderer/class-renderer';
+export * from './renderer/dot-renderer';
 export * from './projection/projection';
 export * from './projection/web-mercator';
 export * from './projection/bd09';
