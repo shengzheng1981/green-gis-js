@@ -145,7 +145,7 @@ export class FeatureLayer extends Layer{
             const features = this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent));
             //获取当前渲染方式下，某一要素对应的渲染符号
             const _getSymbol = (feature) => {
-                if (this._renderer instanceof SimpleRenderer) {
+                /*if (this._renderer instanceof SimpleRenderer) {
                     return (this._renderer as SimpleRenderer).symbol;
                 } else if (this._renderer instanceof CategoryRenderer) {
                     const renderer: CategoryRenderer = this._renderer;
@@ -160,7 +160,8 @@ export class FeatureLayer extends Layer{
                     const symbol = new SimplePointSymbol();
                     symbol.radius = Number(feature.properties[renderer.field.name] || 0);
                     return symbol;
-                }
+                }*/
+                return this._renderer.getSymbol(feature);
             }
             //如果是点图层，同时又设置为聚合显示时
             if (this._featureClass.type == GeometryType.Point && this.cluster) {

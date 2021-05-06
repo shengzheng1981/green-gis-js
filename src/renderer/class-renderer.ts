@@ -3,6 +3,7 @@ import {Field} from "../data/field";
 import {FeatureClass} from "../data/feature-class";
 import {GeometryType} from "../geometry/geometry";
 import {Color} from "../util/color";
+import {Feature} from "../element/feature";
 
 /**
  * 分级渲染项
@@ -108,5 +109,10 @@ export class ClassRenderer {
                     break;
             }
         }
+    }
+
+    getSymbol(feature: Feature): Symbol {
+        const item = this.items.find( item => item.low <= feature.properties[this.field.name] && item.high >= feature.properties[this.field.name]);
+        if (item) return item.symbol;
     }
 }

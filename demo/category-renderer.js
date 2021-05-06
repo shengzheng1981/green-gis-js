@@ -93,6 +93,7 @@ window.load = () => {
             console.log(event.feature.properties["name"], "mouse out");
         });
         map.insertLayer(featureLayer, 0);
+        map.redraw();
     };
     req.open("GET", "assets/geojson/beijing.json", true);
     req.send(null);

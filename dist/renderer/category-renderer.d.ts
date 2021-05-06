@@ -1,6 +1,7 @@
 import { Symbol } from "../symbol/symbol";
 import { Field } from "../data/field";
 import { FeatureClass } from "../data/feature-class";
+import { Feature } from "../element/feature";
 /**
  * 分类渲染项
  */
@@ -55,4 +56,5 @@ export declare class CategoryRenderer {
      * @param {Field} field - 分类字段
      */
     generate(featureClass: FeatureClass, field: Field): void;
+    getSymbol(feature: Feature): Symbol;
 }

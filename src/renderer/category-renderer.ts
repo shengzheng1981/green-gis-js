@@ -3,6 +3,7 @@ import {Field} from "../data/field";
 import {FeatureClass} from "../data/feature-class";
 import {GeometryType} from "../geometry/geometry";
 import {Color} from "../util/color";
+import {Feature} from "../element/feature";
 
 /**
  * 分类渲染项
@@ -99,5 +100,10 @@ export class CategoryRenderer {
                 }
             }
         });
+    }
+
+    getSymbol(feature: Feature): Symbol {
+        const item = this.items.find( item => item.value == feature.properties[this.field.name]);
+        if (item) return item.symbol;
     }
 }

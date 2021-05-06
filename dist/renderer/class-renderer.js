@@ -84,4 +84,9 @@ export class ClassRenderer {
             }
         }
     }
+    getSymbol(feature) {
+        const item = this.items.find(item => item.low <= feature.properties[this.field.name] && item.high >= feature.properties[this.field.name]);
+        if (item)
+            return item.symbol;
+    }
 }

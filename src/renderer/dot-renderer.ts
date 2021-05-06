@@ -1,5 +1,6 @@
 import {Field} from "../data/field";
-import {Symbol} from "../symbol/symbol";
+import {SimplePointSymbol, Symbol} from "../symbol/symbol";
+import {Feature} from "../element/feature";
 
 /**
  * 点半径渲染
@@ -19,6 +20,12 @@ export class DotRenderer {
     }
     set field(value: Field) {
         this._field = value;
+    }
+
+    getSymbol(feature: Feature): Symbol {
+        const symbol = new SimplePointSymbol();
+        symbol.radius = Number(feature.properties[this.field.name] || 0);
+        return symbol;
     }
 
 }

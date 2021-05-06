@@ -1,6 +1,7 @@
 import { Symbol } from "../symbol/symbol";
 import { Field } from "../data/field";
 import { FeatureClass } from "../data/feature-class";
+import { Feature } from "../element/feature";
 /**
  * 分级渲染项
  * @remarks
@@ -57,4 +58,5 @@ export declare class ClassRenderer {
      * TODO: 分级有多种方式，目前只实现均分
      */
     generate(featureClass: FeatureClass, field: Field, breaks: number): void;
+    getSymbol(feature: Feature): Symbol;
 }

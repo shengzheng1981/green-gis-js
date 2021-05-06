@@ -83,4 +83,9 @@ export class CategoryRenderer {
             }
         });
     }
+    getSymbol(feature) {
+        const item = this.items.find(item => item.value == feature.properties[this.field.name]);
+        if (item)
+            return item.symbol;
+    }
 }

@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./dot-renderer.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./noop-proj-coord.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -4856,17 +4856,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FeatureLayer", function() { return FeatureLayer; });
 /* harmony import */ var _layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./layer */ "../dist/layer/layer.js");
 /* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mercator */ "../dist/projection/web-mercator.js");
-/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../renderer/simple-renderer */ "../dist/renderer/simple-renderer.js");
-/* harmony import */ var _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../renderer/category-renderer */ "../dist/renderer/category-renderer.js");
-/* harmony import */ var _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../renderer/class-renderer */ "../dist/renderer/class-renderer.js");
-/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
-/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../geometry/point */ "../dist/geometry/point.js");
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
-/* harmony import */ var _renderer_dot_renderer__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../renderer/dot-renderer */ "../dist/renderer/dot-renderer.js");
-
-
-
-
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _geometry_point__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../geometry/point */ "../dist/geometry/point.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
 
 
 
@@ -4988,35 +4980,31 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
             //获取当前渲染方式下，某一要素对应的渲染符号
             const _getSymbol = (feature) => {
-                if (this._renderer instanceof _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_2__["SimpleRenderer"]) {
-                    return this._renderer.symbol;
-                }
-                else if (this._renderer instanceof _renderer_category_renderer__WEBPACK_IMPORTED_MODULE_3__["CategoryRenderer"]) {
-                    const renderer = this._renderer;
-                    const item = renderer.items.find(item => item.value == feature.properties[renderer.field.name]);
-                    if (item)
-                        return item.symbol;
-                }
-                else if (this._renderer instanceof _renderer_class_renderer__WEBPACK_IMPORTED_MODULE_4__["ClassRenderer"]) {
-                    const renderer = this._renderer;
-                    const item = renderer.items.find(item => item.low <= feature.properties[renderer.field.name] && item.high >= feature.properties[renderer.field.name]);
-                    if (item)
-                        return item.symbol;
-                }
-                else if (this._renderer instanceof _renderer_dot_renderer__WEBPACK_IMPORTED_MODULE_8__["DotRenderer"]) {
-                    const renderer = this._renderer;
-                    const symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_7__["SimplePointSymbol"]();
+                /*if (this._renderer instanceof SimpleRenderer) {
+                    return (this._renderer as SimpleRenderer).symbol;
+                } else if (this._renderer instanceof CategoryRenderer) {
+                    const renderer: CategoryRenderer = this._renderer;
+                    const item = renderer.items.find( item => item.value == feature.properties[renderer.field.name]);
+                    if (item) return item.symbol;
+                } else if (this._renderer instanceof ClassRenderer) {
+                    const renderer: ClassRenderer = this._renderer;
+                    const item = renderer.items.find( item => item.low <= feature.properties[renderer.field.name] && item.high >= feature.properties[renderer.field.name]);
+                    if (item) return item.symbol;
+                } else if (this._renderer instanceof DotRenderer) {
+                    const renderer: DotRenderer = this._renderer;
+                    const symbol = new SimplePointSymbol();
                     symbol.radius = Number(feature.properties[renderer.field.name] || 0);
                     return symbol;
-                }
+                }*/
+                return this._renderer.getSymbol(feature);
             };
             //如果是点图层，同时又设置为聚合显示时
-            if (this._featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_5__["GeometryType"].Point && this.cluster) {
+            if (this._featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_2__["GeometryType"].Point && this.cluster) {
                 const cluster = features.reduce((acc, cur) => {
-                    if (cur.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_6__["Point"]) {
+                    if (cur.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_3__["Point"]) {
                         const point = cur.geometry;
                         const item = acc.find((item) => {
-                            const distance = point.distance(item.feature.geometry, _geometry_geometry__WEBPACK_IMPORTED_MODULE_5__["CoordinateType"].Screen, ctx, projection);
+                            const distance = point.distance(item.feature.geometry, _geometry_geometry__WEBPACK_IMPORTED_MODULE_2__["CoordinateType"].Screen, ctx, projection);
                             return distance <= 50;
                         });
                         if (item) {
@@ -5033,7 +5021,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__["Layer"] {
                         item.feature.draw(ctx, projection, extent, _getSymbol(item.feature));
                     }
                     else {
-                        item.feature.draw(ctx, projection, extent, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_7__["ClusterSymbol"](item.count));
+                        item.feature.draw(ctx, projection, extent, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_4__["ClusterSymbol"](item.count));
                     }
                 });
             }
@@ -7044,6 +7032,11 @@ class CategoryRenderer {
             }
         });
     }
+    getSymbol(feature) {
+        const item = this.items.find(item => item.value == feature.properties[this.field.name]);
+        if (item)
+            return item.symbol;
+    }
 }
 
 
@@ -7149,6 +7142,11 @@ class ClassRenderer {
             }
         }
     }
+    getSymbol(feature) {
+        const item = this.items.find(item => item.low <= feature.properties[this.field.name] && item.high >= feature.properties[this.field.name]);
+        if (item)
+            return item.symbol;
+    }
 }
 
 
@@ -7164,8 +7162,12 @@ class ClassRenderer {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DotRenderer", function() { return DotRenderer; });
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+
 /**
  * 点半径渲染
+ * @remarks
+ * 只适用点图层
  */
 class DotRenderer {
     get field() {
@@ -7173,6 +7175,11 @@ class DotRenderer {
     }
     set field(value) {
         this._field = value;
+    }
+    getSymbol(feature) {
+        const symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+        symbol.radius = Number(feature.properties[this.field.name] || 0);
+        return symbol;
     }
 }
 
@@ -7189,10 +7196,10 @@ class DotRenderer {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Renderer", function() { return Renderer; });
-/**
- * 渲染方式基类
- */
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+
 class Renderer {
+    getSymbol(feature) { return new _symbol_symbol__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"](); }
 }
 
 
@@ -7212,6 +7219,9 @@ __webpack_require__.r(__webpack_exports__);
  * 单一渲染
  */
 class SimpleRenderer {
+    getSymbol(feature) {
+        return this.symbol;
+    }
 }
 
 
@@ -8754,10 +8764,10 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__["Subject"] {
 
 /***/ }),
 
-/***/ "./dot-renderer.js":
-/*!*************************!*\
-  !*** ./dot-renderer.js ***!
-  \*************************/
+/***/ "./noop-proj-coord.js":
+/*!****************************!*\
+  !*** ./noop-proj-coord.js ***!
+  \****************************/
 /*! no exports provided */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -8768,61 +8778,53 @@ __webpack_require__.r(__webpack_exports__);
 
 window.load = () => {
 
-    const amap = new AMap.Map("amap", {
-        fadeOnZoom: false,
-        navigationMode: 'classic',
-        optimizePanAnimation: false,
-        animateEnable: false,
-        dragEnable: false,
-        zoomEnable: false,
-        resizeEnable: true,
-        doubleClickZoom: false,
-        keyboardEnable: false,
-        scrollWheel: false,
-        expandZoomRange: true,
-        zooms: [1, 20],
-        mapStyle: 'normal',
-        features: ['road', 'point', 'bg'],
-        viewMode: '2D'
-    });
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__["Map"]("foo");
-    map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center);
-        document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
-        document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
-        document.getElementById("zoom").value = event.zoom;
-        document.getElementById("x1").value = Math.round(event.extent.xmin * 1000)/1000;
-        document.getElementById("y1").value = Math.round(event.extent.ymin * 1000)/1000;
-        document.getElementById("x2").value = Math.round(event.extent.xmax * 1000)/1000;
-        document.getElementById("y2").value = Math.round(event.extent.ymax * 1000)/1000;
-        document.getElementById("a").value = Math.round(event.matrix.a * 1000)/1000;
-        document.getElementById("d").value = Math.round(event.matrix.d * 1000)/1000;
-        document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
-        document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
-    });
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__["NoopProjection"]());
+    //画网格线
+    const xLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+    map.addLayer(xLayer);
+    const lngSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleLineSymbol"]();
+    lngSymbol.strokeStyle = "#0000ff";
+    for (let i = -900; i <= 900; i = i + 100){
+        const line = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polyline"]([[i, -500], [i, 500]]);
+        const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](line, lngSymbol);
+        xLayer.add(graphic);
+    }
+    //画网格线
+    const yLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+    map.addLayer(yLayer);
+    const latSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimpleLineSymbol"]();
+    latSymbol.strokeStyle = "#4d9221";
+    for (let j = -500; j <= 500; j = j + 100){
+        const line = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polyline"]([[-900, j], [900, j]]);
+        const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](line, latSymbol);
+        yLayer.add(graphic);
+    }
+    //画原点
+    const pointLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+    map.addLayer(pointLayer);
+    const pointSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["SimplePointSymbol"]();
+    pointSymbol.radius = 10;
+    pointSymbol.fillStyle = "#de77ae";
+    pointSymbol.strokeStyle = "#c51b7d";
+    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__["Point"](0, 0);
+    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](point, pointSymbol);
+    pointLayer.add(graphic);
 
-    map.setView([109.519, 18.271], 13);
+    //画XY轴
+    const arrowSymbol = new _dist__WEBPACK_IMPORTED_MODULE_0__["ArrowSymbol"]();
 
-    var req = new XMLHttpRequest();
-    req.onload = (event) => {
-        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureClass"](_dist__WEBPACK_IMPORTED_MODULE_0__["GeometryType"].Point);
-        featureClass.loadGeoJSON(JSON.parse(req.responseText));
-        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["FeatureLayer"]();
-        featureLayer.featureClass = featureClass;
-        const field = new _dist__WEBPACK_IMPORTED_MODULE_0__["Field"]();
-        field.name = "DEPTH";
-        field.type = _dist__WEBPACK_IMPORTED_MODULE_0__["FieldType"].Number;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__["DotRenderer"]();
-        renderer.field = field;
+    const axisLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__["GraphicLayer"]();
+    map.addLayer(axisLayer);
+    const xLine = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polyline"]([[-1000, 0], [1000, 0]]);
+    const xAxis = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](xLine, arrowSymbol);
+    axisLayer.add(xAxis);
+    const yLine = new _dist__WEBPACK_IMPORTED_MODULE_0__["Polyline"]([[0, -600], [0, 600]]);
+    const yAxis = new _dist__WEBPACK_IMPORTED_MODULE_0__["Graphic"](yLine, arrowSymbol);
+    axisLayer.add(yAxis);
 
-        featureLayer.renderer = renderer;
-        featureLayer.zoom = [5, 20];
-        map.addLayer(featureLayer);
-        map.redraw();
-    };
-    req.open("GET", "assets/geojson/sensor.json", true);
-    req.send(null);
+    map.setView([0, 0], 3);
 
 }
 

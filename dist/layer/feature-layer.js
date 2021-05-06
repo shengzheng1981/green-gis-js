@@ -1,12 +1,8 @@
 import { Layer } from "./layer";
 import { WebMercator } from "../projection/web-mercator";
-import { SimpleRenderer } from "../renderer/simple-renderer";
-import { CategoryRenderer } from "../renderer/category-renderer";
-import { ClassRenderer } from "../renderer/class-renderer";
 import { GeometryType, CoordinateType } from "../geometry/geometry";
 import { Point } from "../geometry/point";
-import { ClusterSymbol, SimplePointSymbol } from "../symbol/symbol";
-import { DotRenderer } from "../renderer/dot-renderer";
+import { ClusterSymbol } from "../symbol/symbol";
 export class FeatureLayer extends Layer {
     constructor() {
         super(...arguments);
@@ -123,27 +119,23 @@ export class FeatureLayer extends Layer {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
             //获取当前渲染方式下，某一要素对应的渲染符号
             const _getSymbol = (feature) => {
-                if (this._renderer instanceof SimpleRenderer) {
-                    return this._renderer.symbol;
-                }
-                else if (this._renderer instanceof CategoryRenderer) {
-                    const renderer = this._renderer;
-                    const item = renderer.items.find(item => item.value == feature.properties[renderer.field.name]);
-                    if (item)
-                        return item.symbol;
-                }
-                else if (this._renderer instanceof ClassRenderer) {
-                    const renderer = this._renderer;
-                    const item = renderer.items.find(item => item.low <= feature.properties[renderer.field.name] && item.high >= feature.properties[renderer.field.name]);
-                    if (item)
-                        return item.symbol;
-                }
-                else if (this._renderer instanceof DotRenderer) {
-                    const renderer = this._renderer;
+                /*if (this._renderer instanceof SimpleRenderer) {
+                    return (this._renderer as SimpleRenderer).symbol;
+                } else if (this._renderer instanceof CategoryRenderer) {
+                    const renderer: CategoryRenderer = this._renderer;
+                    const item = renderer.items.find( item => item.value == feature.properties[renderer.field.name]);
+                    if (item) return item.symbol;
+                } else if (this._renderer instanceof ClassRenderer) {
+                    const renderer: ClassRenderer = this._renderer;
+                    const item = renderer.items.find( item => item.low <= feature.properties[renderer.field.name] && item.high >= feature.properties[renderer.field.name]);
+                    if (item) return item.symbol;
+                } else if (this._renderer instanceof DotRenderer) {
+                    const renderer: DotRenderer = this._renderer;
                     const symbol = new SimplePointSymbol();
                     symbol.radius = Number(feature.properties[renderer.field.name] || 0);
                     return symbol;
-                }
+                }*/
+                return this._renderer.getSymbol(feature);
             };
             //如果是点图层，同时又设置为聚合显示时
             if (this._featureClass.type == GeometryType.Point && this.cluster) {
