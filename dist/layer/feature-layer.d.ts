@@ -4,6 +4,14 @@ import { Projection } from "../projection/projection";
 import { FeatureClass } from "../data/feature-class";
 import { Renderer } from "../renderer/renderer";
 import { Label } from "../label/label";
+/**
+ * 聚合类型
+ * @enum {number}
+ */
+export declare enum ClusterType {
+    Default = 0,
+    Thinning = 1
+}
 export declare class FeatureLayer extends Layer {
     /**
      * 矢量要素类（数据源）
@@ -29,6 +37,10 @@ export declare class FeatureLayer extends Layer {
      * 是否聚合
      */
     cluster: boolean;
+    /**
+     * 聚合类型
+     */
+    clusterType: ClusterType;
     /**
      * 是否正在编辑
      */

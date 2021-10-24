@@ -3,6 +3,17 @@ import { WebMercator } from "../projection/web-mercator";
 import { GeometryType, CoordinateType } from "../geometry/geometry";
 import { Point } from "../geometry/point";
 import { ClusterSymbol } from "../symbol/symbol";
+/**
+ * 聚合类型
+ * @enum {number}
+ */
+export var ClusterType;
+(function (ClusterType) {
+    //聚合
+    ClusterType[ClusterType["Default"] = 0] = "Default";
+    //抽稀
+    ClusterType[ClusterType["Thinning"] = 1] = "Thinning";
+})(ClusterType || (ClusterType = {}));
 export class FeatureLayer extends Layer {
     constructor() {
         super(...arguments);
@@ -18,6 +29,10 @@ export class FeatureLayer extends Layer {
          * 是否聚合
          */
         this.cluster = false;
+        /**
+         * 聚合类型
+         */
+        this.clusterType = ClusterType.Default;
         /**
          * 是否正在编辑
          */
@@ -160,7 +175,7 @@ export class FeatureLayer extends Layer {
                         item.feature.draw(ctx, projection, extent, _getSymbol(item.feature));
                     }
                     else {
-                        item.feature.draw(ctx, projection, extent, new ClusterSymbol(item.count));
+                        item.feature.draw(ctx, projection, extent, this.clusterType == ClusterType.Thinning ? _getSymbol(item.feature) : new ClusterSymbol(item.count));
                     }
                 });
             }
@@ -189,7 +204,7 @@ export class FeatureLayer extends Layer {
      * @param {number} zoom - 当前缩放级别
      */
     drawLabel(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
-        if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
+        if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
             this._label.draw(features, ctx, projection);
             /*features.forEach( feature => {

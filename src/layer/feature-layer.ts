@@ -16,6 +16,17 @@ import {ClusterSymbol, SimplePointSymbol} from "../symbol/symbol";
 import {Field} from "../data/field";
 import {DotRenderer} from "../renderer/dot-renderer";
 
+/**
+ * 聚合类型
+ * @enum {number}
+ */
+ export enum ClusterType {
+    //聚合
+    Default = 0,
+    //抽稀
+    Thinning = 1
+}
+
 export class FeatureLayer extends Layer{
     /**
      * 矢量要素类（数据源）
@@ -42,9 +53,15 @@ export class FeatureLayer extends Layer{
      */
     public cluster: boolean = false;
     /**
+     * 聚合类型
+     */
+    public clusterType: ClusterType = ClusterType.Default;
+    /**
      * 是否正在编辑
      */
     public editing: boolean = false;
+
+   
 
     /**
      * 矢量要素类（数据源）
@@ -184,7 +201,7 @@ export class FeatureLayer extends Layer{
                     if (item.count == 1) {
                         item.feature.draw(ctx, projection, extent, _getSymbol(item.feature));
                     } else {
-                        item.feature.draw(ctx, projection, extent, new ClusterSymbol(item.count));
+                        item.feature.draw(ctx, projection, extent, this.clusterType == ClusterType.Thinning ? _getSymbol(item.feature) : new ClusterSymbol(item.count));
                     }
                 });
             } else {
@@ -214,7 +231,7 @@ export class FeatureLayer extends Layer{
      * @param {number} zoom - 当前缩放级别
      */
     drawLabel(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
-        if (this.visible && !this.cluster && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
+        if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature: Feature) => feature.intersect(projection, extent));
             this._label.draw(features, ctx, projection);
             /*features.forEach( feature => {

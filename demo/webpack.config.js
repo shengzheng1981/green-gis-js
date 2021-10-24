@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./noop-proj-coord.js",
+    entry: "./cluster2.js",
     output: {
         filename: "bundle.js"
     },
