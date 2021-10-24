@@ -1,12 +1,3 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import { Color } from "../util/color";
 /**
  * 符号基类
@@ -420,19 +411,19 @@ export class SimpleMarkerSymbol extends PointSymbol {
      * @param {number} screenY - 屏幕坐标Y
      */
     draw(ctx, screenX, screenY) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!this.loaded)
-                yield this.load();
-            if (this.icon) {
-                ctx.save();
-                const matrix = ctx.getTransform();
-                //keep size
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                //请对应参考offset属性的描述内容
-                ctx.drawImage(this.icon, screenX + this.offsetX, screenY + this.offsetY, this.width, this.height);
-                ctx.restore();
-            }
-        });
+        if (!this._loaded) {
+            this.image = new Image();
+            this.image.src = this.url;
+            this._loaded = true;
+        }
+        ;
+        ctx.save();
+        //const matrix = (ctx as any).getTransform();
+        //keep size
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        //请对应参考offset属性的描述内容
+        ctx.drawImage(this.icon || this.image, screenX + this.offsetX, screenY + this.offsetY, this.width, this.height);
+        ctx.restore();
     }
     /**
      * 判断鼠标交互位置是否在符号范围内

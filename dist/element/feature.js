@@ -87,6 +87,21 @@ export class Feature extends Subject {
         return this._geometry ? this._geometry.bound : null;
     }
     /**
+     * RBush
+     */
+    get minX() {
+        return this.bound ? this.bound.xmin : 0;
+    }
+    get maxX() {
+        return this.bound ? this.bound.xmax : 0;
+    }
+    get minY() {
+        return this.bound ? this.bound.ymin : 0;
+    }
+    get maxY() {
+        return this.bound ? this.bound.ymax : 0;
+    }
+    /**
      * 是否处于编辑状态
      */
     get edited() {

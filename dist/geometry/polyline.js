@@ -97,8 +97,7 @@ export class Polyline extends Geometry {
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleLineSymbol()) {
         if (!this._projected)
             this.project(projection);
-        if (!extent.intersect(this._bound))
-            return;
+        //if (!extent.intersect(this._bound)) return;
         this._tolerance = Polyline.TOLERANCE + symbol.lineWidth;
         const matrix = ctx.getTransform();
         this._screen = this._coordinates.map((point, index) => {

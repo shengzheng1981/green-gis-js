@@ -3,6 +3,7 @@ import { WebMercator } from "../projection/web-mercator";
 import { GeometryType, CoordinateType } from "../geometry/geometry";
 import { Point } from "../geometry/point";
 import { ClusterSymbol } from "../symbol/symbol";
+//import RBush from "rbush";
 /**
  * 聚合类型
  * @enum {number}
@@ -38,6 +39,8 @@ export class FeatureLayer extends Layer {
          */
         this.editing = false;
     }
+    //private _tree: RBush<Feature> = new RBush(16);
+    //private _inited: boolean = false;
     /**
      * 矢量要素类（数据源）
      */
@@ -119,6 +122,15 @@ export class FeatureLayer extends Layer {
             feature.emit(event, param);
         });
     }
+    /* initTree(projection: Projection = new WebMercator()) {
+        if (!this._inited) {
+            this._featureClass.features.forEach(feature => {
+                feature.geometry.project(projection);
+            });
+            this._tree.load(this._featureClass.features);
+            this._inited = true;
+        }
+    } */
     /**
      * 绘制图层
      * @remarks
@@ -129,9 +141,17 @@ export class FeatureLayer extends Layer {
      * @param {number} zoom - 当前缩放级别
      */
     draw(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
+        console.time("draw");
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             //过滤可见视图范围内的要素
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
+            /* this.initTree(projection);
+            const features = this._tree.search({
+                minX: extent.xmin,
+                minY: extent.ymin,
+                maxX: extent.xmax,
+                maxY: extent.ymax
+            } as any); */
             //获取当前渲染方式下，某一要素对应的渲染符号
             const _getSymbol = (feature) => {
                 /*if (this._renderer instanceof SimpleRenderer) {
@@ -185,6 +205,7 @@ export class FeatureLayer extends Layer {
                 });
             }
         }
+        console.timeEnd("draw");
     }
     /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
@@ -204,6 +225,7 @@ export class FeatureLayer extends Layer {
      * @param {number} zoom - 当前缩放级别
      */
     drawLabel(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
+        console.time("label");
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
             this._label.draw(features, ctx, projection);
@@ -226,6 +248,7 @@ export class FeatureLayer extends Layer {
                 item.feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
             });*/
         }
+        console.timeEnd("label");
     }
     /**
      * 图层交互

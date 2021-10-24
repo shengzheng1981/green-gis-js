@@ -79,6 +79,13 @@ export declare class Feature extends Subject {
      */
     get bound(): Bound;
     /**
+     * RBush
+     */
+    get minX(): number;
+    get maxX(): number;
+    get minY(): number;
+    get maxY(): number;
+    /**
      * 是否处于编辑状态
      */
     get edited(): boolean;

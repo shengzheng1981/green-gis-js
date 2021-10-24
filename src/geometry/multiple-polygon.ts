@@ -62,7 +62,7 @@ export class MultiplePolygon extends Geometry{
      */
     draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: FillSymbol = new SimpleFillSymbol()) {
         if (!this._projected) this.project(projection);
-        if (!extent.intersect(this._bound)) return;
+        //if (!extent.intersect(this._bound)) return;
         const matrix = (ctx as any).getTransform();
         this._screen = this._coordinates.map( polygon => polygon.map( ring => {
             const points = ring.map((point: any, index) => {

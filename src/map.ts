@@ -601,56 +601,61 @@ export class Map extends Subject{
         }
         this._drag.flag = false;
     }
+
+    private _wheelTimer: any;
     //响应滚轮缩放
     _onWheel(event) {
-        event.preventDefault();
-        //级别缩放
-        const sensitivity = 5;
-        if (Math.abs(event.deltaY) <= sensitivity) return;
-        const delta = event.deltaY < 0 ? -1 : 1;
-        let scale = 1;
-        if (delta < 0) {
-            // 放大
-            scale *= delta * -2;
-        }
-        else {
-            // 缩小
-            scale /= delta * 2;
-        }
-        let zoom = Math.round(Math.log(scale));
-        //无级缩放
-        /*const sensitivity = 100;
-        const delta = event.deltaY / sensitivity;
-        if (Math.abs(delta) <= 0.05) return;
-        let scale = 1;
-        let zoom = -delta;*/
-        //------------------------------------------------------------
-        if (zoom > 0) {
-            // 放大
-            zoom = this._zoom + zoom >= this.maxZoom ? this.maxZoom - this._zoom : zoom;
-        } else if (zoom < 0) {
-            // 缩小
-            zoom = this._zoom + zoom <= this.minZoom ? this.minZoom - this._zoom : zoom;
-        }
-        if (zoom == 0) return;
-        this._zoom += zoom;
-        scale = Math.pow(2, zoom);
-        //交互表现为 鼠标当前位置 屏幕坐标不变 进行缩放 即x2 = x1，y2=y1
-        //其它设定：变换前矩阵(a1,0,0,d1,e1,f1)   变换矩阵(a,0,0,d,e,f)  变换后矩阵(a2,0,0,d2,e2,f2)
-        //scale已通过滚轮变化，换算得到，且a=d=scale，求e和f
-        //1.将原屏幕坐标 x1 转成 地理坐标 x0 = (x1 - e1) / a1
-        //2.地理坐标x0 转成 现屏幕坐标x2  a2 * x0 + e2 = x2 e2 = x2 - a2 * x0 代入1式 e2 = x2 - a2 * (x1 - e1) / a1
-        //3.已知scale = a2 / a1 故 e2 = x2 - scale * (x1 - e1)
-        //4.另矩阵变换 a1 * e + e1 = e2
-        //5.联立3和4 求得 e = (x2 - scale * (x1 - e1) - e1) / a1
-        const matrix = (this._ctx as any).getTransform();
-        const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
-        const e = (x2 - scale * (x1 - e1) - e1) / a1;
-        const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
-        const f = (y2 - scale * (y1 - f1) - f1) / d1;
-        this._ctx.transform( scale, 0, 0, scale, e, f );
-
-        this.redraw();
+        this._wheelTimer && clearTimeout(this._wheelTimer);
+		this._wheelTimer = setTimeout(() => {
+            event.preventDefault();
+            //级别缩放
+            const sensitivity = 5;
+            if (Math.abs(event.deltaY) <= sensitivity) return;
+            const delta = event.deltaY < 0 ? -1 : 1;
+            let scale = 1;
+            if (delta < 0) {
+                // 放大
+                scale *= delta * -2;
+            }
+            else {
+                // 缩小
+                scale /= delta * 2;
+            }
+            let zoom = Math.round(Math.log(scale));
+            //无级缩放
+            /*const sensitivity = 100;
+            const delta = event.deltaY / sensitivity;
+            if (Math.abs(delta) <= 0.05) return;
+            let scale = 1;
+            let zoom = -delta;*/
+            //------------------------------------------------------------
+            if (zoom > 0) {
+                // 放大
+                zoom = this._zoom + zoom >= this.maxZoom ? this.maxZoom - this._zoom : zoom;
+            } else if (zoom < 0) {
+                // 缩小
+                zoom = this._zoom + zoom <= this.minZoom ? this.minZoom - this._zoom : zoom;
+            }
+            if (zoom == 0) return;
+            this._zoom += zoom;
+            scale = Math.pow(2, zoom);
+            //交互表现为 鼠标当前位置 屏幕坐标不变 进行缩放 即x2 = x1，y2=y1
+            //其它设定：变换前矩阵(a1,0,0,d1,e1,f1)   变换矩阵(a,0,0,d,e,f)  变换后矩阵(a2,0,0,d2,e2,f2)
+            //scale已通过滚轮变化，换算得到，且a=d=scale，求e和f
+            //1.将原屏幕坐标 x1 转成 地理坐标 x0 = (x1 - e1) / a1
+            //2.地理坐标x0 转成 现屏幕坐标x2  a2 * x0 + e2 = x2 e2 = x2 - a2 * x0 代入1式 e2 = x2 - a2 * (x1 - e1) / a1
+            //3.已知scale = a2 / a1 故 e2 = x2 - scale * (x1 - e1)
+            //4.另矩阵变换 a1 * e + e1 = e2
+            //5.联立3和4 求得 e = (x2 - scale * (x1 - e1) - e1) / a1
+            const matrix = (this._ctx as any).getTransform();
+            const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
+            const e = (x2 - scale * (x1 - e1) - e1) / a1;
+            const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
+            const f = (y2 - scale * (y1 - f1) - f1) / d1;
+            this._ctx.transform( scale, 0, 0, scale, e, f );
+    
+            this.redraw();
+        }, 50);
     }
     //响应触摸
     _onTouchStart(event) {

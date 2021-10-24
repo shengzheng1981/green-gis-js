@@ -83,7 +83,7 @@ export declare class Point extends Geometry {
      * @param {Bound} extent - 当前可视范围
      * @param {Symbol} symbol - 渲染符号
      */
-    draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: PointSymbol): Promise<void>;
+    draw(ctx: CanvasRenderingContext2D, projection?: Projection, extent?: Bound, symbol?: PointSymbol): void;
     /**
      * 是否包含传入坐标
      * @remarks

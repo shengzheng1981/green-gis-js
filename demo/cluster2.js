@@ -4,14 +4,14 @@ import {
     FeatureClass,
     FeatureLayer,
     SimpleRenderer,
-    Label, SimpleTextSymbol, CoverCollision,
+    Label, SimpleTextSymbol, CoverCollision, SimpleMarkerSymbol,
     Field,
     FieldType,
     GeometryType,
     ClusterType
 } from "../dist";
 
-window.load = () => {
+window.load = async () => {
     const amap = new AMap.Map("amap", {
         fadeOnZoom: false,
         navigationMode: 'classic',
@@ -44,7 +44,7 @@ window.load = () => {
     field.name = "name";
     field.type = FieldType.String;
     featureClass.addField(field)
-    for (let i = 0; i < 10000; i++) {
+    for (let i = 0; i < 100000; i++) {
         const lnglat = random(109.519, 18.271);
         const point = new Point(lnglat[0], lnglat[1]);
         const feature = new Feature(point, {name: "标注" + i});
@@ -53,7 +53,15 @@ window.load = () => {
     const featureLayer = new FeatureLayer();
     featureLayer.featureClass = featureClass;
     const renderer = new SimpleRenderer();
-    featureLayer.cluster = true;
+    const marker = new SimpleMarkerSymbol();
+    marker.width = 32;
+    marker.height = 32;
+    marker.offsetX = -16;
+    marker.offsetY = -32;
+    marker.url = "assets/img/marker.svg";
+    await marker.load();
+    renderer.symbol = marker;
+    //featureLayer.cluster = true;
     featureLayer.clusterType = ClusterType.Thinning;
     featureLayer.renderer = renderer;
 
@@ -65,8 +73,8 @@ window.load = () => {
     label.field = field;
     label.symbol = symbol;
     label.collision = new CoverCollision();
-    featureLayer.label = label;
-    featureLayer.labeled = true;
+    //featureLayer.label = label;
+    //featureLayer.labeled = true;
 
     featureLayer.zoom = [5, 20];
     map.addLayer(featureLayer);

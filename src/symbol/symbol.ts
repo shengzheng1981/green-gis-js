@@ -373,6 +373,7 @@ export class SimpleMarkerSymbol extends PointSymbol {
      * 图标位图
      */
     public icon: ImageBitmap;
+    public image: any;
     /**
      * 图标url
      */
@@ -402,7 +403,7 @@ export class SimpleMarkerSymbol extends PointSymbol {
             img.onerror = reject;
             img.src = this.url;
         })
-    }
+    } 
 
     /**
      * 绘制图标
@@ -412,17 +413,20 @@ export class SimpleMarkerSymbol extends PointSymbol {
      * @param {number} screenX - 屏幕坐标X
      * @param {number} screenY - 屏幕坐标Y
      */
-    async draw(ctx: CanvasRenderingContext2D, screenX, screenY) {
-        if (!this.loaded) await this.load();
-        if (this.icon) {
-            ctx.save();
-            const matrix = (ctx as any).getTransform();
-            //keep size
-            ctx.setTransform(1,0,0,1,0,0);
-            //请对应参考offset属性的描述内容
-            ctx.drawImage(this.icon, screenX + this.offsetX, screenY + this.offsetY, this.width, this.height);
-            ctx.restore();
-        }
+    draw(ctx: CanvasRenderingContext2D, screenX, screenY) {
+        if (!this._loaded) {
+            this.image = new Image();
+            this.image.src = this.url;
+            this._loaded = true;
+        };
+    
+        ctx.save();
+        //const matrix = (ctx as any).getTransform();
+        //keep size
+        ctx.setTransform(1,0,0,1,0,0);
+        //请对应参考offset属性的描述内容
+        ctx.drawImage(this.icon || this.image, screenX + this.offsetX, screenY + this.offsetY, this.width, this.height);
+        ctx.restore();
     }
     /**
      * 判断鼠标交互位置是否在符号范围内

@@ -261,6 +261,7 @@ export declare class SimpleMarkerSymbol extends PointSymbol {
      * 图标位图
      */
     icon: ImageBitmap;
+    image: any;
     /**
      * 图标url
      */
@@ -283,7 +284,7 @@ export declare class SimpleMarkerSymbol extends PointSymbol {
      * @param {number} screenX - 屏幕坐标X
      * @param {number} screenY - 屏幕坐标Y
      */
-    draw(ctx: CanvasRenderingContext2D, screenX: any, screenY: any): Promise<void>;
+    draw(ctx: CanvasRenderingContext2D, screenX: any, screenY: any): void;
     /**
      * 判断鼠标交互位置是否在符号范围内
      * @param {number} anchorX - 鼠标交互位置X

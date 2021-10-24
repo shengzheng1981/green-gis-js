@@ -211,6 +211,7 @@ export declare class Map extends Subject {
     _onMouseDown(event: any): void;
     _onMouseMove(event: any): void;
     _onMouseUp(event: any): void;
+    private _wheelTimer;
     _onWheel(event: any): void;
     _onTouchStart(event: any): void;
     _onTouchMove(event: any): void;

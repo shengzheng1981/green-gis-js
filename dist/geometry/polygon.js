@@ -96,8 +96,7 @@ export class Polygon extends Geometry {
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimpleFillSymbol()) {
         if (!this._projected)
             this.project(projection);
-        if (!extent.intersect(this._bound))
-            return;
+        //if (!extent.intersect(this._bound)) return;
         const matrix = ctx.getTransform();
         this._screen = this._coordinates.map(ring => {
             const points = ring.map((point, index) => {

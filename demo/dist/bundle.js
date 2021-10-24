@@ -1577,32 +1577,32 @@ class FeatureClass {
                     //TODO: each feature has one type that is ridiculous, cause geojson is a featurecollection, not a featurelayer.
                     this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__.GeometryType.Point;
                     const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_2__.Point(item.geometry.coordinates[0], item.geometry.coordinates[1]);
-                    this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(point, item.properties));
+                    this.addFeature(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(point, item.properties));
                     break;
                 case "LineString":
                     this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__.GeometryType.Polyline;
                     const polyline = new _geometry_polyline__WEBPACK_IMPORTED_MODULE_3__.Polyline(item.geometry.coordinates);
-                    this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(polyline, item.properties));
+                    this.addFeature(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(polyline, item.properties));
                     break;
                 case "Polygon":
                     this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__.GeometryType.Polygon;
                     const polygon = new _geometry_polygon__WEBPACK_IMPORTED_MODULE_4__.Polygon(item.geometry.coordinates);
-                    this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(polygon, item.properties));
+                    this.addFeature(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(polygon, item.properties));
                     break;
                 case "MultiPoint":
                     this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__.GeometryType.Point;
                     const multipoint = new _geometry_multiple_point__WEBPACK_IMPORTED_MODULE_7__.MultiplePoint(item.geometry.coordinates);
-                    this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(multipoint, item.properties));
+                    this.addFeature(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(multipoint, item.properties));
                     break;
                 case "MultiLineString":
                     this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__.GeometryType.Polyline;
                     const multipolyline = new _geometry_multiple_polyline__WEBPACK_IMPORTED_MODULE_6__.MultiplePolyline(item.geometry.coordinates);
-                    this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(multipolyline, item.properties));
+                    this.addFeature(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(multipolyline, item.properties));
                     break;
                 case "MultiPolygon":
                     this._type = _geometry_geometry__WEBPACK_IMPORTED_MODULE_1__.GeometryType.Polygon;
                     const multipolygon = new _geometry_multiple_polygon__WEBPACK_IMPORTED_MODULE_5__.MultiplePolygon(item.geometry.coordinates);
-                    this._features.push(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(multipolygon, item.properties));
+                    this.addFeature(new _element_feature__WEBPACK_IMPORTED_MODULE_0__.Feature(multipolygon, item.properties));
                     break;
             }
         });
@@ -2289,6 +2289,21 @@ class Feature extends _util_subject__WEBPACK_IMPORTED_MODULE_2__.Subject {
      */
     get bound() {
         return this._geometry ? this._geometry.bound : null;
+    }
+    /**
+     * RBush
+     */
+    get minX() {
+        return this.bound ? this.bound.xmin : 0;
+    }
+    get maxX() {
+        return this.bound ? this.bound.xmax : 0;
+    }
+    get minY() {
+        return this.bound ? this.bound.ymin : 0;
+    }
+    get maxY() {
+        return this.bound ? this.bound.ymax : 0;
     }
     /**
      * 是否处于编辑状态
@@ -3540,13 +3555,12 @@ class Point extends _geometry__WEBPACK_IMPORTED_MODULE_0__.Geometry {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this._projected)
                 this.project(projection);
-            if (!extent.intersect(this._bound))
-                return;
+            //if (!extent.intersect(this._bound)) return;
             const matrix = ctx.getTransform();
             this._screenX = (matrix.a * this._x + matrix.e);
             this._screenY = (matrix.d * this._y + matrix.f);
             this._symbol = symbol;
-            yield this._symbol.draw(ctx, this._screenX, this._screenY);
+            this._symbol.draw(ctx, this._screenX, this._screenY);
         });
     }
     ;
@@ -4710,6 +4724,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+//import RBush from "rbush";
 /**
  * 聚合类型
  * @enum {number}
@@ -4745,6 +4760,8 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
          */
         this.editing = false;
     }
+    //private _tree: RBush<Feature> = new RBush(16);
+    //private _inited: boolean = false;
     /**
      * 矢量要素类（数据源）
      */
@@ -4826,6 +4843,15 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
             feature.emit(event, param);
         });
     }
+    /* initTree(projection: Projection = new WebMercator()) {
+        if (!this._inited) {
+            this._featureClass.features.forEach(feature => {
+                feature.geometry.project(projection);
+            });
+            this._tree.load(this._featureClass.features);
+            this._inited = true;
+        }
+    } */
     /**
      * 绘制图层
      * @remarks
@@ -4836,9 +4862,17 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
      * @param {number} zoom - 当前缩放级别
      */
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__.WebMercator(), extent = projection.bound, zoom = 10) {
+        console.time("draw");
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             //过滤可见视图范围内的要素
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
+            /* this.initTree(projection);
+            const features = this._tree.search({
+                minX: extent.xmin,
+                minY: extent.ymin,
+                maxX: extent.xmax,
+                maxY: extent.ymax
+            } as any); */
             //获取当前渲染方式下，某一要素对应的渲染符号
             const _getSymbol = (feature) => {
                 /*if (this._renderer instanceof SimpleRenderer) {
@@ -4892,6 +4926,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
                 });
             }
         }
+        console.timeEnd("draw");
     }
     /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
@@ -4911,6 +4946,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
      * @param {number} zoom - 当前缩放级别
      */
     drawLabel(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__.WebMercator(), extent = projection.bound, zoom = 10) {
+        console.time("label");
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
             this._label.draw(features, ctx, projection);
@@ -4933,6 +4969,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
                 item.feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
             });*/
         }
+        console.timeEnd("label");
     }
     /**
      * 图层交互
@@ -5844,56 +5881,59 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
     }
     //响应滚轮缩放
     _onWheel(event) {
-        event.preventDefault();
-        //级别缩放
-        const sensitivity = 5;
-        if (Math.abs(event.deltaY) <= sensitivity)
-            return;
-        const delta = event.deltaY < 0 ? -1 : 1;
-        let scale = 1;
-        if (delta < 0) {
-            // 放大
-            scale *= delta * -2;
-        }
-        else {
-            // 缩小
-            scale /= delta * 2;
-        }
-        let zoom = Math.round(Math.log(scale));
-        //无级缩放
-        /*const sensitivity = 100;
-        const delta = event.deltaY / sensitivity;
-        if (Math.abs(delta) <= 0.05) return;
-        let scale = 1;
-        let zoom = -delta;*/
-        //------------------------------------------------------------
-        if (zoom > 0) {
-            // 放大
-            zoom = this._zoom + zoom >= this.maxZoom ? this.maxZoom - this._zoom : zoom;
-        }
-        else if (zoom < 0) {
-            // 缩小
-            zoom = this._zoom + zoom <= this.minZoom ? this.minZoom - this._zoom : zoom;
-        }
-        if (zoom == 0)
-            return;
-        this._zoom += zoom;
-        scale = Math.pow(2, zoom);
-        //交互表现为 鼠标当前位置 屏幕坐标不变 进行缩放 即x2 = x1，y2=y1
-        //其它设定：变换前矩阵(a1,0,0,d1,e1,f1)   变换矩阵(a,0,0,d,e,f)  变换后矩阵(a2,0,0,d2,e2,f2)
-        //scale已通过滚轮变化，换算得到，且a=d=scale，求e和f
-        //1.将原屏幕坐标 x1 转成 地理坐标 x0 = (x1 - e1) / a1
-        //2.地理坐标x0 转成 现屏幕坐标x2  a2 * x0 + e2 = x2 e2 = x2 - a2 * x0 代入1式 e2 = x2 - a2 * (x1 - e1) / a1
-        //3.已知scale = a2 / a1 故 e2 = x2 - scale * (x1 - e1)
-        //4.另矩阵变换 a1 * e + e1 = e2
-        //5.联立3和4 求得 e = (x2 - scale * (x1 - e1) - e1) / a1
-        const matrix = this._ctx.getTransform();
-        const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
-        const e = (x2 - scale * (x1 - e1) - e1) / a1;
-        const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
-        const f = (y2 - scale * (y1 - f1) - f1) / d1;
-        this._ctx.transform(scale, 0, 0, scale, e, f);
-        this.redraw();
+        this._wheelTimer && clearTimeout(this._wheelTimer);
+        this._wheelTimer = setTimeout(() => {
+            event.preventDefault();
+            //级别缩放
+            const sensitivity = 5;
+            if (Math.abs(event.deltaY) <= sensitivity)
+                return;
+            const delta = event.deltaY < 0 ? -1 : 1;
+            let scale = 1;
+            if (delta < 0) {
+                // 放大
+                scale *= delta * -2;
+            }
+            else {
+                // 缩小
+                scale /= delta * 2;
+            }
+            let zoom = Math.round(Math.log(scale));
+            //无级缩放
+            /*const sensitivity = 100;
+            const delta = event.deltaY / sensitivity;
+            if (Math.abs(delta) <= 0.05) return;
+            let scale = 1;
+            let zoom = -delta;*/
+            //------------------------------------------------------------
+            if (zoom > 0) {
+                // 放大
+                zoom = this._zoom + zoom >= this.maxZoom ? this.maxZoom - this._zoom : zoom;
+            }
+            else if (zoom < 0) {
+                // 缩小
+                zoom = this._zoom + zoom <= this.minZoom ? this.minZoom - this._zoom : zoom;
+            }
+            if (zoom == 0)
+                return;
+            this._zoom += zoom;
+            scale = Math.pow(2, zoom);
+            //交互表现为 鼠标当前位置 屏幕坐标不变 进行缩放 即x2 = x1，y2=y1
+            //其它设定：变换前矩阵(a1,0,0,d1,e1,f1)   变换矩阵(a,0,0,d,e,f)  变换后矩阵(a2,0,0,d2,e2,f2)
+            //scale已通过滚轮变化，换算得到，且a=d=scale，求e和f
+            //1.将原屏幕坐标 x1 转成 地理坐标 x0 = (x1 - e1) / a1
+            //2.地理坐标x0 转成 现屏幕坐标x2  a2 * x0 + e2 = x2 e2 = x2 - a2 * x0 代入1式 e2 = x2 - a2 * (x1 - e1) / a1
+            //3.已知scale = a2 / a1 故 e2 = x2 - scale * (x1 - e1)
+            //4.另矩阵变换 a1 * e + e1 = e2
+            //5.联立3和4 求得 e = (x2 - scale * (x1 - e1) - e1) / a1
+            const matrix = this._ctx.getTransform();
+            const a1 = matrix.a, e1 = matrix.e, x1 = event.offsetX, x2 = x1; //放大到中心点 x2 = this._canvas.width / 2
+            const e = (x2 - scale * (x1 - e1) - e1) / a1;
+            const d1 = matrix.d, f1 = matrix.f, y1 = event.offsetY, y2 = y1; //放大到中心点 y2 = this._canvas.height / 2
+            const f = (y2 - scale * (y1 - f1) - f1) / d1;
+            this._ctx.transform(scale, 0, 0, scale, e, f);
+            this.redraw();
+        }, 50);
     }
     //响应触摸
     _onTouchStart(event) {
@@ -7112,15 +7152,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "VertexSymbol": () => (/* binding */ VertexSymbol)
 /* harmony export */ });
 /* harmony import */ var _util_color__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../util/color */ "../dist/util/color.js");
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 
 /**
  * 符号基类
@@ -7534,19 +7565,19 @@ class SimpleMarkerSymbol extends PointSymbol {
      * @param {number} screenY - 屏幕坐标Y
      */
     draw(ctx, screenX, screenY) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!this.loaded)
-                yield this.load();
-            if (this.icon) {
-                ctx.save();
-                const matrix = ctx.getTransform();
-                //keep size
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                //请对应参考offset属性的描述内容
-                ctx.drawImage(this.icon, screenX + this.offsetX, screenY + this.offsetY, this.width, this.height);
-                ctx.restore();
-            }
-        });
+        if (!this._loaded) {
+            this.image = new Image();
+            this.image.src = this.url;
+            this._loaded = true;
+        }
+        ;
+        ctx.save();
+        //const matrix = (ctx as any).getTransform();
+        //keep size
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        //请对应参考offset属性的描述内容
+        ctx.drawImage(this.icon || this.image, screenX + this.offsetX, screenY + this.offsetY, this.width, this.height);
+        ctx.restore();
     }
     /**
      * 判断鼠标交互位置是否在符号范围内
@@ -8691,7 +8722,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
-window.load = () => {
+window.load = async () => {
     const amap = new AMap.Map("amap", {
         fadeOnZoom: false,
         navigationMode: 'classic',
@@ -8733,7 +8764,15 @@ window.load = () => {
     const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__.FeatureLayer();
     featureLayer.featureClass = featureClass;
     const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleRenderer();
-    featureLayer.cluster = true;
+    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleMarkerSymbol();
+    marker.width = 32;
+    marker.height = 32;
+    marker.offsetX = -16;
+    marker.offsetY = -32;
+    marker.url = "assets/img/marker.svg";
+    await marker.load();
+    renderer.symbol = marker;
+    //featureLayer.cluster = true;
     featureLayer.clusterType = _dist__WEBPACK_IMPORTED_MODULE_0__.ClusterType.Thinning;
     featureLayer.renderer = renderer;
 
@@ -8745,8 +8784,8 @@ window.load = () => {
     label.field = field;
     label.symbol = symbol;
     label.collision = new _dist__WEBPACK_IMPORTED_MODULE_0__.CoverCollision();
-    featureLayer.label = label;
-    featureLayer.labeled = true;
+    //featureLayer.label = label;
+    //featureLayer.labeled = true;
 
     featureLayer.zoom = [5, 20];
     map.addLayer(featureLayer);

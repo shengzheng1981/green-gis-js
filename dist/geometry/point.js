@@ -1,12 +1,3 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import { CoordinateType, Geometry } from "./geometry";
 import { Bound } from "../util/bound";
 import { SimplePointSymbol } from "../symbol/symbol";
@@ -96,17 +87,14 @@ export class Point extends Geometry {
      * @param {Symbol} symbol - 渲染符号
      */
     draw(ctx, projection = new WebMercator(), extent = projection.bound, symbol = new SimplePointSymbol()) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (!this._projected)
-                this.project(projection);
-            if (!extent.intersect(this._bound))
-                return;
-            const matrix = ctx.getTransform();
-            this._screenX = (matrix.a * this._x + matrix.e);
-            this._screenY = (matrix.d * this._y + matrix.f);
-            this._symbol = symbol;
-            yield this._symbol.draw(ctx, this._screenX, this._screenY);
-        });
+        if (!this._projected)
+            this.project(projection);
+        //if (!extent.intersect(this._bound)) return;
+        const matrix = ctx.getTransform();
+        this._screenX = (matrix.a * this._x + matrix.e);
+        this._screenY = (matrix.d * this._y + matrix.f);
+        this._symbol = symbol;
+        this._symbol.draw(ctx, this._screenX, this._screenY);
     }
     ;
     /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, animation: Animation) {

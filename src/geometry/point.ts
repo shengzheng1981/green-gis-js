@@ -128,14 +128,14 @@ export class Point extends Geometry{
      * @param {Bound} extent - 当前可视范围
      * @param {Symbol} symbol - 渲染符号
      */
-    async draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: PointSymbol = new SimplePointSymbol()) {
+    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: PointSymbol = new SimplePointSymbol()) {
         if (!this._projected) this.project(projection);
-        if (!extent.intersect(this._bound)) return;
+        //if (!extent.intersect(this._bound)) return;
         const matrix = (ctx as any).getTransform();
         this._screenX = (matrix.a * this._x + matrix.e);
         this._screenY = (matrix.d * this._y + matrix.f);
         this._symbol = symbol;
-        await this._symbol.draw(ctx, this._screenX, this._screenY);
+        this._symbol.draw(ctx, this._screenX, this._screenY);
     };
 
     /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, animation: Animation) {

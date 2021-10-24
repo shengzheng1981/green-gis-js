@@ -4,6 +4,7 @@
     "sourceMap": false,
     "declaration": true,
     "module": "es2015",
+    "moduleResolution": "Node",
     "target": "es6"
   },
   "include": ["src/**/*"]

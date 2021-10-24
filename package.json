@@ -6,7 +6,8 @@
     "GIS",
     "Canvas"
   ],
-  "dependencies": {},
+  "dependencies": {
+  },
   "devDependencies": {
     "typescript": "^3.8.3"
   },

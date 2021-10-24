@@ -61,9 +61,9 @@ export class MultiplePoint extends Geometry{
      * @param {Bound} extent - 当前可视范围
      * @param {Symbol} symbol - 渲染符号
      */
-    async draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
+    draw(ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, symbol: Symbol = new SimplePointSymbol()) {
         if (!this._projected) this.project(projection);
-        if (!extent.intersect(this._bound)) return;
+        //if (!extent.intersect(this._bound)) return;
         const matrix = (ctx as any).getTransform();
         this._screen = [];
         this._symbol = symbol as PointSymbol;
