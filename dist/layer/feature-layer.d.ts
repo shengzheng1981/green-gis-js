@@ -4,6 +4,7 @@ import { Projection } from "../projection/projection";
 import { FeatureClass } from "../data/feature-class";
 import { Renderer } from "../renderer/renderer";
 import { Label } from "../label/label";
+import { Cluster } from "../cluster/cluster";
 /**
  * 聚合类型
  * @enum {number}
@@ -41,6 +42,10 @@ export declare class FeatureLayer extends Layer {
      * 聚合类型
      */
     clusterType: ClusterType;
+    /**
+     * 聚合方法
+     */
+    clusterMethod: Cluster;
     /**
      * 是否正在编辑
      */

@@ -8,7 +8,8 @@ import {
     Field,
     FieldType,
     GeometryType,
-    ClusterType
+    ClusterType,
+    GridCluster
 } from "../dist";
 
 window.load = async () => {
@@ -61,8 +62,9 @@ window.load = async () => {
     marker.url = "assets/img/marker.svg";
     await marker.load();
     renderer.symbol = marker;
-    //featureLayer.cluster = true;
+    featureLayer.cluster = true;
     featureLayer.clusterType = ClusterType.Thinning;
+    featureLayer.clusterMethod = new GridCluster();
     featureLayer.renderer = renderer;
 
     const label = new Label();

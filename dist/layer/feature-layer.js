@@ -1,8 +1,8 @@
 import { Layer } from "./layer";
 import { WebMercator } from "../projection/web-mercator";
-import { GeometryType, CoordinateType } from "../geometry/geometry";
-import { Point } from "../geometry/point";
+import { GeometryType } from "../geometry/geometry";
 import { ClusterSymbol } from "../symbol/symbol";
+import { DistanceCluster } from "../cluster/distance-cluster";
 //import RBush from "rbush";
 /**
  * 聚合类型
@@ -34,6 +34,10 @@ export class FeatureLayer extends Layer {
          * 聚合类型
          */
         this.clusterType = ClusterType.Default;
+        /**
+         * 聚合方法
+         */
+        this.clusterMethod = new DistanceCluster();
         /**
          * 是否正在编辑
          */
@@ -174,22 +178,22 @@ export class FeatureLayer extends Layer {
             };
             //如果是点图层，同时又设置为聚合显示时
             if (this._featureClass.type == GeometryType.Point && this.cluster) {
-                const cluster = features.reduce((acc, cur) => {
+                /* const cluster = features.reduce( (acc, cur) => {
                     if (cur.geometry instanceof Point) {
-                        const point = cur.geometry;
-                        const item = acc.find((item) => {
+                        const point: Point = cur.geometry;
+                        const item: any = acc.find((item: any) => {
                             const distance = point.distance(item.feature.geometry, CoordinateType.Screen, ctx, projection);
                             return distance <= 50;
                         });
                         if (item) {
                             item.count += 1;
-                        }
-                        else {
-                            acc.push({ feature: cur, count: 1 });
+                        } else {
+                            acc.push({feature: cur, count: 1});
                         }
                         return acc;
                     }
-                }, []); // [{feature, count}]
+                }, []); */ // [{feature, count}]
+                const cluster = this.clusterMethod.generate(features, ctx, projection, extent);
                 cluster.forEach((item) => {
                     if (item.count == 1) {
                         item.feature.draw(ctx, projection, extent, _getSymbol(item.feature));

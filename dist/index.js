@@ -44,3 +44,6 @@ export * from './analysis/interpolation/inverse-distance-weight';
 export * from './tile';
 export * from './measurer';
 export * from './grid';
+export * from './cluster/cluster';
+export * from './cluster/distance-cluster';
+export * from './cluster/grid-cluster';

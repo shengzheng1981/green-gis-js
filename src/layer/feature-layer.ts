@@ -15,6 +15,8 @@ import {Point} from "../geometry/point";
 import {ClusterSymbol, SimplePointSymbol} from "../symbol/symbol";
 import {Field} from "../data/field";
 import {DotRenderer} from "../renderer/dot-renderer";
+import { DistanceCluster } from "../cluster/distance-cluster";
+import { Cluster } from "../cluster/cluster";
 //import RBush from "rbush";
 
 /**
@@ -57,6 +59,10 @@ export class FeatureLayer extends Layer{
      * 聚合类型
      */
     public clusterType: ClusterType = ClusterType.Default;
+    /**
+     * 聚合方法
+     */
+    public clusterMethod: Cluster = new DistanceCluster();
     /**
      * 是否正在编辑
      */
@@ -201,7 +207,7 @@ export class FeatureLayer extends Layer{
             }
             //如果是点图层，同时又设置为聚合显示时
             if (this._featureClass.type == GeometryType.Point && this.cluster) {
-                const cluster = features.reduce( (acc, cur) => {
+                /* const cluster = features.reduce( (acc, cur) => {
                     if (cur.geometry instanceof Point) {
                         const point: Point = cur.geometry;
                         const item: any = acc.find((item: any) => {
@@ -215,7 +221,8 @@ export class FeatureLayer extends Layer{
                         }
                         return acc;
                     }
-                }, []); // [{feature, count}]
+                }, []); */ // [{feature, count}]
+                const cluster = this.clusterMethod.generate(features, ctx, projection, extent);
                 cluster.forEach( (item: any) => {
                     if (item.count == 1) {
                         item.feature.draw(ctx, projection, extent, _getSymbol(item.feature));
