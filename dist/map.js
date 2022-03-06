@@ -60,6 +60,7 @@ export class Map extends Subject {
         this._zoom = 1;
         this.minZoom = 3;
         this.maxZoom = 20;
+        this._float = false;
         //地图视图中心
         this._center = [0, 0];
         //默认图形图层
@@ -127,7 +128,7 @@ export class Map extends Subject {
         //const bound: Bound = this._projection.bound;
         //设置初始矩阵，由于地图切片是256*256，Math.pow(2, this._zoom)代表在一定缩放级别下x与y轴的切片数量
         //this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale , 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
-        this.setView([0, 0], 10);
+        //this.setView([0,0], 10);
         this._onResize = this._onResize.bind(this);
         window.addEventListener("resize", this._onResize);
         //selection
@@ -198,6 +199,12 @@ export class Map extends Subject {
      */
     get zoom() {
         return this._zoom;
+    }
+    get float() {
+        return this._float;
+    }
+    set float(value) {
+        this._float = value;
     }
     /**
      * 坐标投影变换
@@ -552,6 +559,8 @@ export class Map extends Subject {
     }
     //响应滚轮缩放
     _onWheel(event) {
+        event.preventDefault();
+        event.stopPropagation();
         this._wheelTimer && clearTimeout(this._wheelTimer);
         this._wheelTimer = setTimeout(() => {
             event.preventDefault();
@@ -563,13 +572,13 @@ export class Map extends Subject {
             let scale = 1;
             if (delta < 0) {
                 // 放大
-                scale *= delta * -2;
+                scale *= delta * -2; //delta * -1.5
             }
             else {
                 // 缩小
-                scale /= delta * 2;
+                scale /= delta * 2; //delta * 1.5
             }
-            let zoom = Math.round(Math.log(scale));
+            let zoom = this._float ? Math.log(scale) : Math.round(Math.log(scale));
             //无级缩放
             /*const sensitivity = 100;
             const delta = event.deltaY / sensitivity;

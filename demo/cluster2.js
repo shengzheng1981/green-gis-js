@@ -63,7 +63,7 @@ window.load = async () => {
     await marker.load();
     renderer.symbol = marker;
     featureLayer.cluster = true;
-    featureLayer.clusterType = ClusterType.Thinning;
+    //featureLayer.clusterType = ClusterType.Thinning;
     featureLayer.clusterMethod = new GridCluster();
     featureLayer.renderer = renderer;
 

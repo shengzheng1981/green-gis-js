@@ -38,7 +38,7 @@ export class FeatureLayer extends Layer{
     /**
      * 图层渲染方式
      */
-    private _renderer: Renderer;
+    private _renderer: Renderer = new SimpleRenderer();
     /**
      * 图层可见缩放级别
      */

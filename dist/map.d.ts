@@ -25,6 +25,7 @@ export declare class Map extends Subject {
     private _zoom;
     minZoom: number;
     maxZoom: number;
+    private _float;
     private _center;
     private _extent;
     private _projection;
@@ -75,6 +76,8 @@ export declare class Map extends Subject {
      * 缩放级别
      */
     get zoom(): number;
+    get float(): boolean;
+    set float(value: boolean);
     /**
      * 坐标投影变换
      */

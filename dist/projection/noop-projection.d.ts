@@ -24,5 +24,7 @@ export declare class NoopProjection {
     /**
      * 投影后的平面坐标范围
      */
+    protected _bound: Bound;
     get bound(): Bound;
+    set bound(value: Bound);
 }

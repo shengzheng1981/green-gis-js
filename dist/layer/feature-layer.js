@@ -1,5 +1,6 @@
 import { Layer } from "./layer";
 import { WebMercator } from "../projection/web-mercator";
+import { SimpleRenderer } from "../renderer/simple-renderer";
 import { GeometryType } from "../geometry/geometry";
 import { ClusterSymbol } from "../symbol/symbol";
 import { DistanceCluster } from "../cluster/distance-cluster";
@@ -18,6 +19,10 @@ export var ClusterType;
 export class FeatureLayer extends Layer {
     constructor() {
         super(...arguments);
+        /**
+         * 图层渲染方式
+         */
+        this._renderer = new SimpleRenderer();
         /**
          * 图层可见缩放级别
          */

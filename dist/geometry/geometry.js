@@ -102,7 +102,7 @@ export class Geometry {
         const matrix = ctx.getTransform();
         //keep pixel
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        const array = text.split("/r/n");
+        const array = text.toString().split("/r/n");
         let widths = array.map(str => ctx.measureText(str).width + symbol.padding * 2);
         let width = Math.max(...widths);
         let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);
@@ -156,7 +156,7 @@ export class Geometry {
         const matrix = ctx.getTransform();
         //keep pixel
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        const array = text.split("/r/n");
+        const array = text.toString().split("/r/n");
         let widths = array.map(str => ctx.measureText(str).width + symbol.padding * 2);
         let width = Math.max(...widths);
         let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);

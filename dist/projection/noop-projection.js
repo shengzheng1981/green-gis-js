@@ -23,9 +23,9 @@ export class NoopProjection {
      */
     unproject([x, y], original = false) { return [x, y]; }
     ;
-    /**
-     * 投影后的平面坐标范围
-     */
-    get bound() { return new Bound(0, 0, 256 * Math.pow(2, 3), 256 * Math.pow(2, 3)); }
+    get bound() { return this._bound || new Bound(0, 0, 256 * Math.pow(2, 3), 256 * Math.pow(2, 3)); }
     ;
+    set bound(value) {
+        this._bound = value;
+    }
 }

@@ -25,5 +25,10 @@ export class NoopProjection {
     /**
      * 投影后的平面坐标范围
      */
-    get bound(): Bound { return new Bound( 0, 0, 256 * Math.pow(2, 3), 256 * Math.pow(2, 3) ); };
+    protected _bound: Bound;
+    get bound(): Bound { return this._bound || new Bound( 0, 0, 256 * Math.pow(2, 3), 256 * Math.pow(2, 3) ); };
+
+    set bound(value: Bound) {
+        this._bound = value;
+    }
 }

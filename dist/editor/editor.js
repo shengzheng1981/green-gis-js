@@ -333,6 +333,8 @@ export class Editor extends Subject {
             }
             this._handlers["click"].forEach(handler => handler(event));
         }
+        else if (this._action === EditorActionType.Edit) {
+        }
         else {
             /*if (!this._editingFeature) {
                 this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click");
@@ -376,6 +378,20 @@ export class Editor extends Subject {
                 }
             }
             return;
+        }
+        else if (this._action === EditorActionType.Edit) {
+            if (this._featureLayer.featureClass.type == GeometryType.Point) {
+                if (this._editingFeature) {
+                    this._action = EditorActionType.Select;
+                    if (this._editingFeature.edited) {
+                        this._handlers["update"].forEach(handler => handler({ feature: this._editingFeature }));
+                        this._editingFeature.edited = false;
+                    }
+                    this._editingFeature = null;
+                    this._vertexLayer.clear();
+                    this.redraw();
+                }
+            }
         }
         if (this._editingFeature && !(this._editingFeature.geometry instanceof Point)) {
             const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");

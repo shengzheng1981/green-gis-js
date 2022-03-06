@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./cluster2.js",
+    entry: "./editor-point-create.js",
     output: {
         filename: "bundle.js"
     },

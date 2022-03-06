@@ -2134,6 +2134,8 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
             }
             this._handlers["click"].forEach(handler => handler(event));
         }
+        else if (this._action === EditorActionType.Edit) {
+        }
         else {
             /*if (!this._editingFeature) {
                 this._featureLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click");
@@ -2177,6 +2179,20 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
                 }
             }
             return;
+        }
+        else if (this._action === EditorActionType.Edit) {
+            if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__.GeometryType.Point) {
+                if (this._editingFeature) {
+                    this._action = EditorActionType.Select;
+                    if (this._editingFeature.edited) {
+                        this._handlers["update"].forEach(handler => handler({ feature: this._editingFeature }));
+                        this._editingFeature.edited = false;
+                    }
+                    this._editingFeature = null;
+                    this._vertexLayer.clear();
+                    this.redraw();
+                }
+            }
         }
         if (this._editingFeature && !(this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point)) {
             const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dblclick");
@@ -2883,7 +2899,7 @@ class Geometry {
         const matrix = ctx.getTransform();
         //keep pixel
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        const array = text.split("/r/n");
+        const array = text.toString().split("/r/n");
         let widths = array.map(str => ctx.measureText(str).width + symbol.padding * 2);
         let width = Math.max(...widths);
         let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);
@@ -2937,7 +2953,7 @@ class Geometry {
         const matrix = ctx.getTransform();
         //keep pixel
         ctx.setTransform(1, 0, 0, 1, 0, 0);
-        const array = text.split("/r/n");
+        const array = text.toString().split("/r/n");
         let widths = array.map(str => ctx.measureText(str).width + symbol.padding * 2);
         let width = Math.max(...widths);
         let height = symbol.fontSize * array.length + symbol.padding * 2 + symbol.padding * (array.length - 1);
@@ -4829,9 +4845,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _layer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./layer */ "../dist/layer/layer.js");
 /* harmony import */ var _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../projection/web-mercator */ "../dist/projection/web-mercator.js");
-/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
-/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
-/* harmony import */ var _cluster_distance_cluster__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cluster/distance-cluster */ "../dist/cluster/distance-cluster.js");
+/* harmony import */ var _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../renderer/simple-renderer */ "../dist/renderer/simple-renderer.js");
+/* harmony import */ var _geometry_geometry__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../geometry/geometry */ "../dist/geometry/geometry.js");
+/* harmony import */ var _symbol_symbol__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../symbol/symbol */ "../dist/symbol/symbol.js");
+/* harmony import */ var _cluster_distance_cluster__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../cluster/distance-cluster */ "../dist/cluster/distance-cluster.js");
+
 
 
 
@@ -4853,6 +4871,10 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
     constructor() {
         super(...arguments);
         /**
+         * 图层渲染方式
+         */
+        this._renderer = new _renderer_simple_renderer__WEBPACK_IMPORTED_MODULE_2__.SimpleRenderer();
+        /**
          * 图层可见缩放级别
          */
         this._zoom = [3, 20];
@@ -4871,7 +4893,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
         /**
          * 聚合方法
          */
-        this.clusterMethod = new _cluster_distance_cluster__WEBPACK_IMPORTED_MODULE_4__.DistanceCluster();
+        this.clusterMethod = new _cluster_distance_cluster__WEBPACK_IMPORTED_MODULE_5__.DistanceCluster();
         /**
          * 是否正在编辑
          */
@@ -5011,7 +5033,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
                 return this._renderer.getSymbol(feature);
             };
             //如果是点图层，同时又设置为聚合显示时
-            if (this._featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_2__.GeometryType.Point && this.cluster) {
+            if (this._featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryType.Point && this.cluster) {
                 /* const cluster = features.reduce( (acc, cur) => {
                     if (cur.geometry instanceof Point) {
                         const point: Point = cur.geometry;
@@ -5033,7 +5055,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
                         item.feature.draw(ctx, projection, extent, _getSymbol(item.feature));
                     }
                     else {
-                        item.feature.draw(ctx, projection, extent, this.clusterType == ClusterType.Thinning ? _getSymbol(item.feature) : new _symbol_symbol__WEBPACK_IMPORTED_MODULE_3__.ClusterSymbol(item.count));
+                        item.feature.draw(ctx, projection, extent, this.clusterType == ClusterType.Thinning ? _getSymbol(item.feature) : new _symbol_symbol__WEBPACK_IMPORTED_MODULE_4__.ClusterSymbol(item.count));
                     }
                 });
             }
@@ -5506,6 +5528,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
         this._zoom = 1;
         this.minZoom = 3;
         this.maxZoom = 20;
+        this._float = false;
         //地图视图中心
         this._center = [0, 0];
         //默认图形图层
@@ -5573,7 +5596,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
         //const bound: Bound = this._projection.bound;
         //设置初始矩阵，由于地图切片是256*256，Math.pow(2, this._zoom)代表在一定缩放级别下x与y轴的切片数量
         //this._ctx.setTransform(256 * Math.pow(2, this._zoom) / (bound.xmax - bound.xmin) * bound.xscale , 0, 0, 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale, this._canvas.width / 2, this._canvas.height / 2);
-        this.setView([0, 0], 10);
+        //this.setView([0,0], 10);
         this._onResize = this._onResize.bind(this);
         window.addEventListener("resize", this._onResize);
         //selection
@@ -5644,6 +5667,12 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
      */
     get zoom() {
         return this._zoom;
+    }
+    get float() {
+        return this._float;
+    }
+    set float(value) {
+        this._float = value;
     }
     /**
      * 坐标投影变换
@@ -5998,6 +6027,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
     }
     //响应滚轮缩放
     _onWheel(event) {
+        event.preventDefault();
+        event.stopPropagation();
         this._wheelTimer && clearTimeout(this._wheelTimer);
         this._wheelTimer = setTimeout(() => {
             event.preventDefault();
@@ -6009,13 +6040,13 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
             let scale = 1;
             if (delta < 0) {
                 // 放大
-                scale *= delta * -2;
+                scale *= delta * -2; //delta * -1.5
             }
             else {
                 // 缩小
-                scale /= delta * 2;
+                scale /= delta * 2; //delta * 1.5
             }
-            let zoom = Math.round(Math.log(scale));
+            let zoom = this._float ? Math.log(scale) : Math.round(Math.log(scale));
             //无级缩放
             /*const sensitivity = 100;
             const delta = event.deltaY / sensitivity;
@@ -6818,11 +6849,11 @@ class NoopProjection {
      */
     unproject([x, y], original = false) { return [x, y]; }
     ;
-    /**
-     * 投影后的平面坐标范围
-     */
-    get bound() { return new _util_bound__WEBPACK_IMPORTED_MODULE_0__.Bound(0, 0, 256 * Math.pow(2, 3), 256 * Math.pow(2, 3)); }
+    get bound() { return this._bound || new _util_bound__WEBPACK_IMPORTED_MODULE_0__.Bound(0, 0, 256 * Math.pow(2, 3), 256 * Math.pow(2, 3)); }
     ;
+    set bound(value) {
+        this._bound = value;
+    }
 }
 
 
@@ -8832,14 +8863,14 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__.Subject {
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-/*!*********************!*\
-  !*** ./cluster2.js ***!
-  \*********************/
+/*!********************************!*\
+  !*** ./editor-point-create.js ***!
+  \********************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
-window.load = async () => {
+window.load = () => {
     const amap = new AMap.Map("amap", {
         fadeOnZoom: false,
         navigationMode: 'classic',
@@ -8861,54 +8892,60 @@ window.load = async () => {
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__.Map("foo");
     map.on("extent", (event) => {
         amap.setZoomAndCenter(event.zoom, event.center);
+        document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
+        document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
+        document.getElementById("zoom").value = event.zoom;
+        document.getElementById("x1").value = Math.round(event.extent.xmin * 1000)/1000;
+        document.getElementById("y1").value = Math.round(event.extent.ymin * 1000)/1000;
+        document.getElementById("x2").value = Math.round(event.extent.xmax * 1000)/1000;
+        document.getElementById("y2").value = Math.round(event.extent.ymax * 1000)/1000;
+        document.getElementById("a").value = Math.round(event.matrix.a * 1000)/1000;
+        document.getElementById("d").value = Math.round(event.matrix.d * 1000)/1000;
+        document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
+        document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
 
-    //随机生成点数据
-    const random = (lng, lat) => {
-        return [lng + Math.random() - 0.5, lat + Math.random() - 0.5];
+    var req = new XMLHttpRequest();
+    req.onload = (event) => {
+        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__.FeatureClass();
+        featureClass.loadGeoJSON(JSON.parse(req.responseText));
+        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__.FeatureLayer();
+        featureLayer.featureClass = featureClass;
+        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleRenderer();
+        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimplePointSymbol();
+        symbol.fillStyle = "#008888";
+        renderer.symbol = symbol;
+        featureLayer.renderer = renderer;
+        featureLayer.zoom = [13, 20];
+        map.addLayer(featureLayer);
+
+        const editor = map.editor;
+        editor.start();
+        editor.setFeatureLayer(featureLayer);
+        document.getElementById("status").value = "editor is started";
+
+        window.start = () => {
+            editor.start();
+            editor.setFeatureLayer(featureLayer);
+            document.getElementById("status").value = "editor is started";
+        };
+
+        window.stop = () => {
+            editor.stop();
+            document.getElementById("status").value = "editor is stopped";
+        };
+
+        window.create = () => {
+            editor.create();
+        };
+
+        map.setView([109.519, 18.271], 13);
     };
-    const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__.FeatureClass(_dist__WEBPACK_IMPORTED_MODULE_0__.GeometryType.Point);
-    const field = new _dist__WEBPACK_IMPORTED_MODULE_0__.Field();
-    field.name = "name";
-    field.type = _dist__WEBPACK_IMPORTED_MODULE_0__.FieldType.String;
-    featureClass.addField(field)
-    for (let i = 0; i < 100000; i++) {
-        const lnglat = random(109.519, 18.271);
-        const point = new _dist__WEBPACK_IMPORTED_MODULE_0__.Point(lnglat[0], lnglat[1]);
-        const feature = new _dist__WEBPACK_IMPORTED_MODULE_0__.Feature(point, {name: "标注" + i});
-        featureClass.addFeature(feature);
-    }
-    const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__.FeatureLayer();
-    featureLayer.featureClass = featureClass;
-    const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleRenderer();
-    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleMarkerSymbol();
-    marker.width = 32;
-    marker.height = 32;
-    marker.offsetX = -16;
-    marker.offsetY = -32;
-    marker.url = "assets/img/marker.svg";
-    await marker.load();
-    renderer.symbol = marker;
-    featureLayer.cluster = true;
-    featureLayer.clusterType = _dist__WEBPACK_IMPORTED_MODULE_0__.ClusterType.Thinning;
-    featureLayer.clusterMethod = new _dist__WEBPACK_IMPORTED_MODULE_0__.GridCluster();
-    featureLayer.renderer = renderer;
+    req.open("GET", "assets/geojson/junction.json", true);
+    req.send(null);
 
-    const label = new _dist__WEBPACK_IMPORTED_MODULE_0__.Label();
-    const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleTextSymbol();
-    symbol.pointSymbolWidth = 12;     //diameter
-    symbol.pointSymbolHeight = 12;   //diameter
-    symbol.auto = true;
-    label.field = field;
-    label.symbol = symbol;
-    label.collision = new _dist__WEBPACK_IMPORTED_MODULE_0__.CoverCollision();
-    //featureLayer.label = label;
-    //featureLayer.labeled = true;
+    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__.GCJ02(_dist__WEBPACK_IMPORTED_MODULE_0__.LatLngType.GCJ02));
 
-    featureLayer.zoom = [5, 20];
-    map.addLayer(featureLayer);
-
-    map.setView([109.519, 18.271], 13);
 
 }
 
