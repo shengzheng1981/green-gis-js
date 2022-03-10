@@ -1,6 +1,6 @@
 module.exports = {
     mode: "development",
-    entry: "./editor-point-create.js",
+    entry: "./editor-polyline-create.js",
     output: {
         filename: "bundle.js"
     },

@@ -82,4 +82,16 @@ export class Utility {
         }
         return el.className.baseVal === undefined ? el.className : el.className.baseVal;
     }
+    static createContextMenu(container) {
+        const menu = container.createElement("ul");
+        menu.classList.add("green-context-menu");
+        container.appendChild(menu);
+        return menu;
+    }
+    static addContextMenuItem(menu, item, handler) {
+        const li = menu.createElement("li");
+        li.createElement("span");
+        li.addEventListener("click", handler);
+        return li;
+    }
 }

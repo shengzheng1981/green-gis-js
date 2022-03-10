@@ -56,6 +56,7 @@ export class Map extends Subject{
     public minZoom: number = 3;
     public maxZoom: number = 20;
     private _float: boolean = false;
+    private _origin: number[];
     //地图视图中心
     private _center: number[] = [0,0];
     //地图视图范围
@@ -149,6 +150,9 @@ export class Map extends Subject{
     }
     set float(value: boolean) {
         this._float = value;
+    }
+    set origin(value: number[]) {
+        this._origin = value;
     }
     /**
      * 坐标投影变换
@@ -250,6 +254,8 @@ export class Map extends Subject{
         this._tooltip = new Tooltip(this);
 
         this._projection = new WebMercator();
+
+        this._origin = [this._canvas.width / 2, this._canvas.height / 2];
         //this._center = [0, 0];
         //this._zoom = 10;
         //Latlng [-180, 180] [-90, 90]
@@ -307,6 +313,8 @@ export class Map extends Subject{
         const d = 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale;
         const e = this._canvas.width / 2 - a * origin[0];
         const f = this._canvas.height / 2 - d * origin[1];
+        //const e = this._origin[0] - a * origin[0];
+        //const f = this._origin[1] - d * origin[1];
         this._ctx.setTransform(a , 0, 0, d, e, f);
     }
 
@@ -328,6 +336,8 @@ export class Map extends Subject{
         const d = 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale;
         const e = this._canvas.width / 2 - a * origin[0];
         const f = this._canvas.height / 2 - d * origin[1];
+        //const e = this._origin[0] - a * origin[0];
+        //const f = this._origin[1] - d * origin[1];
         this._ctx.setTransform(a , 0, 0, d, e, f);
         this.redraw();
     }
@@ -561,7 +571,7 @@ export class Map extends Subject{
     _onMouseDown(event) {
         if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseDown(event);
-            return;
+            //return;
         }
         this._drag.flag = true;
         this._drag.start.x = event.x;
@@ -576,7 +586,11 @@ export class Map extends Subject{
             [event.lng, event.lat] = this._projection.unproject([x, y]);
             [event.originalLng, event.originalLat] = this._projection.unproject([x, y], true);
             this._editor._onMouseMove(event);
-            return;
+            if (this._editor.dragging) {
+                this._drag.flag = false;
+                return;
+            }
+            //return;
         }
         if (this._measurer.measuring) {
             const matrix = (this._ctx as any).getTransform();
@@ -597,7 +611,7 @@ export class Map extends Subject{
     _onMouseUp(event) {
         if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseUp(event);
-            return;
+            //return;
         }
         if (this._drag.flag) {
             this._drag.end.x = event.x;

@@ -19,7 +19,7 @@ export class Graphic extends Subject {
      * @param {Symbol} symbol - 渲染符号
      */
     constructor(geometry, symbol) {
-        super(["click", "dblclick", "mouseover", "mouseout", "dragstart"]);
+        super(["click", "dblclick", "mouseover", "mouseout", "dragstart", "rightclick"]);
         /**
          * 是否可见
          */

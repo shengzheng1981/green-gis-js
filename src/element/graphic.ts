@@ -67,7 +67,7 @@ export class Graphic extends Subject{
      * @param {Symbol} symbol - 渲染符号
      */
     constructor(geometry, symbol) {
-        super(["click", "dblclick", "mouseover", "mouseout", "dragstart"]);
+        super(["click", "dblclick", "mouseover", "mouseout", "dragstart", "rightclick"]);
         this._geometry = geometry;
         this._symbol = symbol;
     }

@@ -26,6 +26,7 @@ export declare class Map extends Subject {
     minZoom: number;
     maxZoom: number;
     private _float;
+    private _origin;
     private _center;
     private _extent;
     private _projection;
@@ -78,6 +79,7 @@ export declare class Map extends Subject {
     get zoom(): number;
     get float(): boolean;
     set float(value: boolean);
+    set origin(value: number[]);
     /**
      * 坐标投影变换
      */

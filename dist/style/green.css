@@ -83,3 +83,32 @@
     box-shadow: 3px 3px 7px rgba(0, 0, 0, .07);
     transform: translateY(6.53px) rotate(-45deg);
 }
+
+
+
+.green-context-menu {
+    background: #fff;
+    width: 100px;
+    border: 1px solid #ccc;
+    position: absolute;
+    z-index: 1000;
+    padding: 0px;
+    box-shadow: 2px 2px 8px 1px rgba(0, 0, 0, .2);
+    display: none;
+}
+.green-context-menu li {
+    list-style: none;
+    width: 100%;
+}
+.green-context-menu li span {
+    display: inline-block;
+    text-decoration: none;
+    color: #555;
+    width: 100%;
+    padding: 10px 0;
+    text-align: center;
+    cursor: pointer;
+}
+.green-context-menu li:hover{
+    background: #eee;
+}

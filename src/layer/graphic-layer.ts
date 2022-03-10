@@ -123,6 +123,8 @@ export class GraphicLayer extends Layer{
                     graphics[0].emit("click", {graphic: graphics[0], screenX: screenX, screenY: screenY});
                 } else if (event == "dragstart") {
                     graphics[0].emit("dragstart", {graphic: graphics[0], screenX: screenX, screenY: screenY});
+                } else if (event == "rightclick") {
+                    graphics[0].emit("rightclick", {graphic: graphics[0], screenX: screenX, screenY: screenY});
                 }
                 return true;
             } else {

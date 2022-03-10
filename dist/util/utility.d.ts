@@ -46,4 +46,6 @@ export declare class Utility {
      * @return {string} css class name
      */
     static getClass(el: any): any;
+    static createContextMenu(container: any): any;
+    static addContextMenuItem(menu: any, item: any, handler: any): any;
 }

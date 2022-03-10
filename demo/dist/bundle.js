@@ -1830,6 +1830,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
         this._drag = {
             flag: false,
             vertex: null,
+            middle: null,
             start: {
                 x: 0,
                 y: 0
@@ -1848,23 +1849,44 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
         this._defaultPointSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.SimplePointSymbol();
         this._defaultLineSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.SimpleLineSymbol();
         this._defaultPolygonSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.SimpleFillSymbol();
+        this._drawPointSymbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.SimplePointSymbol();
         this._map = map;
-        const container = map.container;
+        this._container = map.container;
         //create canvas
         this._canvas = document.createElement("canvas");
         this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 90";
-        this._canvas.width = container.clientWidth;
-        this._canvas.height = container.clientHeight;
-        container.appendChild(this._canvas);
+        this._canvas.width = this._container.clientWidth;
+        this._canvas.height = this._container.clientHeight;
+        this._container.appendChild(this._canvas);
         this._ctx = this._canvas.getContext("2d");
         this._onResize = this._onResize.bind(this);
         this._extentChange = this._extentChange.bind(this);
         this._switchEditing = this._switchEditing.bind(this);
         this._map.on("resize", this._onResize);
         this._map.on("extent", this._extentChange);
+        this._contextMenu = document.createElement("ul");
+        this._contextMenu.classList.add("green-context-menu");
+        this._container.appendChild(this._contextMenu);
+        this._menuFinishEditing = this._createContextMenuItem("完成编辑");
+        this._menuStopEditing = this._createContextMenuItem("停止编辑");
+        this._menuDeleteVertex = this._createContextMenuItem("删除顶点");
+        this._closeContextMenu = this._closeContextMenu.bind(this);
+        this._finishEditing = this._finishEditing.bind(this);
+        this._stopEditing = this._stopEditing.bind(this);
+        this._deleteVertex = this._deleteVertex.bind(this);
+        this._menuFinishEditing.addEventListener("click", this._finishEditing);
+        this._menuStopEditing.addEventListener("click", this._stopEditing);
+        this._menuDeleteVertex.addEventListener("click", this._deleteVertex);
+        this._drawPointSymbol.radius = 5;
+        this._drawPointSymbol.fillStyle = "#ffffff80";
+        this._drawPointSymbol.lineWidth = 1;
+        this._drawPointSymbol.strokeStyle = "#ff0000";
     }
     get editing() {
         return this._editing;
+    }
+    get dragging() {
+        return this._drag.flag;
     }
     get editingFeature() {
         return this._editingFeature;
@@ -1893,6 +1915,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
     set defaultPolygonSymbol(value) {
         this._defaultPolygonSymbol = value;
     }
+    /****** 公共函数 外部调用 ******/
     setFeatureLayer(layer) {
         if (this._editing) {
             this._featureLayer = layer;
@@ -1905,32 +1928,140 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
             throw new Error("please start editing!");
         }
     }
+    addFeature(feature) {
+        this._featureLayer.featureClass.addFeature(feature);
+        feature.on("dblclick", this._switchEditing);
+        this._handlers["create"].forEach(handler => handler({ feature: feature }));
+        this.redraw();
+    }
+    removeFeature(feature) {
+        this._featureLayer.featureClass.removeFeature(feature);
+        feature.off("dblclick", this._switchEditing);
+        this._handlers["delete"].forEach(handler => handler({ feature: feature }));
+        this.redraw();
+    }
     start() {
-        if (!this._editing) {
-            this._editing = true;
-            this._vertexLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__.GraphicLayer();
-            this._action = EditorActionType.Select;
-            this._createLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__.GraphicLayer();
-            this._handlers["startedit"].forEach(handler => handler());
-        }
+        this._startEditing();
         //TODO: edit stack for undo/redo
     }
+    stop() {
+        this._stopEditing();
+    }
     create() {
-        this._action = EditorActionType.Create;
+        this._setCreateStatus();
         this._vertexLayer.clear();
+        this._middleLayer.clear();
         this._editingFeature = null;
         this.redraw();
     }
     save() {
     }
-    stop() {
+    redraw() {
+        this._ctx.save();
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
+        this._featureLayer && this._featureLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this._vertexLayer && this._vertexLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this._createLayer && this._createLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+        this._middleLayer && this._middleLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+    }
+    clear() {
+        this._ctx.save();
+        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.restore();
+    }
+    /*** 响应map事件 ***/
+    _onResize(event) {
+        this._canvas.width = this._map.container.clientWidth;
+        this._canvas.height = this._map.container.clientHeight;
+    }
+    _extentChange(event) {
+        this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
+        this.redraw();
+    }
+    /*** 右键菜单 ***/
+    _bindContextMenu() {
+        const menu = this._contextMenu;
+        const container = this._container;
+        this._container.addEventListener("click", this._closeContextMenu);
+        this._container.oncontextmenu = function (e) {
+            menu.style.display = 'block';
+            // 获取鼠标坐标
+            var mouseX = e.clientX;
+            var mouseY = e.clientY;
+            // 判断边界值，防止菜单栏溢出可视窗口
+            if (mouseX >= (container.clientWidth - menu.offsetWidth)) {
+                mouseX = container.clientWidth - menu.offsetWidth;
+            }
+            else {
+                mouseX = mouseX;
+            }
+            if (mouseY > container.clientHeight - menu.offsetHeight) {
+                mouseY = container.clientHeight - menu.offsetHeight;
+            }
+            else {
+                mouseY = mouseY;
+            }
+            menu.style.left = mouseX + 'px';
+            menu.style.top = mouseY + 'px';
+            return false;
+        };
+    }
+    _unbindContextMenu() {
+        this._container.oncontextmenu = function (e) {
+            return true;
+        };
+        this._container.removeEventListener("click", this._closeContextMenu);
+        this._closeContextMenu();
+    }
+    _showContextMenu() {
+        this._contextMenu.style.visibility = "visible";
+    }
+    _hideContextMenu() {
+        this._contextMenu.style.visibility = "hidden";
+    }
+    _closeContextMenu() {
+        this._contextMenu.style.display = "none";
+    }
+    _initContextMenu(items) {
+        while (this._contextMenu.firstChild) {
+            this._contextMenu.removeChild(this._contextMenu.lastChild);
+        }
+        items.forEach(item => {
+            this._contextMenu.appendChild(item);
+        });
+    }
+    _createContextMenuItem(name) {
+        const li = document.createElement("li");
+        const span = document.createElement("span");
+        span.innerText = name;
+        li.appendChild(span);
+        return li;
+    }
+    /*** 启停编辑 ***/
+    _startEditing() {
+        if (!this._editing) {
+            this._editing = true;
+            this._vertexLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__.GraphicLayer();
+            this._middleLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__.GraphicLayer();
+            this._createLayer = new _layer_graphic_layer__WEBPACK_IMPORTED_MODULE_1__.GraphicLayer();
+            this._handlers["startedit"].forEach(handler => handler());
+            this._setSelectStatus();
+            this._bindContextMenu();
+        }
+    }
+    _stopEditing() {
         if (this._editing) {
             this._editing = false;
             this._editingFeature = null;
+            this._editingVertex = null;
             this._featureLayer.editing = false;
             this._featureLayer.off("dblclick", this._switchEditing);
             this._featureLayer = null;
             this._vertexLayer = null;
+            this._middleLayer = null;
             this._action = EditorActionType.Select;
             this._create = {
                 click: 0,
@@ -1951,38 +2082,13 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
             };
             this.clear();
             this._handlers["stopedit"].forEach(handler => handler());
+            this._unbindContextMenu();
         }
     }
-    addFeature(feature) {
-        this._featureLayer.featureClass.addFeature(feature);
-        feature.on("dblclick", this._switchEditing);
-        this._handlers["create"].forEach(handler => handler({ feature: feature }));
-        this.redraw();
-    }
-    removeFeature(feature) {
-        this._featureLayer.featureClass.removeFeature(feature);
-        feature.off("dblclick", this._switchEditing);
-        this._handlers["delete"].forEach(handler => handler({ feature: feature }));
-        this.redraw();
-    }
-    _onResize(event) {
-        this._canvas.width = this._map.container.clientWidth;
-        this._canvas.height = this._map.container.clientHeight;
-    }
-    _extentChange(event) {
-        this._ctx.setTransform(event.matrix.a, 0, 0, event.matrix.d, event.matrix.e, event.matrix.f);
-        this.redraw();
-    }
-    _getMiddlePoint(point1, point2) {
-        point1.project(this._map.projection);
-        point2.project(this._map.projection);
-        const [x, y] = [(point1.x + point2.x) / 2, (point1.y + point2.y) / 2];
-        const [lng, lat] = this._map.projection.unproject([x, y]);
-        return new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(lng, lat);
-    }
+    /*** 编辑状态切换 ***/
     _switchEditing(event) {
         if (!this._editingFeature && this._action === EditorActionType.Select) {
-            this._action = EditorActionType.Edit;
+            this._setEditStatus();
             this._editingFeature = event.feature;
             if (this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point) {
                 const point = this._editingFeature.geometry;
@@ -1992,31 +2098,11 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
             }
             else if (this._editingFeature.geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__.Polyline) {
                 const polyline = this._editingFeature.geometry;
-                polyline.lnglats.forEach((lnglat, index) => {
+                polyline.lnglats.forEach(lnglat => {
                     const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(lnglat[0], lnglat[1]);
-                    const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.VertexSymbol());
-                    this._vertexLayer.add(vertex);
-                    vertex.on("dragstart", (event) => {
-                        this._drag.vertex = vertex;
-                    });
-                    vertex.on("dblclick", (event) => {
-                        this._vertexLayer.remove(vertex);
-                        this._editingFeature.edited = true;
-                        polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
-                        this.redraw();
-                    });
-                    //middle point
-                    /*if (index < polyline.lnglats.length - 1) {
-                        const p1: Point = new Point(lnglat[0], lnglat[1]), p2: Point = new Point(polyline.lnglats[index + 1][0], polyline.lnglats[index + 1][1]);
-                        const p: Point = this._getMiddlePoint(p1, p2);
-                        const symbol: VertexSymbol = new VertexSymbol();
-                        symbol.strokeStyle = "#888888";
-                        symbol.fillStyle = "#88888888";
-                        symbol.size = 6;
-                        const middle: Graphic = new Graphic(p, symbol);
-                        this._vertexLayer.add(middle);
-                    }*/
+                    this._createVertex(point);
                 });
+                this._drawMiddlePoint(polyline.lnglats, false);
                 this.redraw();
             }
             else if (this._editingFeature.geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_8__.Polygon) {
@@ -2024,48 +2110,124 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
                 polygon.lnglats.forEach(ring => {
                     ring.forEach(lnglat => {
                         const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(lnglat[0], lnglat[1]);
-                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.VertexSymbol());
-                        this._vertexLayer.add(vertex);
-                        vertex.on("dragstart", (event) => {
-                            this._drag.vertex = vertex;
-                        });
-                        vertex.on("dblclick", (event) => {
-                            this._vertexLayer.remove(vertex);
-                            this._editingFeature.edited = true;
-                            polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
-                            this.redraw();
-                        });
+                        this._createVertex(point);
                     });
+                    this._drawMiddlePoint(ring, true);
                 });
                 this.redraw();
             }
         }
         else if (this._editingFeature === event.feature && this._action === EditorActionType.Edit) {
-            this._action = EditorActionType.Select;
-            if (this._editingFeature.edited) {
-                this._handlers["update"].forEach(handler => handler({ feature: this._editingFeature }));
-                this._editingFeature.edited = false;
-            }
-            this._editingFeature = null;
-            this._vertexLayer.clear();
-            this.redraw();
+            this._finishEditing();
         }
     }
-    redraw() {
-        this._ctx.save();
-        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
-        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-        this._ctx.restore();
-        this._featureLayer && this._featureLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
-        this._vertexLayer && this._vertexLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
-        this._createLayer && this._createLayer.draw(this._ctx, this._map.projection, this._map.extent, this._map.zoom);
+    _finishEditing() {
+        this._setSelectStatus();
+        if (this._editingFeature.edited) {
+            this._handlers["update"].forEach(handler => handler({ feature: this._editingFeature }));
+            this._editingFeature.edited = false;
+        }
+        this._editingFeature = null;
+        this._vertexLayer.clear();
+        this._middleLayer.clear();
+        this.redraw();
     }
-    clear() {
-        this._ctx.save();
-        this._ctx.setTransform(1, 0, 0, 1, 0, 0);
-        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-        this._ctx.restore();
+    /*** 编辑状态统一处理 ***/
+    _setSelectStatus() {
+        this._action = EditorActionType.Select;
+        this._showContextMenu();
+        this._initContextMenu([this._menuStopEditing]);
     }
+    _setEditStatus() {
+        this._action = EditorActionType.Edit;
+        this._showContextMenu();
+        this._initContextMenu([this._menuFinishEditing]);
+    }
+    _setCreateStatus() {
+        this._action = EditorActionType.Create;
+        this._hideContextMenu();
+        this._initContextMenu([]);
+    }
+    /*** 顶点处理 ***/
+    _createVertex(point) {
+        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(point, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.VertexSymbol());
+        this._vertexLayer.add(vertex);
+        vertex.on("dragstart", (event) => {
+            this._drag.vertex = vertex;
+        });
+        vertex.on("rightclick", (event) => {
+            this._editingVertex = vertex;
+        });
+        return vertex;
+    }
+    _deleteVertex() {
+        if (!this._editingVertex)
+            return;
+        const vertex = this._editingVertex;
+        const geometry = this._editingFeature.geometry;
+        if (geometry instanceof _geometry_polygon__WEBPACK_IMPORTED_MODULE_8__.Polygon) {
+            if (this._vertexLayer.graphics.length == 3) {
+                this._editingVertex = null;
+                throw new Error("polygon need 3 vertex!");
+                return;
+            }
+            this._vertexLayer.remove(vertex);
+            this._editingFeature.edited = true;
+            const polygon = geometry;
+            const point = vertex.geometry;
+            polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
+            polygon.lnglats.forEach(ring => {
+                this._drawMiddlePoint(ring, true);
+            });
+        }
+        else if (geometry instanceof _geometry_polyline__WEBPACK_IMPORTED_MODULE_7__.Polyline) {
+            if (this._vertexLayer.graphics.length == 2) {
+                this._editingVertex = null;
+                throw new Error("polyline need 2 vertex!");
+                return;
+            }
+            this._vertexLayer.remove(vertex);
+            this._editingFeature.edited = true;
+            const polyline = geometry;
+            const point = vertex.geometry;
+            polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat]);
+            this._drawMiddlePoint(polyline.lnglats, false);
+        }
+        this._editingVertex = null;
+        this.redraw();
+    }
+    _drawMiddlePoint(line, closed) {
+        this._middleLayer.clear();
+        line.forEach((lnglat, index) => {
+            if (closed || index < line.length - 1) {
+                //middle point
+                let p1, p2;
+                if (index < line.length - 1) {
+                    p1 = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(lnglat[0], lnglat[1]), p2 = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(line[index + 1][0], line[index + 1][1]);
+                }
+                else {
+                    p1 = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(lnglat[0], lnglat[1]), p2 = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(line[0][0], line[0][1]);
+                }
+                //middle point
+                p1.project(this._map.projection);
+                p2.project(this._map.projection);
+                const [x, y] = [(p1.x + p2.x) / 2, (p1.y + p2.y) / 2];
+                const [lng, lat] = this._map.projection.unproject([x, y]);
+                const p = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(lng, lat);
+                const symbol = new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.VertexSymbol();
+                symbol.strokeStyle = "#ff0000";
+                symbol.fillStyle = "#ffffff80";
+                symbol.size = 8;
+                const middle = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(p, symbol);
+                middle.index = index;
+                middle.on("dragstart", (event) => {
+                    this._drag.middle = middle;
+                });
+                this._middleLayer.add(middle);
+            }
+        });
+    }
+    /*** 编辑事件处理 ***/
     _onClick(event) {
         if (event.detail > 1)
             return;
@@ -2074,20 +2236,20 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
                 const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(event.lng, event.lat);
                 const feature = new _element_feature__WEBPACK_IMPORTED_MODULE_3__.Feature(point, {}, this._defaultPointSymbol);
                 this.addFeature(feature);
-                this._action = EditorActionType.Select;
+                this._setSelectStatus();
             }
             else if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__.GeometryType.Polygon) {
                 if (this._create.click == 0) {
                     this._createLayer.clear();
                     const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(event.lng, event.lat);
-                    const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(point, this._defaultPointSymbol);
+                    const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(point, this._drawPointSymbol);
                     this._createLayer.add(graphic);
                     this._create.click += 1;
                     this._create.lnglats.push([event.lng, event.lat]);
                 }
                 else if (this._create.click == 1) {
                     const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(event.lng, event.lat);
-                    const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(second, this._defaultPointSymbol);
+                    const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(second, this._drawPointSymbol);
                     this._createLayer.add(graphic1);
                     if (this._create.graphic)
                         this._createLayer.remove(this._create.graphic);
@@ -2099,7 +2261,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
                 }
                 else {
                     const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(event.lng, event.lat);
-                    const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(second, this._defaultPointSymbol);
+                    const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(second, this._drawPointSymbol);
                     this._createLayer.add(graphic1);
                     if (this._create.graphic)
                         this._createLayer.remove(this._create.graphic);
@@ -2114,14 +2276,14 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
                 if (this._create.click == 0) {
                     this._createLayer.clear();
                     const point = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(event.lng, event.lat);
-                    const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(point, this._defaultPointSymbol);
+                    const graphic = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(point, this._drawPointSymbol);
                     this._createLayer.add(graphic);
                     this._create.click += 1;
                     this._create.lnglats.push([event.lng, event.lat]);
                 }
                 else {
                     const second = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(event.lng, event.lat);
-                    const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(second, this._defaultPointSymbol);
+                    const graphic1 = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(second, this._drawPointSymbol);
                     this._createLayer.add(graphic1);
                     if (this._create.graphic)
                         this._createLayer.remove(this._create.graphic);
@@ -2135,6 +2297,11 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
             this._handlers["click"].forEach(handler => handler(event));
         }
         else if (this._action === EditorActionType.Edit) {
+            if (this._editingFeature && !(this._editingFeature.geometry instanceof _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point)) {
+                const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "click");
+                if (flag)
+                    return;
+            }
         }
         else {
             /*if (!this._editingFeature) {
@@ -2159,7 +2326,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
                     };
                     this._createLayer.clear();
                     this.addFeature(feature);
-                    this._action = EditorActionType.Select;
+                    this._setSelectStatus();
                 }
             }
             else if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__.GeometryType.Polyline) {
@@ -2175,7 +2342,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
                     };
                     this._createLayer.clear();
                     this.addFeature(feature);
-                    this._action = EditorActionType.Select;
+                    this._setSelectStatus();
                 }
             }
             return;
@@ -2183,7 +2350,7 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
         else if (this._action === EditorActionType.Edit) {
             if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__.GeometryType.Point) {
                 if (this._editingFeature) {
-                    this._action = EditorActionType.Select;
+                    this._setSelectStatus();
                     if (this._editingFeature.edited) {
                         this._handlers["update"].forEach(handler => handler({ feature: this._editingFeature }));
                         this._editingFeature.edited = false;
@@ -2204,8 +2371,25 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
     _onMouseDown(event) {
         if (this._action === EditorActionType.Create)
             return;
+        if (event.button == 2) { //右键
+            if (this._action === EditorActionType.Edit) {
+                if (this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__.GeometryType.Polyline || this._featureLayer.featureClass.type == _geometry_geometry__WEBPACK_IMPORTED_MODULE_0__.GeometryType.Polygon) {
+                    const flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "rightclick");
+                    if (flag) {
+                        this._initContextMenu([this._menuFinishEditing, this._menuDeleteVertex]);
+                    }
+                    else {
+                        this._initContextMenu([this._menuFinishEditing]);
+                    }
+                }
+            }
+            return;
+        }
         if (this._editingFeature) {
             this._drag.flag = this._vertexLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dragstart");
+            if (!this._drag.flag) {
+                this._drag.flag = this._middleLayer.contain(event.offsetX, event.offsetY, this._map.projection, this._map.extent, this._map.zoom, "dragstart");
+            }
             this._drag.start.x = event.x;
             this._drag.start.y = event.y;
         }
@@ -2274,26 +2458,21 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
                 if (this._drag.vertex) {
                     const polyline = this._editingFeature.geometry;
                     const point = this._drag.vertex.geometry;
-                    polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat], event.offsetX, event.offsetY, !event.shiftKey);
-                    if (event.shiftKey) {
-                        const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(point.lng, point.lat);
-                        shift.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
-                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(shift, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.VertexSymbol());
-                        this._vertexLayer.add(vertex);
-                        vertex.on("dragstart", (event) => {
-                            this._drag.vertex = vertex;
-                        });
-                        vertex.on("dblclick", (event) => {
-                            this._vertexLayer.remove(vertex);
-                            this._editingFeature.edited = true;
-                            polyline.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
-                            this.redraw();
-                        });
-                    }
-                    else {
-                        point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
-                    }
+                    polyline.splice(this._ctx, this._map.projection, [point.lng, point.lat], event.offsetX, event.offsetY, true);
+                    point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
+                    this._drawMiddlePoint(polyline.lnglats, false);
                     this._drag.vertex = null;
+                    this.redraw();
+                }
+                if (this._drag.middle) {
+                    const polyline = this._editingFeature.geometry;
+                    const point = this._drag.middle.geometry;
+                    polyline.splice2(this._ctx, this._map.projection, this._drag.middle.index, event.offsetX, event.offsetY, false);
+                    const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(point.lng, point.lat);
+                    shift.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
+                    this._createVertex(shift);
+                    this._drawMiddlePoint(polyline.lnglats, false);
+                    this._drag.middle = null;
                     this.redraw();
                 }
             }
@@ -2301,26 +2480,25 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
                 if (this._drag.vertex) {
                     const polygon = this._editingFeature.geometry;
                     const point = this._drag.vertex.geometry;
-                    polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat], event.offsetX, event.offsetY, !event.shiftKey);
-                    if (event.shiftKey) {
-                        const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(point.lng, point.lat);
-                        shift.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
-                        const vertex = new _element_graphic__WEBPACK_IMPORTED_MODULE_2__.Graphic(shift, new _symbol_symbol__WEBPACK_IMPORTED_MODULE_5__.VertexSymbol());
-                        this._vertexLayer.add(vertex);
-                        vertex.on("dragstart", (event) => {
-                            this._drag.vertex = vertex;
-                        });
-                        vertex.on("dblclick", (event) => {
-                            this._vertexLayer.remove(vertex);
-                            this._editingFeature.edited = true;
-                            polygon.splice(this._ctx, this._map.projection, [shift.lng, shift.lat]);
-                            this.redraw();
-                        });
-                    }
-                    else {
-                        point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
-                    }
+                    polygon.splice(this._ctx, this._map.projection, [point.lng, point.lat], event.offsetX, event.offsetY, true);
+                    point.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
+                    polygon.lnglats.forEach(ring => {
+                        this._drawMiddlePoint(ring, true);
+                    });
                     this._drag.vertex = null;
+                    this.redraw();
+                }
+                if (this._drag.middle) {
+                    const polygon = this._editingFeature.geometry;
+                    const point = this._drag.middle.geometry;
+                    polygon.splice2(this._ctx, this._map.projection, this._drag.middle.index, event.offsetX, event.offsetY, false);
+                    const shift = new _geometry_point__WEBPACK_IMPORTED_MODULE_4__.Point(point.lng, point.lat);
+                    shift.move(this._ctx, this._map.projection, event.offsetX, event.offsetY);
+                    this._createVertex(shift);
+                    polygon.lnglats.forEach(ring => {
+                        this._drawMiddlePoint(ring, true);
+                    });
+                    this._drag.middle = null;
                     this.redraw();
                 }
             }
@@ -2564,7 +2742,7 @@ class Graphic extends _util_subject__WEBPACK_IMPORTED_MODULE_1__.Subject {
      * @param {Symbol} symbol - 渲染符号
      */
     constructor(geometry, symbol) {
-        super(["click", "dblclick", "mouseover", "mouseout", "dragstart"]);
+        super(["click", "dblclick", "mouseover", "mouseout", "dragstart", "rightclick"]);
         /**
          * 是否可见
          */
@@ -3828,6 +4006,24 @@ class Polygon extends _geometry__WEBPACK_IMPORTED_MODULE_0__.Geometry {
         }
         this.project(projection);
     }
+    splice2(ctx, projection, index, screenX = undefined, screenY = undefined, replaced = true) {
+        if (screenX == undefined && screenY == undefined) {
+            this._lnglats.forEach(ring => {
+                ring.length > 3 && index != -1 && ring.splice(index + 1, 1);
+            });
+        }
+        else {
+            const matrix = ctx.getTransform();
+            const x = (screenX - matrix.e) / matrix.a;
+            const y = (screenY - matrix.f) / matrix.d;
+            this._projection = projection;
+            const [lng, lat] = this._projection.unproject([x, y]);
+            this._lnglats.forEach(ring => {
+                index != -1 && ring.splice(index + 1, replaced ? 1 : 0, [lng, lat]);
+            });
+        }
+        this.project(projection);
+    }
     /**
      * 绘制面
      * @param {CanvasRenderingContext2D} ctx - 绘图上下文
@@ -4092,6 +4288,20 @@ class Polyline extends _geometry__WEBPACK_IMPORTED_MODULE_0__.Geometry {
             const [lng, lat] = this._projection.unproject([x, y]);
             const index = this._lnglats.findIndex(point => point[0] == lnglat[0] && point[1] == lnglat[1]);
             index != -1 && this._lnglats.splice(index, replaced ? 1 : 0, [lng, lat]);
+        }
+        this.project(projection);
+    }
+    splice2(ctx, projection, index, screenX = undefined, screenY = undefined, replaced = true) {
+        if (screenX == undefined && screenY == undefined) {
+            this._lnglats.length > 2 && index != -1 && this._lnglats.splice(index + 1, 1);
+        }
+        else {
+            const matrix = ctx.getTransform();
+            const x = (screenX - matrix.e) / matrix.a;
+            const y = (screenY - matrix.f) / matrix.d;
+            this._projection = projection;
+            const [lng, lat] = this._projection.unproject([x, y]);
+            index != -1 && this._lnglats.splice(index + 1, replaced ? 1 : 0, [lng, lat]);
         }
         this.project(projection);
     }
@@ -5278,6 +5488,9 @@ class GraphicLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
                 else if (event == "dragstart") {
                     graphics[0].emit("dragstart", { graphic: graphics[0], screenX: screenX, screenY: screenY });
                 }
+                else if (event == "rightclick") {
+                    graphics[0].emit("rightclick", { graphic: graphics[0], screenX: screenX, screenY: screenY });
+                }
                 return true;
             }
             else {
@@ -5589,6 +5802,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
         //tooltip
         this._tooltip = new _tooltip_tooltip__WEBPACK_IMPORTED_MODULE_9__.Tooltip(this);
         this._projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_2__.WebMercator();
+        this._origin = [this._canvas.width / 2, this._canvas.height / 2];
         //this._center = [0, 0];
         //this._zoom = 10;
         //Latlng [-180, 180] [-90, 90]
@@ -5674,6 +5888,9 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
     set float(value) {
         this._float = value;
     }
+    set origin(value) {
+        this._origin = value;
+    }
     /**
      * 坐标投影变换
      */
@@ -5728,6 +5945,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
         const d = 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale;
         const e = this._canvas.width / 2 - a * origin[0];
         const f = this._canvas.height / 2 - d * origin[1];
+        //const e = this._origin[0] - a * origin[0];
+        //const f = this._origin[1] - d * origin[1];
         this._ctx.setTransform(a, 0, 0, d, e, f);
     }
     /**
@@ -5748,6 +5967,8 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
         const d = 256 * Math.pow(2, this._zoom) / (bound.ymax - bound.ymin) * bound.yscale;
         const e = this._canvas.width / 2 - a * origin[0];
         const f = this._canvas.height / 2 - d * origin[1];
+        //const e = this._origin[0] - a * origin[0];
+        //const f = this._origin[1] - d * origin[1];
         this._ctx.setTransform(a, 0, 0, d, e, f);
         this.redraw();
     }
@@ -5979,7 +6200,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
     _onMouseDown(event) {
         if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseDown(event);
-            return;
+            //return;
         }
         this._drag.flag = true;
         this._drag.start.x = event.x;
@@ -5993,7 +6214,11 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
             [event.lng, event.lat] = this._projection.unproject([x, y]);
             [event.originalLng, event.originalLat] = this._projection.unproject([x, y], true);
             this._editor._onMouseMove(event);
-            return;
+            if (this._editor.dragging) {
+                this._drag.flag = false;
+                return;
+            }
+            //return;
         }
         if (this._measurer.measuring) {
             const matrix = this._ctx.getTransform();
@@ -6014,7 +6239,7 @@ class Map extends _util_subject__WEBPACK_IMPORTED_MODULE_8__.Subject {
     _onMouseUp(event) {
         if (this._editor.editing && this._editor.editingFeature) {
             this._editor._onMouseUp(event);
-            return;
+            //return;
         }
         if (this._drag.flag) {
             this._drag.end.x = event.x;
@@ -8039,6 +8264,8 @@ class VertexSymbol extends PointSymbol {
          * 正方形边长
          */
         this.size = 10;
+        this.fillStyle = "#ffffff80";
+        this.strokeStyle = "#ff0000";
     }
     /**
      * 绘制Vertex符号
@@ -8635,6 +8862,18 @@ class Utility {
         }
         return el.className.baseVal === undefined ? el.className : el.className.baseVal;
     }
+    static createContextMenu(container) {
+        const menu = container.createElement("ul");
+        menu.classList.add("green-context-menu");
+        container.appendChild(menu);
+        return menu;
+    }
+    static addContextMenuItem(menu, item, handler) {
+        const li = menu.createElement("li");
+        li.createElement("span");
+        li.addEventListener("click", handler);
+        return li;
+    }
 }
 
 
@@ -8863,9 +9102,9 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__.Subject {
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-/*!********************************!*\
-  !*** ./editor-point-create.js ***!
-  \********************************/
+/*!***********************************!*\
+  !*** ./editor-polyline-create.js ***!
+  \***********************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
@@ -8912,8 +9151,8 @@ window.load = () => {
         const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__.FeatureLayer();
         featureLayer.featureClass = featureClass;
         const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleRenderer();
-        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimplePointSymbol();
-        symbol.fillStyle = "#008888";
+        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleLineSymbol();
+        symbol.strokeStyle = "#008888";
         renderer.symbol = symbol;
         featureLayer.renderer = renderer;
         featureLayer.zoom = [13, 20];
@@ -8941,7 +9180,7 @@ window.load = () => {
 
         map.setView([109.519, 18.271], 13);
     };
-    req.open("GET", "assets/geojson/junction.json", true);
+    req.open("GET", "assets/geojson/pipe.json", true);
     req.send(null);
 
     map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__.GCJ02(_dist__WEBPACK_IMPORTED_MODULE_0__.LatLngType.GCJ02));

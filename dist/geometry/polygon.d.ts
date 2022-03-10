@@ -55,6 +55,7 @@ export declare class Polygon extends Geometry {
      * @param {boolean} replaced - true 替换 false 删除
      */
     splice(ctx: CanvasRenderingContext2D, projection: Projection, lnglat: number[], screenX?: any, screenY?: any, replaced?: boolean): void;
+    splice2(ctx: CanvasRenderingContext2D, projection: Projection, index: number, screenX?: any, screenY?: any, replaced?: boolean): void;
     /**
      * 绘制面
      * @param {CanvasRenderingContext2D} ctx - 绘图上下文

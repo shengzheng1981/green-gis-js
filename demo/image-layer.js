@@ -6,8 +6,9 @@ window.load = async () => {
     const map = new Map("foo");
     const projection = new NoopProjection();
     projection.bound = new Bound(0, 0, 512, 512);
-    map.setProjection(projection);
     map.minZoom = 1;
+    map.setProjection(projection);
+ 
     map.on("extent", (event) => {
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;

@@ -31,13 +31,12 @@ export class ImageLayer extends Subject {
         this._image.style.height = height + 'px';
         this._image.style.position = 'absolute';
         this._image.src = url;
-        this._image.style.left = '0px';
-        this._image.style.top = '0px';
+        this._image.style.left = - (width - container.offsetWidth) / 2 + 'px';
+        this._image.style.top = - (height - container.offsetHeight) / 2 +'px';
         this._image.style.transformOrigin = 'center';
         this._imageContainer.appendChild(this._image);
+        this._imageContainer.style.transformOrigin = 'center';
 
-        this._scaleX = width / container.offsetWidth;
-        this._scaleY = height / container.offsetHeight;
     }
 
     //与主视图同步
@@ -45,7 +44,7 @@ export class ImageLayer extends Subject {
         const center = this._map.center;
         const zoom = this._map.zoom;
         const matrix = event.matrix;
-        console.log("scale(" + matrix.a + ") translate(" + -center[0] + "px," + -center[1] + "px)");
+        console.log("scale(" + matrix.a + ") translate(" + matrix.e + "px," + matrix.f + "px)");
         //this._image.style.transform = "translate(" + -center[0] + "px," + -center[1] + "px) scale(" + zoom + ")";
         this._imageContainer.style.transform = "scale(" + matrix.a + ") translate(" + -center[0] + "px," + -center[1] + "px)";
     }

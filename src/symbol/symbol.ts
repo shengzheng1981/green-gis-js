@@ -734,6 +734,8 @@ export class VertexSymbol extends PointSymbol {
      * 正方形边长
      */
     public size: number = 10;
+    public fillStyle: string = "#ffffff80";
+    public strokeStyle: string = "#ff0000";
     /**
      * 绘制Vertex符号
      * @param {CanvasRenderingContext2D} ctx - 绘图上下文

@@ -737,6 +737,8 @@ export class VertexSymbol extends PointSymbol {
          * 正方形边长
          */
         this.size = 10;
+        this.fillStyle = "#ffffff80";
+        this.strokeStyle = "#ff0000";
     }
     /**
      * 绘制Vertex符号

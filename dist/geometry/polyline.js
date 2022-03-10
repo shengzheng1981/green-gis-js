@@ -87,6 +87,20 @@ export class Polyline extends Geometry {
         }
         this.project(projection);
     }
+    splice2(ctx, projection, index, screenX = undefined, screenY = undefined, replaced = true) {
+        if (screenX == undefined && screenY == undefined) {
+            this._lnglats.length > 2 && index != -1 && this._lnglats.splice(index + 1, 1);
+        }
+        else {
+            const matrix = ctx.getTransform();
+            const x = (screenX - matrix.e) / matrix.a;
+            const y = (screenY - matrix.f) / matrix.d;
+            this._projection = projection;
+            const [lng, lat] = this._projection.unproject([x, y]);
+            index != -1 && this._lnglats.splice(index + 1, replaced ? 1 : 0, [lng, lat]);
+        }
+        this.project(projection);
+    }
     /**
      * 绘制线
      * @param {CanvasRenderingContext2D} ctx - 绘图上下文
