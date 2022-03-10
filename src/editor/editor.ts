@@ -238,10 +238,10 @@ export class Editor extends Subject{
         this._container.addEventListener("click", this._closeContextMenu);
         this._container.oncontextmenu = function (e) {
             menu.style.display = 'block';
+            const rect = container.getBoundingClientRect();
             // 获取鼠标坐标
-            var mouseX = e.clientX;
-            var mouseY = e.clientY;
-    
+            var mouseX = e.clientX - rect.x;
+            var mouseY = e.clientY - rect.y;
             // 判断边界值，防止菜单栏溢出可视窗口
             if (mouseX >= (container.clientWidth - menu.offsetWidth)) {
               mouseX = container.clientWidth - menu.offsetWidth;
