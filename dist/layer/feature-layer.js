@@ -150,7 +150,7 @@ export class FeatureLayer extends Layer {
      * @param {number} zoom - 当前缩放级别
      */
     draw(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
-        console.time("draw");
+        //console.time("draw");
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             //过滤可见视图范围内的要素
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
@@ -214,7 +214,7 @@ export class FeatureLayer extends Layer {
                 });
             }
         }
-        console.timeEnd("draw");
+        //console.timeEnd("draw");
     }
     /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
@@ -234,7 +234,7 @@ export class FeatureLayer extends Layer {
      * @param {number} zoom - 当前缩放级别
      */
     drawLabel(ctx, projection = new WebMercator(), extent = projection.bound, zoom = 10) {
-        console.time("label");
+        //console.time("label");
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
             this._label.draw(features, ctx, projection);
@@ -257,7 +257,7 @@ export class FeatureLayer extends Layer {
                 item.feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
             });*/
         }
-        console.timeEnd("label");
+        //console.timeEnd("label");
     }
     /**
      * 图层交互

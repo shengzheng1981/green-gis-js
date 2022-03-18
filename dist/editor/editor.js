@@ -136,6 +136,12 @@ export class Editor extends Subject {
     removeFeature(feature) {
         this._featureLayer.featureClass.removeFeature(feature);
         feature.off("dblclick", this._switchEditing);
+        if (feature == this._editingFeature) {
+            this._editingFeature = null;
+            this._editingVertex = null;
+            this._vertexLayer.clear();
+            this._middleLayer.clear();
+        }
         this._handlers["delete"].forEach(handler => handler({ feature: feature }));
         this.redraw();
     }

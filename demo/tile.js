@@ -26,8 +26,9 @@ window.load = async () => {
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
     //map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
-    map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
-    map.setView([116.397411,39.909186], 12);
+    //map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
+    map.setTileUrl("http://localhost:4014/tiles/{z}/{x}/{y}.png");
+    map.setView([108.8297880158,34.1988763951], 12);
     const marker = new SimpleMarkerSymbol();
     marker.width = 32;
     marker.height = 32;
@@ -35,7 +36,7 @@ window.load = async () => {
     marker.offsetY = -32;
     marker.url = "assets/img/marker.svg";
     await marker.load();
-    const point = new Point(116.397411,39.909186);
+    const point = new Point(108.8297880158,34.1988763951);
     const graphic = new Graphic(point, marker);
     map.addGraphic(graphic);
 }

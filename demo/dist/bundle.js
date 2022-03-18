@@ -1937,6 +1937,12 @@ class Editor extends _util_subject__WEBPACK_IMPORTED_MODULE_6__.Subject {
     removeFeature(feature) {
         this._featureLayer.featureClass.removeFeature(feature);
         feature.off("dblclick", this._switchEditing);
+        if (feature == this._editingFeature) {
+            this._editingFeature = null;
+            this._editingVertex = null;
+            this._vertexLayer.clear();
+            this._middleLayer.clear();
+        }
         this._handlers["delete"].forEach(handler => handler({ feature: feature }));
         this.redraw();
     }
@@ -5212,7 +5218,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
      * @param {number} zoom - 当前缩放级别
      */
     draw(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__.WebMercator(), extent = projection.bound, zoom = 10) {
-        console.time("draw");
+        //console.time("draw");
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             //过滤可见视图范围内的要素
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
@@ -5276,7 +5282,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
                 });
             }
         }
-        console.timeEnd("draw");
+        //console.timeEnd("draw");
     }
     /*animate(elapsed, ctx: CanvasRenderingContext2D, projection: Projection = new WebMercator(), extent: Bound = projection.bound, zoom: number = 10) {
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
@@ -5296,7 +5302,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
      * @param {number} zoom - 当前缩放级别
      */
     drawLabel(ctx, projection = new _projection_web_mercator__WEBPACK_IMPORTED_MODULE_1__.WebMercator(), extent = projection.bound, zoom = 10) {
-        console.time("label");
+        //console.time("label");
         if (this.visible && this._zoom[0] <= zoom && this._zoom[1] >= zoom) {
             const features = this._featureClass.features.filter((feature) => feature.intersect(projection, extent));
             this._label.draw(features, ctx, projection);
@@ -5319,7 +5325,7 @@ class FeatureLayer extends _layer__WEBPACK_IMPORTED_MODULE_0__.Layer {
                 item.feature.label(this._label.field, ctx, projection, extent, this._label.symbol);
             });*/
         }
-        console.timeEnd("label");
+        //console.timeEnd("label");
     }
     /**
      * 图层交互
@@ -8390,6 +8396,10 @@ class Tile extends _util_subject__WEBPACK_IMPORTED_MODULE_0__.Subject {
                 tile.style.height = '256px';
                 tile.style.position = 'absolute';
                 tile.src = url;
+                tile.onerror = (e) => {
+                    tile.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAADHUlEQVR4nO3UAQ3AQBDDsNv4c+4DiU0hUr5tOyDplx26DADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDACq7u4BHrAF/IxtuEcAAAAASUVORK5CYII=';
+                    return true;
+                };
                 tile.style.left = (-pixelX + (x - tileMinX) * 256) + 'px';
                 tile.style.top = (-pixelY + (y - tileMinY) * 256) + 'px';
                 this._container.appendChild(tile);
@@ -9103,35 +9113,26 @@ class Viewer extends _util_subject__WEBPACK_IMPORTED_MODULE_1__.Subject {
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-/*!***********************************!*\
-  !*** ./editor-polyline-create.js ***!
-  \***********************************/
+/*!*****************!*\
+  !*** ./tile.js ***!
+  \*****************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dist__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../dist */ "../dist/index.js");
 
 
-window.load = () => {
-    const amap = new AMap.Map("amap", {
-        fadeOnZoom: false,
+
+window.load = async () => {
+    /*const amap = new AMap.Map("amap", {
         navigationMode: 'classic',
-        optimizePanAnimation: false,
-        animateEnable: false,
-        dragEnable: false,
-        zoomEnable: false,
-        resizeEnable: true,
-        doubleClickZoom: false,
-        keyboardEnable: false,
-        scrollWheel: false,
-        expandZoomRange: true,
         zooms: [1, 20],
-        mapStyle: 'normal',
+        mapStyle: 'amap://styles/normal',
         features: ['road', 'point', 'bg'],
         viewMode: '2D'
-    });
+    });*/
 
     const map = new _dist__WEBPACK_IMPORTED_MODULE_0__.Map("foo");
     map.on("extent", (event) => {
-        amap.setZoomAndCenter(event.zoom, event.center);
+        //amap.setZoomAndCenter(event.zoom, event.center, true);
         document.getElementById("x").value = Math.round(event.center[0] * 1000)/1000;
         document.getElementById("y").value = Math.round(event.center[1] * 1000)/1000;
         document.getElementById("zoom").value = event.zoom;
@@ -9144,51 +9145,23 @@ window.load = () => {
         document.getElementById("e").value = Math.round(event.matrix.e * 1000)/1000;
         document.getElementById("f").value = Math.round(event.matrix.f * 1000)/1000;
     });
-
-    var req = new XMLHttpRequest();
-    req.onload = (event) => {
-        const featureClass = new _dist__WEBPACK_IMPORTED_MODULE_0__.FeatureClass();
-        featureClass.loadGeoJSON(JSON.parse(req.responseText));
-        const featureLayer = new _dist__WEBPACK_IMPORTED_MODULE_0__.FeatureLayer();
-        featureLayer.featureClass = featureClass;
-        const renderer = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleRenderer();
-        const symbol = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleLineSymbol();
-        symbol.strokeStyle = "#008888";
-        renderer.symbol = symbol;
-        featureLayer.renderer = renderer;
-        featureLayer.zoom = [13, 20];
-        map.addLayer(featureLayer);
-
-        const editor = map.editor;
-        editor.start();
-        editor.setFeatureLayer(featureLayer);
-        document.getElementById("status").value = "editor is started";
-
-        window.start = () => {
-            editor.start();
-            editor.setFeatureLayer(featureLayer);
-            document.getElementById("status").value = "editor is started";
-        };
-
-        window.stop = () => {
-            editor.stop();
-            document.getElementById("status").value = "editor is stopped";
-        };
-
-        window.create = () => {
-            editor.create();
-        };
-
-        map.setView([109.519, 18.271], 13);
-    };
-    req.open("GET", "assets/geojson/pipe.json", true);
-    req.send(null);
-
-    map.setProjection(new _dist__WEBPACK_IMPORTED_MODULE_0__.GCJ02(_dist__WEBPACK_IMPORTED_MODULE_0__.LatLngType.GCJ02));
-
-
+    //map.setTileUrl("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png");
+    //map.setTileUrl("http://wprd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7");
+    map.setTileUrl("http://localhost:4014/tiles/{z}/{x}/{y}.png");
+    map.setView([108.8297880158,34.1988763951], 12);
+    const marker = new _dist__WEBPACK_IMPORTED_MODULE_0__.SimpleMarkerSymbol();
+    marker.width = 32;
+    marker.height = 32;
+    marker.offsetX = -16;
+    marker.offsetY = -32;
+    marker.url = "assets/img/marker.svg";
+    await marker.load();
+    const point = new _dist__WEBPACK_IMPORTED_MODULE_0__.Point(108.8297880158,34.1988763951);
+    const graphic = new _dist__WEBPACK_IMPORTED_MODULE_0__.Graphic(point, marker);
+    map.addGraphic(graphic);
 }
 
+//cause typescript tsc forget js suffix for geometry.js
 })();
 
 /******/ })()
