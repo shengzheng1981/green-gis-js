@@ -8,6 +8,10 @@ export class Tile extends Subject{
     private _container: HTMLDivElement;
     private _map: Map;
     /**
+     * 图层可见缩放级别
+     */
+     private _zoom: number[] = [3, 20];
+    /**
      * 图层url
      */
     protected _url: string;
@@ -22,6 +26,24 @@ export class Tile extends Subject{
      */
     set url(value: string) {
         this._url = value;
+    }
+    /**
+     * 图层可见缩放级别设置
+     */
+    get minZoom() {
+        return this._zoom[0];
+    }
+    get maxZoom() {
+        return this._zoom[1];
+    }
+    set minZoom(value: number) {
+        this._zoom[0] = value;
+    }
+    set maxZoom(value: number) {
+        this._zoom[1] = value;
+    }
+    set zoom(value: number[]) {
+        this._zoom = value;
     }
     /**
      * 创建Tile
@@ -50,11 +72,18 @@ export class Tile extends Subject{
      */
     redraw() {
         if (!this._url) return;
+
+        this._container.innerHTML = "";
+        const zoom = this._map.zoom;
+        if (this._zoom[0] > zoom && this._zoom[1] < zoom) return;
+
+        //经纬度坐标转切片坐标
         const lngLat2Tile = (lng, lat, z) => {
             let tileX = Math.floor((lng + 180) / 360 * Math.pow(2, z));
             let tileY = Math.floor((1 / 2 - (Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180))) / (2 * Math.PI)) * Math.pow(2, z));
             return [tileX, tileY];
         };
+        //经纬度坐标查切片内像素坐标
         const lngLat2Pixel = (lng, lat, z) => {
             let pixelX = Math.floor( ( (lng + 180) / 360 * Math.pow(2, z) * 256 ) % 256 );
             let pixelY = Math.floor( ( ( 1 - ( Math.log(Math.tan(lat * Math.PI/180) + 1 / Math.cos(lat * Math.PI/180)) ) / (2 * Math.PI) )  * Math.pow(2, z) * 256 ) % 256 );
@@ -65,14 +94,14 @@ export class Tile extends Subject{
         };
         const projection = this._map.projection;
         const extent = this._map.extent;
-        const zoom = this._map.zoom;
+        
+        //左上角经纬度
         const [lng1, lat1] = projection.unproject([extent.xmin, extent.ymax]);
+        //右下角经纬度
         const [lng2, lat2] = projection.unproject([extent.xmax, extent.ymin]);
         const [tileMinX, tileMinY] = lngLat2Tile(lng1, lat1, zoom);
         const [tileMaxX, tileMaxY] = lngLat2Tile(lng2, lat2, zoom);
         const [pixelX, pixelY] = lngLat2Pixel(lng1, lat1, zoom);
-
-        this._container.innerHTML = "";
 
         for(let x = tileMinX; x <= tileMaxX; x++) {
             for(let y = tileMinY; y <= tileMaxY; y++) {
@@ -84,10 +113,10 @@ export class Tile extends Subject{
                 tile.style.height = '256px';
                 tile.style.position = 'absolute';
                 tile.src = url;
-                tile.onerror = (e) => {
-                    tile.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAADHUlEQVR4nO3UAQ3AQBDDsNv4c+4DiU0hUr5tOyDplx26DADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDACq7u4BHrAF/IxtuEcAAAAASUVORK5CYII=';
-                    return true;
-                };
+                // tile.onerror = (e) => {
+                //     tile.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAADHUlEQVR4nO3UAQ3AQBDDsNv4c+4DiU0hUr5tOyDplx26DADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDADCDACq7u4BHrAF/IxtuEcAAAAASUVORK5CYII=';
+                //     return true;
+                // };
                 tile.style.left = (-pixelX + (x - tileMinX) * 256) + 'px';
                 tile.style.top = (-pixelY + (y - tileMinY) * 256) + 'px';
                 this._container.appendChild(tile);

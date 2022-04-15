@@ -19,7 +19,7 @@ export class Viewer extends Subject {
         const container = map.container;
         //create canvas
         this._canvas = document.createElement("canvas");
-        this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%;";
+        this._canvas.style.cssText = "position: absolute; height: 100%; width: 100%; z-index: 90";
         this._canvas.width = container.clientWidth;
         this._canvas.height = container.clientHeight;
         container.appendChild(this._canvas);

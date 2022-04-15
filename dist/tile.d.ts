@@ -8,6 +8,10 @@ export declare class Tile extends Subject {
     private _container;
     private _map;
     /**
+     * 图层可见缩放级别
+     */
+    private _zoom;
+    /**
      * 图层url
      */
     protected _url: string;
@@ -19,6 +23,14 @@ export declare class Tile extends Subject {
      * 图层url
      */
     set url(value: string);
+    /**
+     * 图层可见缩放级别设置
+     */
+    get minZoom(): number;
+    get maxZoom(): number;
+    set minZoom(value: number);
+    set maxZoom(value: number);
+    set zoom(value: number[]);
     /**
      * 创建Tile
      * 不应自主创建，map内部创建
